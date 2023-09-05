@@ -1,0 +1,2 @@
+# gomodule
+golang common module
