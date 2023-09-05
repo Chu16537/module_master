@@ -20,16 +20,18 @@ type Handler struct {
 	config Config
 	client *mongo.Client
 	db     *mongo.Database
+	opts   *options.ClientOptions
 }
 
 func New(ctx context.Context, cfg Config) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
 		config: cfg,
+		opts:   options.Client().ApplyURI(cfg.Addr),
 	}
 
 	if !h.connect() {
-		return h, fmt.Errorf("mongodb connection failed")
+		return nil, fmt.Errorf("mongodb connection failed")
 	}
 
 	return h, nil
@@ -54,12 +56,10 @@ func (h *Handler) Check() error {
 
 // 連線
 func (h *Handler) connect() bool {
-	fmt.Println(h.config.Addr)
-	// 设置 MongoDB 连接选项
-	opts := options.Client().ApplyURI(h.config.Addr)
+	h.close()
 
 	// 建立连接
-	client, err := mongo.Connect(h.ctx, opts)
+	client, err := mongo.Connect(h.ctx, h.opts)
 	if err != nil {
 		return false
 	}

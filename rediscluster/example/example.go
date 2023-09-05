@@ -1,34 +1,33 @@
-package example
+package main
 
 import (
 	"context"
 	"fmt"
-	"gomodule/mongo"
+	"gomodule/rediscluster"
 	"time"
 )
 
-// 範例
-func Example() {
+func main() {
 	// 创建一个上下文和配置
 	ctx := context.Background()
-	cfg := mongo.Config{
-		Addr:     "mongodb://localhost:27017", // MongoDB 地址
-		Database: "mydatabase",                // 数据库名称
+	cfg := rediscluster.Config{
+		Addrs:    []string{"localhost:7001", "localhost:7002"}, // Redis 集群地址
+		Password: "",                                           // Redis 密码
 	}
 
-	var handler *mongo.Handler
+	var handler *rediscluster.Handler
 	for i := 0; i < 10; i++ {
-		// 初始化 MongoDB 连接处理程序
-		mgo, err := mongo.New(ctx, cfg)
+		// 初始化 Redis 集群连接处理程序
+		h, err := rediscluster.New(ctx, cfg)
 		if err != nil {
-			fmt.Println("Failed to initialize MongoDB:", err)
+			fmt.Println("Failed to initialize Redis:", err)
 			continue
 		}
-		handler = mgo
+		handler = h
 	}
 
 	if handler == nil {
-		panic("mongo New fail")
+		panic("redis New fail")
 	}
 
 	defer handler.Done() // 在程序结束时关闭连接
@@ -41,7 +40,7 @@ func Example() {
 	fmt.Println("Application finished.")
 }
 
-func check(ctx context.Context, h *mongo.Handler) {
+func check(ctx context.Context, h *rediscluster.Handler) {
 	// 設定檢查秒數
 	checkInterval := 2 * time.Second
 	ticker := time.NewTicker(checkInterval)
