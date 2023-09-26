@@ -25,6 +25,8 @@ type Handler struct {
 	mu           sync.Mutex
 	FuncMap      map[int][]func()
 	MaxWaitTime  time.Duration
+	ctxMap       map[int]context.Context
+	cancelMap    map[int]context.CancelFunc
 }
 
 // 初始化
@@ -38,6 +40,8 @@ func Init(conf *Config) {
 	}
 
 	handler.ctx, handler.cancel = context.WithCancel(context.Background())
+	handler.ctxMap = make(map[int]context.Context)
+	handler.cancelMap = make(map[int]context.CancelFunc)
 
 	handler.shutdownChan = make(chan os.Signal, 1)
 	signal.Notify(handler.shutdownChan, syscall.SIGINT, syscall.SIGTERM)
@@ -96,4 +100,17 @@ func AddshutdownFunc(level int, f func()) {
 	} else {
 		handler.FuncMap[level] = append(handler.FuncMap[level], f)
 	}
+
+	if handler.ctxMap[level] == nil {
+		handler.ctxMap[level], handler.cancelMap[level] = context.WithCancel(context.Background())
+	}
+}
+
+// 取得指定的cxt
+func (h *Handler) GetLevelCxt(level int) (context.Context, context.CancelFunc) {
+	if handler.ctxMap[level] == nil {
+		handler.ctxMap[level], handler.cancelMap[level] = context.WithCancel(context.Background())
+	}
+
+	return handler.ctxMap[level], handler.cancelMap[level]
 }
