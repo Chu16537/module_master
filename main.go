@@ -1,12 +1,6 @@
 package main
 
-import (
-	"gomodule/zyaml"
-)
-
-// mg "gomodule/mongo/example"
-// nats "gomodule/natscluster/example"
-// redis "gomodule/rediscluster/example"
+import "github.com/Chu16537/gomodule/zyaml"
 
 func main() {
 

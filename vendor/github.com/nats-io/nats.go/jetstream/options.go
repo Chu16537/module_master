@@ -164,11 +164,21 @@ func (t PullThresholdMessages) configureConsume(opts *consumeOpts) error {
 	return nil
 }
 
+func (t PullThresholdMessages) configureMessages(opts *consumeOpts) error {
+	opts.ThresholdMessages = int(t)
+	return nil
+}
+
 // PullThresholdBytes sets the byte count on which Consume will trigger
 // new pull request to the server. Defaults to 50% of MaxBytes (if set).
 type PullThresholdBytes int
 
 func (t PullThresholdBytes) configureConsume(opts *consumeOpts) error {
+	opts.ThresholdBytes = int(t)
+	return nil
+}
+
+func (t PullThresholdBytes) configureMessages(opts *consumeOpts) error {
 	opts.ThresholdBytes = int(t)
 	return nil
 }
@@ -194,6 +204,25 @@ func (hb PullHeartbeat) configureMessages(opts *consumeOpts) error {
 		return fmt.Errorf("%w: idle_heartbeat value must be within 1s-30s range", ErrInvalidOption)
 	}
 	opts.Heartbeat = hbTime
+	return nil
+}
+
+// StopAfter sets the number of messages after which the consumer is automatically stopped
+type StopAfter int
+
+func (nMsgs StopAfter) configureConsume(opts *consumeOpts) error {
+	if nMsgs <= 0 {
+		return fmt.Errorf("%w: auto stop after value cannot be less than 1", ErrInvalidOption)
+	}
+	opts.StopAfter = int(nMsgs)
+	return nil
+}
+
+func (nMsgs StopAfter) configureMessages(opts *consumeOpts) error {
+	if nMsgs <= 0 {
+		return fmt.Errorf("%w: auto stop after value cannot be less than 1", ErrInvalidOption)
+	}
+	opts.StopAfter = int(nMsgs)
 	return nil
 }
 
@@ -315,4 +344,77 @@ func WithStallWait(ttl time.Duration) PublishOpt {
 		opts.stallWait = ttl
 		return nil
 	}
+}
+
+// KV Options
+
+type watchOptFn func(opts *watchOpts) error
+
+func (opt watchOptFn) configureWatcher(opts *watchOpts) error {
+	return opt(opts)
+}
+
+// IncludeHistory instructs the key watcher to include historical values as well.
+func IncludeHistory() WatchOpt {
+	return watchOptFn(func(opts *watchOpts) error {
+		if opts.updatesOnly {
+			return fmt.Errorf("%w: include history can not be used with updates only", ErrInvalidOption)
+		}
+		opts.includeHistory = true
+		return nil
+	})
+}
+
+// UpdatesOnly instructs the key watcher to only include updates on values (without latest values when started).
+func UpdatesOnly() WatchOpt {
+	return watchOptFn(func(opts *watchOpts) error {
+		if opts.includeHistory {
+			return fmt.Errorf("%w: updates only can not be used with include history", ErrInvalidOption)
+		}
+		opts.updatesOnly = true
+		return nil
+	})
+}
+
+// IgnoreDeletes will have the key watcher not pass any deleted keys.
+func IgnoreDeletes() WatchOpt {
+	return watchOptFn(func(opts *watchOpts) error {
+		opts.ignoreDeletes = true
+		return nil
+	})
+}
+
+// MetaOnly instructs the key watcher to retrieve only the entry meta data, not the entry value.
+func MetaOnly() WatchOpt {
+	return watchOptFn(func(opts *watchOpts) error {
+		opts.metaOnly = true
+		return nil
+	})
+}
+
+// DeleteMarkersOlderThan indicates that delete or purge markers older than that
+// will be deleted as part of PurgeDeletes() operation, otherwise, only the data
+// will be removed but markers that are recent will be kept.
+// Note that if no option is specified, the default is 30 minutes. You can set
+// this option to a negative value to instruct to always remove the markers,
+// regardless of their age.
+type DeleteMarkersOlderThan time.Duration
+
+func (ttl DeleteMarkersOlderThan) configurePurge(opts *purgeOpts) error {
+	opts.dmthr = time.Duration(ttl)
+	return nil
+}
+
+type deleteOptFn func(opts *deleteOpts) error
+
+func (opt deleteOptFn) configureDelete(opts *deleteOpts) error {
+	return opt(opts)
+}
+
+// LastRevision deletes if the latest revision matches.
+func LastRevision(revision uint64) KVDeleteOpt {
+	return deleteOptFn(func(opts *deleteOpts) error {
+		opts.revision = revision
+		return nil
+	})
 }
