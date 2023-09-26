@@ -18,12 +18,12 @@ type Config struct {
 
 type Handler struct {
 	ctx    context.Context
-	config Config
+	config *Config
 	client *redis.ClusterClient
 	opts   *redis.ClusterOptions
 }
 
-func New(ctx context.Context, cfg Config) (*Handler, error) {
+func New(ctx context.Context, cfg *Config) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
 		config: cfg,

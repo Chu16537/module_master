@@ -17,13 +17,13 @@ type Config struct {
 
 type Handler struct {
 	ctx    context.Context
-	config Config
+	config *Config
 	client *mongo.Client
 	db     *mongo.Database
 	opts   *options.ClientOptions
 }
 
-func New(ctx context.Context, cfg Config) (*Handler, error) {
+func New(ctx context.Context, cfg *Config) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
 		config: cfg,
@@ -75,4 +75,9 @@ func (h *Handler) close() {
 	if h.client != nil {
 		h.client.Disconnect(h.ctx)
 	}
+}
+
+// 取得DB
+func (h *Handler) GetDB() *mongo.Database {
+	return h.db
 }

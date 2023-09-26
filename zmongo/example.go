@@ -10,7 +10,7 @@ import (
 func Example() {
 	// 创建一个上下文和配置
 	ctx := context.Background()
-	cfg := Config{
+	cfg := &Config{
 		Addr:     "mongodb://localhost:27017", // MongoDB 地址
 		Database: "mydatabase",                // 数据库名称
 	}

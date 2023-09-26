@@ -14,6 +14,10 @@ const defaultFuncCount = 5 // 每个级别默认的函数数量
 
 var handler *Handler
 
+type Config struct {
+	WaitTime int // 等待時間
+}
+
 type Handler struct {
 	ctx          context.Context
 	cancel       context.CancelFunc
@@ -27,10 +31,10 @@ type Handler struct {
 /*
 waitTime 等待時間
 */
-func Init(waitTime int) {
+func Init(conf *Config) {
 	handler = &Handler{
 		FuncMap:     make(map[int][]func()),
-		MaxWaitTime: time.Duration(waitTime) * time.Second,
+		MaxWaitTime: time.Duration(conf.WaitTime) * time.Second,
 	}
 
 	handler.ctx, handler.cancel = context.WithCancel(context.Background())

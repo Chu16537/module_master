@@ -9,7 +9,7 @@ import (
 func Test() {
 	// 创建一个上下文和配置
 	ctx := context.Background()
-	cfg := Config{
+	cfg := &Config{
 		Addrs:    []string{"localhost:7001", "localhost:7002"}, // Redis 集群地址
 		Password: "",                                           // Redis 密码
 	}
