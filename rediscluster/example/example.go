@@ -1,4 +1,4 @@
-package main
+package example
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func main() {
+func Example() {
 	// 创建一个上下文和配置
 	ctx := context.Background()
 	cfg := rediscluster.Config{

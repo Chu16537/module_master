@@ -1,0 +1,12 @@
+syntax = "proto3";
+package example;
+option go_package=".;example";
+
+
+message Req{
+    int64 id = 1;
+}
+
+message Res{
+    string name = 1;
+}
