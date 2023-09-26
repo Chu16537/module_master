@@ -1,9 +1,8 @@
-package example
+package zmongo
 
 import (
 	"context"
 	"fmt"
-	"gomodule/mongo"
 	"time"
 )
 
@@ -11,15 +10,15 @@ import (
 func Example() {
 	// 创建一个上下文和配置
 	ctx := context.Background()
-	cfg := mongo.Config{
+	cfg := Config{
 		Addr:     "mongodb://localhost:27017", // MongoDB 地址
 		Database: "mydatabase",                // 数据库名称
 	}
 
-	var handler *mongo.Handler
+	var handler *Handler
 	for i := 0; i < 10; i++ {
 		// 初始化 MongoDB 连接处理程序
-		mgo, err := mongo.New(ctx, cfg)
+		mgo, err := New(ctx, cfg)
 		if err != nil {
 			fmt.Println("Failed to initialize MongoDB:", err)
 			continue
@@ -41,7 +40,7 @@ func Example() {
 	fmt.Println("Application finished.")
 }
 
-func check(ctx context.Context, h *mongo.Handler) {
+func check(ctx context.Context, h *Handler) {
 	// 設定檢查秒數
 	checkInterval := 2 * time.Second
 	ticker := time.NewTicker(checkInterval)

@@ -1,4 +1,4 @@
-package natscluster
+package znats
 
 import (
 	"fmt"

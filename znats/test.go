@@ -1,9 +1,9 @@
-package example
+package znats
 
 import (
 	"context"
 	"fmt"
-	"gomodule/natscluster"
+	"gomodule/znats/proto"
 	"time"
 )
 
@@ -13,14 +13,14 @@ var (
 	Subname    = "a1"
 )
 
-func Example() {
+func Test() {
 
 	ctx := context.Background()
-	cfg := natscluster.Config{
+	cfg := Config{
 		Addrs: []string{Addr},
 	}
 
-	h, err := natscluster.New(ctx, cfg)
+	h, err := New(ctx, cfg)
 	if err != nil {
 		fmt.Println("err", err)
 		return
@@ -30,7 +30,7 @@ func Example() {
 
 	time.Sleep(1 * time.Second)
 
-	msg := &Req{
+	msg := &proto.Req{
 		Id: 1,
 	}
 

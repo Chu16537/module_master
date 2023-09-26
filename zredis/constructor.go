@@ -1,4 +1,4 @@
-package rediscluster
+package zredis
 
 import (
 	"context"
