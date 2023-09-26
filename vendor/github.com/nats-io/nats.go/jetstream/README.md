@@ -6,23 +6,25 @@ This doc covers the basic usage of the `jetstream` package in `nats.go` client.
   - [Overview](#overview)
   - [Basic usage](#basic-usage)
   - [Streams](#streams)
-    - [Stream management (CRUD)](#stream-management-crud)
+    - [Stream management (CRUD)](#stream-management--crud-)
     - [Listing streams and stream names](#listing-streams-and-stream-names)
     - [Stream-specific operations](#stream-specific-operations)
   - [Consumers](#consumers)
     - [Consumers management](#consumers-management)
-    - [Listing consumers and consumer names](#listing-consumers-and-consumer-names)
+    - [Listing consumers and consumer
+      names](#listing-consumers-and-consumer-names)
     - [Ordered consumers](#ordered-consumers)
-    - [Receiving messages from the consumer](#receiving-messages-from-the-consumer)
-      - [__Single fetch__](#single-fetch)
+    - [Receiving messages from the
+      consumer](#receiving-messages-from-the-consumer)
+      - [Single fetch](#single-fetch)
       - [Continuous polling](#continuous-polling)
-        - [Using `Consume()` receive messages in a callback](#using-consume-receive-messages-in-a-callback)
-        - [Using `Messages()` to iterate over incoming messages](#using-messages-to-iterate-over-incoming-messages)
-        - [Using `Messages()` to fetch single messages one by one](#using-messages-to-fetch-single-messages-one-by-one)
+        - [Using `Consume()` receive messages in a
+          callback](#using-consume-receive-messages-in-a-callback)
+        - [Using `Messages()` to iterate over incoming
+          messages](#using-messages-to-iterate-over-incoming-messages)
   - [Publishing on stream](#publishing-on-stream)
-    - [__Synchronous publish__](#synchronous-publish)
-    - [__Async publish__](#async-publish)
-  - [Examples](#examples)
+    - [Synchronous publish](#synchronous-publish)
+    - [Async publish](#async-publish)
 
 ## Overview
 
