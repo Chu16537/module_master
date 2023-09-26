@@ -3,8 +3,9 @@ package znats
 import (
 	"context"
 	"fmt"
-	"gomodule/znats/proto"
 	"time"
+
+	"github.com/Chu16537/gomodule/znats/proto"
 )
 
 var (
@@ -16,7 +17,7 @@ var (
 func Test() {
 
 	ctx := context.Background()
-	cfg := Config{
+	cfg := &Config{
 		Addrs: []string{Addr},
 	}
 

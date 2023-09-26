@@ -2,7 +2,8 @@ package znats
 
 import (
 	"fmt"
-	"gomodule/utils"
+
+	"github.com/Chu16537/gomodule/utils"
 
 	"github.com/nats-io/nats.go/jetstream"
 )
