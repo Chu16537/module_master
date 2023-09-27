@@ -60,6 +60,7 @@ func (h *Handler) shutdown() {
 
 	go h.execute()
 
+	// 等待 h.MaxWaitTime 會往下執行
 	<-ctx.Done()
 	handler.cancel()
 }
