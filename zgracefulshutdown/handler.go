@@ -12,8 +12,6 @@ import (
 
 const defaultFuncCount = 5 // 每个级别默认的函数数量
 
-var handler *Handler
-
 type Config struct {
 	WaitTime int // 等待時間
 }
@@ -33,26 +31,27 @@ type Handler struct {
 /*
 waitTime 等待時間
 */
-func Init(conf *Config) {
-	handler = &Handler{
+func Init(conf *Config) *Handler {
+	h := &Handler{
 		FuncMap:     make(map[int][]func()),
 		MaxWaitTime: time.Duration(conf.WaitTime) * time.Second,
 	}
 
-	handler.ctx, handler.cancel = context.WithCancel(context.Background())
-	handler.ctxMap = make(map[int]context.Context)
-	handler.cancelMap = make(map[int]context.CancelFunc)
+	h.ctx, h.cancel = context.WithCancel(context.Background())
+	h.ctxMap = make(map[int]context.Context)
+	h.cancelMap = make(map[int]context.CancelFunc)
 
-	handler.shutdownChan = make(chan os.Signal, 1)
-	signal.Notify(handler.shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	h.shutdownChan = make(chan os.Signal, 1)
+	signal.Notify(h.shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	go handler.shutdown()
+	go h.shutdown()
 
+	return h
 }
 
 // 關閉流程
 func (h *Handler) shutdown() {
-	<-handler.shutdownChan
+	<-h.shutdownChan
 
 	// 创建一个新的 context，设置超时时间
 	ctx, cancel := context.WithTimeout(context.Background(), h.MaxWaitTime)
@@ -62,7 +61,7 @@ func (h *Handler) shutdown() {
 
 	// 等待 h.MaxWaitTime 會往下執行
 	<-ctx.Done()
-	handler.cancel()
+	h.cancel()
 }
 
 // 執行關閉func
@@ -87,31 +86,31 @@ func (h *Handler) execute() {
 }
 
 // 等待關閉
-func WaitDone() {
-	<-handler.ctx.Done()
+func (h *Handler) WaitDone() {
+	<-h.ctx.Done()
 }
 
 // 新增 shutdown 要執行的func
-func AddshutdownFunc(level int, f func()) {
-	handler.mu.Lock()
-	defer handler.mu.Unlock()
+func (h *Handler) AddshutdownFunc(level int, f func()) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
 
-	if _, ok := handler.FuncMap[level]; !ok {
-		handler.FuncMap[level] = make([]func(), defaultFuncCount)
+	if _, ok := h.FuncMap[level]; !ok {
+		h.FuncMap[level] = make([]func(), defaultFuncCount)
 	} else {
-		handler.FuncMap[level] = append(handler.FuncMap[level], f)
+		h.FuncMap[level] = append(h.FuncMap[level], f)
 	}
 
-	if handler.ctxMap[level] == nil {
-		handler.ctxMap[level], handler.cancelMap[level] = context.WithCancel(context.Background())
+	if h.ctxMap[level] == nil {
+		h.ctxMap[level], h.cancelMap[level] = context.WithCancel(context.Background())
 	}
 }
 
 // 取得指定的cxt
-func GetLevelCxt(level int) (context.Context, context.CancelFunc) {
-	if handler.ctxMap[level] == nil {
-		handler.ctxMap[level], handler.cancelMap[level] = context.WithCancel(context.Background())
+func (h *Handler) GetLevelCxt(level int) (context.Context, context.CancelFunc) {
+	if h.ctxMap[level] == nil {
+		h.ctxMap[level], h.cancelMap[level] = context.WithCancel(context.Background())
 	}
 
-	return handler.ctxMap[level], handler.cancelMap[level]
+	return h.ctxMap[level], h.cancelMap[level]
 }
