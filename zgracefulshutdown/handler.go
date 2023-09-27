@@ -108,7 +108,7 @@ func AddshutdownFunc(level int, f func()) {
 }
 
 // 取得指定的cxt
-func (h *Handler) GetLevelCxt(level int) (context.Context, context.CancelFunc) {
+func GetLevelCxt(level int) (context.Context, context.CancelFunc) {
 	if handler.ctxMap[level] == nil {
 		handler.ctxMap[level], handler.cancelMap[level] = context.WithCancel(context.Background())
 	}
