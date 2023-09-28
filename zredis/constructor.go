@@ -80,3 +80,7 @@ func (h *Handler) close() {
 		h.client.Close()
 	}
 }
+
+func (h *Handler) GetClient() *redis.ClusterClient {
+	return h.client
+}
