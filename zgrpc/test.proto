@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package test;
+option go_package = "./test";
+
+
+message Req{
+    int32 ReqID = 1;
+}
+
+message Res{
+    int32 ResID = 1; 
+}
+
+service Roomserver {
+    rpc Ping(stream Req)returns(stream Res){}
+}
