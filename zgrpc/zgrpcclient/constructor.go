@@ -3,9 +3,11 @@ package zgrpcclient
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Config struct {
@@ -55,8 +57,12 @@ func (h *Handler) GetConn() *grpc.ClientConn {
 }
 
 func (h *Handler) connect() error {
-	fmt.Println("h.config.Addr", h.config.Addr)
-	conn, err := grpc.Dial(h.config.Addr, grpc.WithInsecure())
+	opt := keepalive.ClientParameters{
+		Time:                60 * time.Second, // 定期发送 PING 帧的时间间隔
+		Timeout:             60 * time.Second, // 确认 PING 帧的超时时间
+		PermitWithoutStream: true,             // 允许在没有活动流时发送心跳包
+	}
+	conn, err := grpc.Dial(h.config.Addr, grpc.WithInsecure(), grpc.WithKeepaliveParams(opt))
 	if err != nil {
 		return err
 	}
