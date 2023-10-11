@@ -2,7 +2,6 @@ package znats
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -22,20 +21,14 @@ func (h *Handler) getCons(s jetstream.Stream, topicname string) jetstream.Consum
 	return c
 }
 
-func (h *Handler) startSub(c jetstream.Consumer, f func(interface{})) {
-	info, _ := c.Info(h.ctx)
-	fmt.Println("StartSub", info.Config.FilterSubject)
-
+func (h *Handler) startSub(c jetstream.Consumer, f func([]byte)) {
 	cons, _ := c.Consume(func(msg jetstream.Msg) {
-		data := string(msg.Data())
-		fmt.Println(info.Config.FilterSubject, "time", time.Now())
 		if f != nil {
-			// 執行事件結束
-			f(data)
+			// 執行事件
+			f(msg.Data())
 		}
 		// 回傳ack
 		msg.Ack()
-		fmt.Println(info.Config.FilterSubject, "time", time.Now())
 	})
 	h.consumeMap[c.CachedInfo().Config.FilterSubject] = cons
 }

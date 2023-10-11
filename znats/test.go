@@ -12,6 +12,7 @@ var (
 	Addr       = "127.0.0.1:4222"
 	streamName = "togsa1"
 	Subname    = "a1"
+	SubChan    = make(chan []byte)
 )
 
 func Test() {
@@ -28,6 +29,7 @@ func Test() {
 	}
 
 	h.Sub(streamName, Subname, handler)
+	go readSubChan()
 
 	time.Sleep(1 * time.Second)
 
@@ -36,12 +38,23 @@ func Test() {
 	}
 
 	h.Pub(Subname, msg)
+	h.Pub(Subname, msg)
+	h.Pub(Subname, msg)
+	h.Pub(Subname, msg)
 
 	time.Sleep(10000 * time.Second)
 
 }
 
 // 間聽到事件實作
-func handler(msg interface{}) {
+func handler(msg []byte) {
 	fmt.Println("handler", msg)
+	SubChan <- msg
+}
+
+func readSubChan() {
+	for v := range SubChan {
+		fmt.Println("ReadSubChan", time.Now(), v)
+		time.Sleep(3 * time.Second)
+	}
 }

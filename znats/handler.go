@@ -13,7 +13,7 @@ func (h *Handler) Pub(topicName string, msg interface{}) {
 }
 
 // 訂閱
-func (h *Handler) Sub(streamName string, topicname string, f func(interface{})) bool {
+func (h *Handler) Sub(streamName string, topicname string, f func([]byte)) bool {
 	var err error
 
 	// 不需要stream
