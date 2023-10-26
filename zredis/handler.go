@@ -7,8 +7,8 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func (h *Handler) Del(key string) (int64, error) {
-	return h.client.Del(h.ctx, key).Result()
+func (h *Handler) Del(key string) error {
+	return h.client.Del(h.ctx, key).Err()
 }
 
 // 是否為 key 不存在的錯誤
@@ -24,16 +24,16 @@ func (h *Handler) Exists(key string) (int64, error) {
 	return h.client.Exists(h.ctx, key).Result()
 }
 
-func (h *Handler) Set(key string, value interface{}, expiration time.Duration) (string, error) {
-	return h.client.Set(h.ctx, key, value, expiration).Result()
+func (h *Handler) Set(key string, value interface{}, expiration time.Duration) error {
+	return h.client.Set(h.ctx, key, value, expiration).Err()
 }
 
 func (h *Handler) SetEX(key string, value interface{}, expiration time.Duration) (string, error) {
 	return h.client.SetEx(h.ctx, key, value, expiration).Result()
 }
 
-func (h *Handler) HDel(key string, fields ...string) (int64, error) {
-	return h.client.HDel(h.ctx, key, fields...).Result()
+func (h *Handler) HDel(key string, fields ...string) error {
+	return h.client.HDel(h.ctx, key, fields...).Err()
 }
 
 func (h *Handler) HGet(key, field string) (string, error) {
@@ -48,16 +48,16 @@ func (h *Handler) HKeys(key string) ([]string, error) {
 	return h.client.HKeys(h.ctx, key).Result()
 }
 
-func (h *Handler) HSet(key string, values ...interface{}) (int64, error) {
-	return h.client.HSet(h.ctx, key, values...).Result()
+func (h *Handler) HSet(key string, values ...interface{}) error {
+	return h.client.HSet(h.ctx, key, values...).Err()
 }
 
 func (h *Handler) HIncrBy(key string, field string, value int64) (int64, error) {
 	return h.client.HIncrBy(h.ctx, key, field, value).Result()
 }
 
-func (h *Handler) HMSet(key string, values ...interface{}) (bool, error) {
-	return h.client.HMSet(h.ctx, key, values...).Result()
+func (h *Handler) HMSet(key string, values ...interface{}) error {
+	return h.client.HMSet(h.ctx, key, values...).Err()
 }
 
 func (h *Handler) HExists(key, field string) (bool, error) {
