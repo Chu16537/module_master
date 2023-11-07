@@ -81,3 +81,7 @@ func (h *Handler) close() {
 func (h *Handler) GetDB() *mongo.Database {
 	return h.db
 }
+
+func (h *Handler) GetCtx() context.Context {
+	return h.ctx
+}

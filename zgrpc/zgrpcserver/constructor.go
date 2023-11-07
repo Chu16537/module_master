@@ -3,12 +3,15 @@ package zgrpcserver
 import (
 	"fmt"
 	"net"
+	"time"
 
 	"google.golang.org/grpc"
 )
 
 type Config struct {
-	Addr string
+	Addr         string
+	ReStartTime  int // 重啟時間
+	ReStartCount int // 重啟次數
 }
 
 type Handler struct {
@@ -53,4 +56,20 @@ func (h *Handler) Run() error {
 
 func (h *Handler) Get() *grpc.Server {
 	return h.server
+}
+
+// 循環啟動
+func (h *Handler) LoopRun(count int, f func(interface{})) {
+	go func() {
+		if err := h.server.Serve(*h.listener); err != nil {
+			// 超過次數
+			if count > h.config.ReStartCount {
+				f(err)
+			}
+
+			t := time.Duration(h.config.ReStartTime) * time.Millisecond
+			time.Sleep(t)
+			h.LoopRun(count+1, f)
+		}
+	}()
 }
