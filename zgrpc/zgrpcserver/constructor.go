@@ -59,17 +59,17 @@ func (h *Handler) Get() *grpc.Server {
 }
 
 // 循環啟動
-func (h *Handler) LoopRun(count int, f func(interface{})) {
+func (h *Handler) LoopRun(count int) {
 	go func() {
 		if err := h.server.Serve(*h.listener); err != nil {
 			// 超過次數
 			if count > h.config.ReStartCount {
-				f(err)
+				panic(err)
 			}
 
 			t := time.Duration(h.config.ReStartTime) * time.Millisecond
 			time.Sleep(t)
-			h.LoopRun(count+1, f)
+			h.LoopRun(count + 1)
 		}
 	}()
 }
