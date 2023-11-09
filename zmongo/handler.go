@@ -2,7 +2,6 @@ package zmongo
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -11,42 +10,18 @@ import (
 )
 
 // 創建唯一索引
-func (h *Handler) IndexesCreateOne(colName string, indexModel mongo.IndexModel) error {
+func (h *Handler) IndexesCreateOne(colName string, key string) error {
 	col := h.db.Collection(colName)
 
-	// 获取已经创建的索引名称
-	list, err := col.Indexes().List(h.ctx)
-	if err != nil {
+	im := mongo.IndexModel{
+		Keys: bson.M{
+			key: 1,
+		},
+		Options: options.Index().SetUnique(true),
+	}
+	// 创建索引
+	if _, err := col.Indexes().CreateOne(h.ctx, im); err != nil {
 		return err
-	}
-	defer list.Close(h.ctx)
-
-	createNames := make(map[string]struct{})
-	for list.Next(h.ctx) {
-		var index bson.M
-		if err := list.Decode(&index); err != nil {
-			return err
-		}
-
-		for k := range index["key"].(bson.M) {
-			if k != "_id" {
-				createNames[k] = struct{}{}
-			}
-		}
-	}
-
-	// 检查索引是否已存在
-	indexKeys := indexModel.Keys.(bson.M)
-	fmt.Println("indexKeys", indexKeys, createNames)
-	for key := range indexKeys {
-		if _, ok := createNames[key]; !ok {
-			// 创建索引
-			_, err = col.Indexes().CreateOne(h.ctx, indexModel)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
 	}
 
 	return nil
