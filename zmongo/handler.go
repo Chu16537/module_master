@@ -70,7 +70,7 @@ func (h *Handler) FindArray(ctx context.Context, colName string, filter bson.M, 
 	return list, nil
 }
 
-// 新增一筆資料 併發不重複
+// 新增一筆資料
 func (h *Handler) InsertOne(ctx context.Context, colName string, obj interface{}) error {
 	col := h.db.Collection(colName)
 
@@ -79,6 +79,52 @@ func (h *Handler) InsertOne(ctx context.Context, colName string, obj interface{}
 	// 錯誤不是重複
 	if err != nil && !mongo.IsDuplicateKeyError(err) {
 		return err
+	}
+	return nil
+}
+
+// 更新一筆資料
+func (h *Handler) UpdateOne(ctx context.Context, colName string, filter bson.M, update bson.M, opts *options.UpdateOptions) error {
+	col := h.db.Collection(colName)
+
+	// 更新数据
+	result, err := col.UpdateOne(ctx, filter, update, opts)
+	// 錯誤不是重複
+	if err != nil {
+		return err
+	}
+	if result.MatchedCount == 0 {
+		return fmt.Errorf("not data update")
+	}
+	return nil
+}
+
+// 更新一筆資料
+func (h *Handler) UpdateMany(ctx context.Context, colName string, filter bson.M, update bson.M, opts *options.UpdateOptions) error {
+	col := h.db.Collection(colName)
+
+	// 更新数据
+	_, err := col.UpdateMany(ctx, filter, update, opts)
+	// 錯誤不是重複
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 刪除一筆資料
+func (h *Handler) DelOne(ctx context.Context, colName string, filter bson.M, opts *options.DeleteOptions) error {
+	col := h.db.Collection(colName)
+
+	// 更新数据
+	result, err := col.DeleteOne(ctx, filter, opts)
+	// 錯誤不是重複
+	if err != nil {
+		return err
+	}
+	if result.DeletedCount == 0 {
+		return fmt.Errorf("not data del")
 	}
 	return nil
 }
