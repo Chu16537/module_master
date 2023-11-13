@@ -28,6 +28,28 @@ func (h *Handler) IndexesCreateOne(ctx context.Context, colName string, key stri
 	return nil
 }
 
+// 自增id
+func (h *Handler) IncrementID(ctx context.Context, colName string, tagColName string) (int, error) {
+	col := h.db.Collection(colName)
+
+	filter := bson.D{{"_id", tagColName}}
+	update := bson.M{"$inc": bson.M{"value": 1}}
+	options := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
+
+	res := col.FindOneAndUpdate(ctx, filter, update, options)
+
+	if res.Err() != nil {
+		return 0, res.Err()
+	}
+
+	var counter Counter
+	if err := res.Decode(&counter); err != nil {
+		return 0, err
+	}
+
+	return counter.Value, nil
+}
+
 // 查一筆資料
 func (h *Handler) FindOne(ctx context.Context, colName string, filter bson.M, opts *options.FindOneOptions, obj interface{}) (interface{}, error) {
 	col := h.db.Collection(colName)
@@ -100,7 +122,7 @@ func (h *Handler) UpdateOne(ctx context.Context, colName string, filter bson.M, 
 }
 
 // 更新一筆資料
-func (h *Handler) UpdateMany(ctx context.Context, colName string, filter bson.M, update bson.M, opts *options.UpdateOptions) error {
+func (h *Handler) UpdateManySameValue(ctx context.Context, colName string, filter bson.M, update bson.M, opts *options.UpdateOptions) error {
 	col := h.db.Collection(colName)
 
 	// 更新数据
@@ -111,6 +133,12 @@ func (h *Handler) UpdateMany(ctx context.Context, colName string, filter bson.M,
 	}
 
 	return nil
+}
+
+// 更新多筆資料 每個數值都不一樣
+func (h *Handler) UpdateManyDifferentValue(ctx context.Context, colName string, wm []mongo.WriteModel) (*mongo.BulkWriteResult, error) {
+	col := h.db.Collection(colName)
+	return col.BulkWrite(ctx, wm)
 }
 
 // 刪除一筆資料
@@ -127,28 +155,6 @@ func (h *Handler) DelOne(ctx context.Context, colName string, filter bson.M, opt
 		return fmt.Errorf("not data del")
 	}
 	return nil
-}
-
-// 自增id
-func (h *Handler) IncrementID(ctx context.Context, colName string, tagColName string) (int, error) {
-	col := h.db.Collection(colName)
-
-	filter := bson.D{{"_id", tagColName}}
-	update := bson.M{"$inc": bson.M{"value": 1}}
-	options := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
-
-	res := col.FindOneAndUpdate(ctx, filter, update, options)
-
-	if res.Err() != nil {
-		return 0, res.Err()
-	}
-
-	var counter Counter
-	if err := res.Decode(&counter); err != nil {
-		return 0, err
-	}
-
-	return counter.Value, nil
 }
 
 // 事務
@@ -174,10 +180,4 @@ func (h *Handler) StartTransaction(ctx context.Context, cancel context.CancelFun
 	}
 
 	return result, nil
-}
-
-// 更新多筆資料 每個數值都不一樣
-func (h *Handler) BulkWrite(ctx context.Context, colName string, wm []mongo.WriteModel) (*mongo.BulkWriteResult, error) {
-	col := h.db.Collection(colName)
-	return col.BulkWrite(ctx, wm)
 }
