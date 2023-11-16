@@ -2,7 +2,6 @@ package zmongo
 
 import (
 	"context"
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -30,8 +29,8 @@ func New(ctx context.Context, cfg *Config) (*Handler, error) {
 		opts:   options.Client().ApplyURI(cfg.Addr),
 	}
 
-	if !h.connect() {
-		return nil, fmt.Errorf("mongodb connection failed")
+	if err := h.connect(); err != nil {
+		return nil, err
 	}
 
 	return h, nil
@@ -46,28 +45,28 @@ func (h *Handler) Done() {
 func (h *Handler) Check() error {
 	if err := h.client.Ping(h.ctx, nil); err != nil {
 		h.close()
-		if !h.connect() {
-			return fmt.Errorf("mongodb connection lost, and reconnect failed: %v", h.config)
+		if err2 := h.connect(); err2 != nil {
+			return err2
 		}
-		return fmt.Errorf("mongodb connection lost, but reconnect succeeded")
+		return err
 	}
 	return nil
 }
 
 // 連線
-func (h *Handler) connect() bool {
+func (h *Handler) connect() error {
 	h.close()
 
 	// 建立连接
 	client, err := mongo.Connect(h.ctx, h.opts)
 	if err != nil {
-		return false
+		return err
 	}
 
 	h.client = client
 	h.db = client.Database(h.config.Database)
 
-	return true
+	return nil
 }
 
 // 關閉

@@ -98,8 +98,8 @@ func (h *Handler) InsertOne(ctx context.Context, colName string, obj interface{}
 
 	// 插入数据
 	_, err := col.InsertOne(ctx, obj)
-	// 錯誤不是重複
-	if err != nil && !mongo.IsDuplicateKeyError(err) {
+
+	if err != nil {
 		return err
 	}
 	return nil
@@ -110,14 +110,12 @@ func (h *Handler) UpdateOne(ctx context.Context, colName string, filter bson.M, 
 	col := h.db.Collection(colName)
 
 	// 更新数据
-	result, err := col.UpdateOne(ctx, filter, update, opts)
-	// 錯誤不是重複
+	_, err := col.UpdateOne(ctx, filter, update, opts)
+
 	if err != nil {
 		return err
 	}
-	if result.MatchedCount == 0 {
-		return fmt.Errorf("not data update")
-	}
+
 	return nil
 }
 
@@ -127,7 +125,7 @@ func (h *Handler) UpdateManySameValue(ctx context.Context, colName string, filte
 
 	// 更新数据
 	_, err := col.UpdateMany(ctx, filter, update, opts)
-	// 錯誤不是重複
+
 	if err != nil {
 		return err
 	}
@@ -136,9 +134,16 @@ func (h *Handler) UpdateManySameValue(ctx context.Context, colName string, filte
 }
 
 // 更新多筆資料 每個數值都不一樣
-func (h *Handler) UpdateManyDifferentValue(ctx context.Context, colName string, wm []mongo.WriteModel) (*mongo.BulkWriteResult, error) {
+func (h *Handler) UpdateManyDifferentValue(ctx context.Context, colName string, wm []mongo.WriteModel) error {
 	col := h.db.Collection(colName)
-	return col.BulkWrite(ctx, wm)
+
+	_, err := col.BulkWrite(ctx, wm)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // 刪除一筆資料
@@ -146,14 +151,12 @@ func (h *Handler) DelOne(ctx context.Context, colName string, filter bson.M, opt
 	col := h.db.Collection(colName)
 
 	// 更新数据
-	result, err := col.DeleteOne(ctx, filter, opts)
+	_, err := col.DeleteOne(ctx, filter, opts)
 	// 錯誤不是重複
 	if err != nil {
 		return err
 	}
-	if result.DeletedCount == 0 {
-		return fmt.Errorf("not data del")
-	}
+
 	return nil
 }
 

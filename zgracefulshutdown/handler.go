@@ -12,13 +12,6 @@ import (
 
 const defaultFuncCount = 5 // 每个级别默认的函数数量
 
-type Igf interface {
-	// 取得指定的cxt
-	GetLevelCxt(level int) (context.Context, context.CancelFunc)
-	// 新增 shutdown 要執行的func
-	AddshutdownFunc(level int, f func())
-}
-
 type Config struct {
 	WaitTime int // 等待時間
 }
@@ -38,7 +31,7 @@ type Handler struct {
 /*
 waitTime 等待時間
 */
-func Init(conf *Config) *Handler {
+func Init(conf *Config) (*Handler, error) {
 	h := &Handler{
 		FuncMap:     make(map[int][]func()),
 		MaxWaitTime: time.Duration(conf.WaitTime) * time.Second,
@@ -53,7 +46,7 @@ func Init(conf *Config) *Handler {
 
 	go h.shutdown()
 
-	return h
+	return h, nil
 }
 
 // 關閉流程
