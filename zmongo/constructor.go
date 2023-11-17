@@ -2,6 +2,7 @@ package zmongo
 
 import (
 	"context"
+	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -16,17 +17,17 @@ type Config struct {
 
 type Handler struct {
 	ctx    context.Context
-	config *Config
+	opts   *options.ClientOptions
 	client *mongo.Client
 	db     *mongo.Database
-	opts   *options.ClientOptions
+	dbName string
 }
 
-func New(ctx context.Context, cfg *Config) (*Handler, error) {
+func New(ctx context.Context, conf *Config, opts *options.ClientOptions) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
-		config: cfg,
-		opts:   options.Client().ApplyURI(cfg.Addr),
+		opts:   opts,
+		dbName: conf.Database,
 	}
 
 	if err := h.connect(); err != nil {
@@ -43,7 +44,10 @@ func (h *Handler) Done() {
 
 // 檢查連線
 func (h *Handler) Check() error {
-	if err := h.client.Ping(h.ctx, nil); err != nil {
+	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
+	defer cancel()
+
+	if err := h.client.Ping(ctx, nil); err != nil {
 		h.close()
 		if err2 := h.connect(); err2 != nil {
 			return err2
@@ -57,14 +61,17 @@ func (h *Handler) Check() error {
 func (h *Handler) connect() error {
 	h.close()
 
+	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
+	defer cancel()
+
 	// 建立连接
-	client, err := mongo.Connect(h.ctx, h.opts)
+	client, err := mongo.Connect(ctx, h.opts)
 	if err != nil {
 		return err
 	}
 
 	h.client = client
-	h.db = client.Database(h.config.Database)
+	h.db = client.Database(h.dbName)
 
 	return nil
 }
@@ -76,11 +83,17 @@ func (h *Handler) close() {
 	}
 }
 
+// 取得 client
+func (h *Handler) GetClient() *mongo.Client {
+	return h.client
+}
+
 // 取得DB
 func (h *Handler) GetDB() *mongo.Database {
 	return h.db
 }
 
+// 取得 ctx
 func (h *Handler) GetCtx() context.Context {
 	return h.ctx
 }

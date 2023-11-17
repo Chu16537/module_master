@@ -9,30 +9,19 @@ import (
 
 type Config struct {
 	Addrs    []string
-	Password string // 设置密码
-	// DialTimeout  time.Duration // 设置连接超时
-	// ReadTimeout  time.Duration // 设置读取超时
-	// WriteTimeout time.Duration // 设置写入超时
+	Password string
 }
 
 type Handler struct {
 	ctx    context.Context
-	config *Config
 	client *redis.ClusterClient
 	opts   *redis.ClusterOptions
 }
 
-func New(ctx context.Context, cfg *Config) (*Handler, error) {
+func New(ctx context.Context, opts *redis.ClusterOptions) (*Handler, error) {
 	h := &Handler{
-		ctx:    ctx,
-		config: cfg,
-		opts: &redis.ClusterOptions{
-			Addrs:        cfg.Addrs,
-			Password:     cfg.Password,
-			DialTimeout:  5 * time.Second,
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 5 * time.Second,
-		},
+		ctx:  ctx,
+		opts: opts,
 	}
 
 	if err := h.connect(); err != nil {
@@ -49,7 +38,10 @@ func (h *Handler) Done() {
 
 // 檢查連線
 func (h *Handler) Check() error {
-	if _, err := h.client.Ping(h.ctx).Result(); err != nil {
+	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
+	defer cancel()
+
+	if _, err := h.client.Ping(ctx).Result(); err != nil {
 		if err2 := h.connect(); err2 != nil {
 			return err2
 		}
@@ -62,9 +54,12 @@ func (h *Handler) Check() error {
 func (h *Handler) connect() error {
 	h.close()
 
+	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
+	defer cancel()
+
 	// 建立連線
 	client := redis.NewClusterClient(h.opts)
-	_, err := client.Ping(h.ctx).Result()
+	_, err := client.Ping(ctx).Result()
 	if err != nil {
 		return err
 	}
