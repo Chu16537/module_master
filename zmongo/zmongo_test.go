@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/Chu16537/gomodule/zmongo"
 	"go.mongodb.org/mongo-driver/bson"
@@ -49,15 +48,12 @@ type Account struct {
 
 func TestFindOne(t *testing.T) {
 
-	ctx, cancel := context.WithTimeout(h.GetCtx(), 5*time.Second)
-	defer cancel()
-
 	c := "account"
 	f := bson.M{"playerid": 1}
 
 	a := &Account{}
 
-	err := zmongo.FindOne(h.GetDB(), ctx, c, a, f)
+	err := h.FindOne(c, a, f)
 	if err != nil {
 		fmt.Println("TestFindOne", err)
 	}

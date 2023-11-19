@@ -1,16 +1,14 @@
 package zmongo
 
 import (
-	"context"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // 創建唯一索引
-func IndexesCreateOne(db *mongo.Database, ctx context.Context, colName string, key string) error {
-	col := db.Collection(colName)
+func (h *Handler) IndexesCreateOne(colName string, key string) error {
+	col := h.db.Collection(colName)
 
 	im := mongo.IndexModel{
 		Keys: bson.M{
@@ -18,8 +16,9 @@ func IndexesCreateOne(db *mongo.Database, ctx context.Context, colName string, k
 		},
 		Options: options.Index().SetUnique(true),
 	}
+
 	// 创建索引
-	if _, err := col.Indexes().CreateOne(ctx, im); err != nil {
+	if _, err := col.Indexes().CreateOne(h.ctx, im); err != nil {
 		return err
 	}
 
@@ -27,15 +26,15 @@ func IndexesCreateOne(db *mongo.Database, ctx context.Context, colName string, k
 }
 
 // 自增id
-func IncrementID(db *mongo.Database, ctx context.Context, colName string, tagColName string) (int, error) {
-	col := db.Collection(colName)
+func (h *Handler) IncrementID(colName string, tagColName string) (int, error) {
+	col := h.db.Collection(colName)
 
 	filter := bson.D{{"_id", tagColName}}
 	update := bson.M{"$inc": bson.M{"value": 1}}
 	options := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 
 	var counter Counter
-	err := col.FindOneAndUpdate(ctx, filter, update, options).Decode(&counter)
+	err := col.FindOneAndUpdate(h.ctx, filter, update, options).Decode(&counter)
 
 	if err != nil {
 		return 0, err
@@ -45,18 +44,18 @@ func IncrementID(db *mongo.Database, ctx context.Context, colName string, tagCol
 }
 
 // 事務
-func StartTransaction(client *mongo.Client, ctx context.Context, f func(sessionContext mongo.SessionContext) (interface{}, error)) (interface{}, error) {
-	session, err := client.StartSession()
+func (h *Handler) StartTransaction(f func(sessionContext mongo.SessionContext) (interface{}, error)) (interface{}, error) {
+	session, err := h.client.StartSession()
 	if err != nil {
 		return nil, err
 	}
-	defer session.EndSession(ctx)
+	defer session.EndSession(h.ctx)
 
 	// 开启事务
-	result, err := session.WithTransaction(ctx, f)
+	result, err := session.WithTransaction(h.ctx, f)
 	if err != nil {
 		// 回滚事务
-		errAbort := session.AbortTransaction(ctx)
+		errAbort := session.AbortTransaction(h.ctx)
 		if errAbort != nil {
 			return nil, errAbort
 		}
