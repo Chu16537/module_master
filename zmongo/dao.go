@@ -1,9 +1,11 @@
 package zmongo
 
+import "go.mongodb.org/mongo-driver/mongo"
+
 // IndexesCreateOne
 type CreateIndex struct {
 	ColName string
-	Key     string
+	Val     mongo.IndexModel
 }
 
 // 計數器
