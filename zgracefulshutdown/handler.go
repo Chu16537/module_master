@@ -31,7 +31,7 @@ type Handler struct {
 /*
 waitTime 等待時間
 */
-func Init(conf *Config) (*Handler, error) {
+func Init(conf *Config) *Handler {
 	h := &Handler{
 		FuncMap:     make(map[int][]func()),
 		MaxWaitTime: time.Duration(conf.WaitTime) * time.Second,
@@ -46,7 +46,7 @@ func Init(conf *Config) (*Handler, error) {
 
 	go h.shutdown()
 
-	return h, nil
+	return h
 }
 
 // 關閉流程

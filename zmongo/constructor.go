@@ -23,10 +23,21 @@ type Handler struct {
 	dbName string
 }
 
-func New(ctx context.Context, conf *Config, opts *options.ClientOptions) (*Handler, error) {
+func New(ctx context.Context, conf *Config) (*Handler, error) {
+
+	opt := options.Client().ApplyURI(conf.Addr)
+
+	if conf.Username != "" {
+		cred := options.Credential{
+			Username: conf.Username,
+			Password: conf.Password,
+		}
+		opt.SetAuth(cred)
+	}
+
 	h := &Handler{
 		ctx:    ctx,
-		opts:   opts,
+		opts:   opt,
 		dbName: conf.Database,
 	}
 
