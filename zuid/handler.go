@@ -1,4 +1,4 @@
-package uid
+package zuid
 
 import "github.com/rs/xid"
 
