@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Chu16537/gomodule/zjson"
 	"github.com/Chu16537/gomodule/znats/proto"
 )
 
@@ -28,7 +29,7 @@ func Test() {
 		return
 	}
 
-	h.Sub(streamName, Subname, handler)
+	h.Sub(Subname, handler)
 	go readSubChan()
 
 	time.Sleep(1 * time.Second)
@@ -36,11 +37,12 @@ func Test() {
 	msg := &proto.Req{
 		Id: 1,
 	}
+	data, _ := zjson.Marshal(msg)
 
-	h.Pub("", Subname, msg)
-	h.Pub("", Subname, msg)
-	h.Pub("", Subname, msg)
-	h.Pub("", Subname, msg)
+	h.Pub(Subname, data)
+	h.Pub(Subname, data)
+	h.Pub(Subname, data)
+	h.Pub(Subname, data)
 
 	time.Sleep(10000 * time.Second)
 
