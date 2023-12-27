@@ -1,23 +1,22 @@
 package znats
 
 import (
-	"fmt"
-
 	"github.com/Chu16537/gomodule/utils"
+	"github.com/Chu16537/gomodule/zuid"
+	"github.com/pkg/errors"
 
 	"github.com/nats-io/nats.go/jetstream"
 )
 
 // 移除 stream的 topic
-func (h *Handler) delStreamTopic(streamName, topicname string) {
+func (h *Handler) delStreamTopic(streamName, topicname string) error {
 	stream, _ := h.js.StreamNameBySubject(h.ctx, topicname)
 
 	// 現在要使用的 stream 與之前的不相同
 	if stream != "" && stream != streamName {
 		oldStream, err := h.js.Stream(h.ctx, stream)
 		if err != nil {
-			fmt.Println("delStreamTopic", err)
-			return
+			return errors.Wrapf(err, "delStreamTopic Stream err :%v", err.Error())
 		}
 		// stream資料
 		info, _ := oldStream.Info(h.ctx)
@@ -32,19 +31,26 @@ func (h *Handler) delStreamTopic(streamName, topicname string) {
 		if isDel {
 			newSubName := utils.RemoveItems(info.Config.Subjects, topicname)
 			info.Config.Subjects = newSubName
-			_, err := h.js.UpdateStream(h.ctx, info.Config)
-			if err != nil {
-				fmt.Println("delStreamTopic UpdateStream", err)
-				return
+			if _, err := h.js.UpdateStream(h.ctx, info.Config); err != nil {
+				return errors.Wrapf(err, "delStreamTopic UpdateStream err :%v", err.Error())
 			}
 		}
 	}
+
+	return nil
 }
 
 // 產生新的 stream
-func (h *Handler) createStream(streamName, topicname string) jetstream.Stream {
+func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, error) {
+	var (
+		s   jetstream.Stream
+		err error
+	)
 	// 取得 stream
-	s, _ := h.js.Stream(h.ctx, streamName)
+	s, err = h.js.Stream(h.ctx, streamName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "createStream Stream err :%v", err.Error())
+	}
 
 	if s == nil {
 		conf := jetstream.StreamConfig{
@@ -55,10 +61,9 @@ func (h *Handler) createStream(streamName, topicname string) jetstream.Stream {
 		// 創建 stream
 		s, err := h.js.CreateStream(h.ctx, conf)
 		if err != nil {
-			fmt.Println("createStream", err)
-			return nil
+			return nil, errors.Wrapf(err, "createStream CreateStream err :%v", err.Error())
 		}
-		return s
+		return s, nil
 	}
 
 	// 判斷是否已經有topicname
@@ -76,8 +81,39 @@ func (h *Handler) createStream(streamName, topicname string) jetstream.Stream {
 		info, _ := s.Info(h.ctx)
 		newSubName := append(info.Config.Subjects, topicname)
 		info.Config.Subjects = newSubName
-		s, _ = h.js.UpdateStream(h.ctx, info.Config)
+		s, err = h.js.UpdateStream(h.ctx, info.Config)
+		if err != nil {
+			return nil, errors.Wrapf(err, "createStream UpdateStream err :%v", err.Error())
+		}
 	}
 
-	return s
+	return s, nil
+}
+
+func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func(string, []byte)) error {
+	c, err := s.CreateOrUpdateConsumer(h.ctx, jetstream.ConsumerConfig{
+		Durable:       streamName, // 使用永久的
+		AckPolicy:     jetstream.AckExplicitPolicy,
+		FilterSubject: topicname, // 指定sub
+	})
+
+	if err != nil {
+		return errors.Wrapf(err, "startSub CreateOrUpdateConsumer err :%v", err.Error())
+	}
+
+	_, err = c.Consume(func(msg jetstream.Msg) {
+		if f != nil {
+			id := zuid.GetUID()
+			// 執行事件
+			f(id, msg.Data())
+			h.msgAckMap.Store(id, msg)
+		}
+	})
+
+	if err != nil {
+		h.js.DeleteConsumer(h.ctx, streamName, topicname)
+		return errors.Wrapf(err, "startSub Consume err :%v", err.Error())
+	}
+
+	return nil
 }

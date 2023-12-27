@@ -37,18 +37,18 @@ func Test() {
 		Id: 1,
 	}
 
-	h.Pub(Subname, msg)
-	h.Pub(Subname, msg)
-	h.Pub(Subname, msg)
-	h.Pub(Subname, msg)
+	h.Pub("", Subname, msg)
+	h.Pub("", Subname, msg)
+	h.Pub("", Subname, msg)
+	h.Pub("", Subname, msg)
 
 	time.Sleep(10000 * time.Second)
 
 }
 
 // 間聽到事件實作
-func handler(msg []byte) {
-	fmt.Println("handler", msg)
+func handler(id string, msg []byte) {
+	fmt.Println("handler", id, msg)
 	SubChan <- msg
 }
 

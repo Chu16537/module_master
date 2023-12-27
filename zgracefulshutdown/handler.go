@@ -27,51 +27,51 @@ type Handler struct {
 	cancelMap    map[int]context.CancelFunc
 }
 
+var GF *Handler
+
 // 初始化
 /*
 waitTime 等待時間
 */
-func Init(conf *Config) *Handler {
-	h := &Handler{
+func Init(conf *Config) {
+	GF = &Handler{
 		FuncMap:     make(map[int][]func()),
 		MaxWaitTime: time.Duration(conf.WaitTime) * time.Second,
 	}
 
-	h.ctx, h.cancel = context.WithCancel(context.Background())
-	h.ctxMap = make(map[int]context.Context)
-	h.cancelMap = make(map[int]context.CancelFunc)
+	GF.ctx, GF.cancel = context.WithCancel(context.Background())
+	GF.ctxMap = make(map[int]context.Context)
+	GF.cancelMap = make(map[int]context.CancelFunc)
 
-	h.shutdownChan = make(chan os.Signal, 1)
-	signal.Notify(h.shutdownChan, syscall.SIGINT, syscall.SIGTERM)
+	GF.shutdownChan = make(chan os.Signal, 1)
+	signal.Notify(GF.shutdownChan, syscall.SIGINT, syscall.SIGTERM)
 
-	go h.shutdown()
-
-	return h
+	go shutdown()
 }
 
 // 關閉流程
-func (h *Handler) shutdown() {
-	<-h.shutdownChan
+func shutdown() {
+	<-GF.shutdownChan
 
 	// 创建一个新的 context，设置超时时间
-	ctx, cancel := context.WithTimeout(context.Background(), h.MaxWaitTime)
+	ctx, cancel := context.WithTimeout(context.Background(), GF.MaxWaitTime)
 	defer cancel()
 
-	go h.execute()
+	go execute()
 
 	// 等待 h.MaxWaitTime 會往下執行
 	<-ctx.Done()
-	h.cancel()
+	GF.cancel()
 }
 
 // 執行關閉func
-func (h *Handler) execute() {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+func execute() {
+	GF.mu.Lock()
+	defer GF.mu.Unlock()
 
-	levels := make([]int, len(h.FuncMap))
+	levels := make([]int, len(GF.FuncMap))
 	idx := 0
-	for i := range h.FuncMap {
+	for i := range GF.FuncMap {
 		levels[idx] = i
 		idx++
 	}
@@ -79,38 +79,39 @@ func (h *Handler) execute() {
 
 	// 根據 level 執行func
 	for _, level := range levels {
-		for _, f := range h.FuncMap[level] {
+		for _, f := range GF.FuncMap[level] {
 			f()
 		}
 	}
 }
 
 // 等待關閉
-func (h *Handler) WaitDone() {
-	<-h.ctx.Done()
+func WaitDone() {
+	<-GF.ctx.Done()
 }
 
 // 新增 shutdown 要執行的func
-func (h *Handler) AddshutdownFunc(level int, f func()) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
+func AddshutdownFunc(level int, f func()) {
+	GF.mu.Lock()
+	defer GF.mu.Unlock()
 
-	if _, ok := h.FuncMap[level]; !ok {
-		h.FuncMap[level] = make([]func(), defaultFuncCount)
+	if _, ok := GF.FuncMap[level]; !ok {
+		GF.FuncMap[level] = make([]func(), defaultFuncCount)
+		GF.FuncMap[level] = append(GF.FuncMap[level], f)
 	} else {
-		h.FuncMap[level] = append(h.FuncMap[level], f)
+		GF.FuncMap[level] = append(GF.FuncMap[level], f)
 	}
 
-	if h.ctxMap[level] == nil {
-		h.ctxMap[level], h.cancelMap[level] = context.WithCancel(context.Background())
+	if GF.ctxMap[level] == nil {
+		GF.ctxMap[level], GF.cancelMap[level] = context.WithCancel(context.Background())
 	}
 }
 
 // 取得指定的cxt
-func (h *Handler) GetLevelCxt(level int) (context.Context, context.CancelFunc) {
-	if h.ctxMap[level] == nil {
-		h.ctxMap[level], h.cancelMap[level] = context.WithCancel(context.Background())
+func GetLevelCxt(level int) (context.Context, context.CancelFunc) {
+	if GF.ctxMap[level] == nil {
+		GF.ctxMap[level], GF.cancelMap[level] = context.WithCancel(context.Background())
 	}
 
-	return h.ctxMap[level], h.cancelMap[level]
+	return GF.ctxMap[level], GF.cancelMap[level]
 }
