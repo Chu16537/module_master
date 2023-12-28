@@ -49,8 +49,8 @@ func Test() {
 }
 
 // 間聽到事件實作
-func handler(id string, msg []byte) {
-	fmt.Println("handler", id, msg)
+func handler(msg []byte) {
+	fmt.Println("handler", msg)
 	SubChan <- msg
 }
 

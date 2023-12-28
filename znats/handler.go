@@ -2,7 +2,6 @@ package znats
 
 import (
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
 )
 
@@ -16,36 +15,19 @@ func (h *Handler) Pub(topicName string, data []byte) error {
 }
 
 // 推送
-func (h *Handler) PubAck(msgAckID string, topicName string, data []byte) error {
+func (h *Handler) PubStream(topicName string, data []byte) error {
 	if _, err := h.js.Publish(h.ctx, topicName, data); err != nil {
 		return errors.Wrapf(err, "js Publish err :%v", err.Error())
 	}
-
-	v, isLoad := h.msgAckMap.Load(msgAckID)
-	if !isLoad {
-		return nil
-	}
-
-	msg, ok := v.(jetstream.Msg)
-	if !ok {
-		return nil
-	}
-
-	msg.Ack()
-
-	h.msgAckMap.Delete(msgAckID)
-
 	return nil
 }
 
 // 訂閱
-func (h *Handler) Sub(topicname string, f func(string, []byte)) error {
+func (h *Handler) Sub(topicname string, f func([]byte)) error {
 	var err error
 
 	if _, err = h.nc.Subscribe(topicname, func(m *nats.Msg) {
-		if f != nil {
-			f("", m.Data)
-		}
+		f(m.Data)
 	}); err != nil {
 		return errors.Wrapf(err, "Subscribe err :%v", err.Error())
 	}
@@ -53,7 +35,7 @@ func (h *Handler) Sub(topicname string, f func(string, []byte)) error {
 }
 
 // 訂閱
-func (h *Handler) SubStream(streamName string, topicname string, f func(string, []byte)) error {
+func (h *Handler) SubStream(streamName string, topicname string, f func(uint64, []byte)) error {
 	var err error
 
 	// 更新

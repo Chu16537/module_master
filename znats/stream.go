@@ -2,7 +2,6 @@ package znats
 
 import (
 	"github.com/Chu16537/gomodule/utils"
-	"github.com/Chu16537/gomodule/zuid"
 	"github.com/pkg/errors"
 
 	"github.com/nats-io/nats.go/jetstream"
@@ -90,7 +89,7 @@ func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, 
 	return s, nil
 }
 
-func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func(string, []byte)) error {
+func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func(uint64, []byte)) error {
 	c, err := s.CreateOrUpdateConsumer(h.ctx, jetstream.ConsumerConfig{
 		Durable:       streamName, // 使用永久的
 		AckPolicy:     jetstream.AckExplicitPolicy,
@@ -101,19 +100,22 @@ func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f f
 		return errors.Wrapf(err, "startSub CreateOrUpdateConsumer err :%v", err.Error())
 	}
 
-	_, err = c.Consume(func(msg jetstream.Msg) {
-		if f != nil {
-			id := zuid.GetUID()
-			// 執行事件
-			f(id, msg.Data())
-			h.msgAckMap.Store(id, msg)
-		}
-	})
+	go func() {
+		consContext, err := c.Consume(func(msg jetstream.Msg) {
+			metadata, _ := msg.Metadata()
+			if metadata != nil {
+				sequence := metadata.Sequence.Consumer
+				// 執行事件
+				f(sequence, msg.Data())
+			}
+		})
 
-	if err != nil {
-		h.js.DeleteConsumer(h.ctx, streamName, topicname)
-		return errors.Wrapf(err, "startSub Consume err :%v", err.Error())
-	}
+		if err != nil {
+			h.js.DeleteConsumer(h.ctx, streamName, topicname)
+		}
+
+		defer consContext.Stop()
+	}()
 
 	return nil
 }

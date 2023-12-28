@@ -3,7 +3,6 @@ package znats
 import (
 	"context"
 	"strings"
-	"sync"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -20,8 +19,6 @@ type Handler struct {
 	opts   *nats.Options
 	nc     *nats.Conn
 	js     jetstream.JetStream
-
-	msgAckMap sync.Map // 等待ack訊息
 }
 
 func New(ctx context.Context, cfg *Config) (*Handler, error) {
