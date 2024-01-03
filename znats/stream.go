@@ -89,7 +89,7 @@ func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, 
 	return s, nil
 }
 
-func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func(uint64, []byte)) error {
+func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func([]byte)) error {
 	c, err := s.CreateOrUpdateConsumer(h.ctx, jetstream.ConsumerConfig{
 		Durable:       streamName, // 使用永久的
 		AckPolicy:     jetstream.AckExplicitPolicy,
@@ -104,9 +104,9 @@ func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f f
 		consContext, err := c.Consume(func(msg jetstream.Msg) {
 			metadata, _ := msg.Metadata()
 			if metadata != nil {
-				sequence := metadata.Sequence.Consumer
 				// 執行事件
-				f(sequence, msg.Data())
+				f(msg.Data())
+				msg.Ack()
 			}
 		})
 

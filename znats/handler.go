@@ -24,10 +24,8 @@ func (h *Handler) PubStream(topicName string, data []byte) error {
 
 // 訂閱
 func (h *Handler) Sub(topicname string, f func([]byte)) error {
-	var err error
-
-	if _, err = h.nc.Subscribe(topicname, func(m *nats.Msg) {
-		f(m.Data)
+	if _, err := h.nc.Subscribe(topicname, func(msg *nats.Msg) {
+		f(msg.Data)
 	}); err != nil {
 		return errors.Wrapf(err, "Subscribe err :%v", err.Error())
 	}
@@ -35,7 +33,7 @@ func (h *Handler) Sub(topicname string, f func([]byte)) error {
 }
 
 // 訂閱
-func (h *Handler) SubStream(streamName string, topicname string, f func(uint64, []byte)) error {
+func (h *Handler) SubStream(streamName string, topicname string, f func([]byte)) error {
 	var err error
 
 	// 更新

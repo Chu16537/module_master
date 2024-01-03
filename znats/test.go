@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/Chu16537/gomodule/zjson"
-	"github.com/Chu16537/gomodule/znats/proto"
 )
 
 var (
@@ -15,6 +14,10 @@ var (
 	Subname    = "a1"
 	SubChan    = make(chan []byte)
 )
+
+type Msg struct {
+	ID int
+}
 
 func Test() {
 
@@ -34,8 +37,8 @@ func Test() {
 
 	time.Sleep(1 * time.Second)
 
-	msg := &proto.Req{
-		Id: 1,
+	msg := &Msg{
+		ID: 1,
 	}
 	data, _ := zjson.Marshal(msg)
 
