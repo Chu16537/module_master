@@ -18,10 +18,17 @@ type Handler struct {
 	opts   *redis.ClusterOptions
 }
 
-func New(ctx context.Context, opts *redis.ClusterOptions) (*Handler, error) {
+func New(ctx context.Context, conf *Config) (*Handler, error) {
+
 	h := &Handler{
-		ctx:  ctx,
-		opts: opts,
+		ctx: ctx,
+		opts: &redis.ClusterOptions{
+			Addrs:        conf.Addrs,
+			Password:     conf.Password,
+			DialTimeout:  5 * time.Second,
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 5 * time.Second,
+		},
 	}
 
 	if err := h.connect(); err != nil {

@@ -40,7 +40,7 @@ func (h *Handler) delStreamTopic(streamName, topicname string) error {
 }
 
 // 產生新的 stream
-func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, error) {
+func (h *Handler) createStream(streamName, topicname string) error {
 	var (
 		s   jetstream.Stream
 		err error
@@ -48,7 +48,7 @@ func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, 
 	// 取得 stream
 	s, err = h.js.Stream(h.ctx, streamName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "createStream Stream err :%v", err.Error())
+		return errors.Wrapf(err, "createStream Stream err :%v", err.Error())
 	}
 
 	if s == nil {
@@ -58,11 +58,10 @@ func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, 
 			Subjects:  []string{topicname},
 		}
 		// 創建 stream
-		s, err := h.js.CreateStream(h.ctx, conf)
+		s, err = h.js.CreateStream(h.ctx, conf)
 		if err != nil {
-			return nil, errors.Wrapf(err, "createStream CreateStream err :%v", err.Error())
+			return errors.Wrapf(err, "createStream CreateStream err :%v", err.Error())
 		}
-		return s, nil
 	}
 
 	// 判斷是否已經有topicname
@@ -82,17 +81,13 @@ func (h *Handler) createStream(streamName, topicname string) (jetstream.Stream, 
 		info.Config.Subjects = newSubName
 		s, err = h.js.UpdateStream(h.ctx, info.Config)
 		if err != nil {
-			return nil, errors.Wrapf(err, "createStream UpdateStream err :%v", err.Error())
+			return errors.Wrapf(err, "createStream UpdateStream err :%v", err.Error())
 		}
 	}
 
-	return s, nil
-}
-
-func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f func([]byte)) error {
 	c, err := s.CreateOrUpdateConsumer(h.ctx, jetstream.ConsumerConfig{
 		Durable:       streamName, // 使用永久的
-		AckPolicy:     jetstream.AckExplicitPolicy,
+		AckPolicy:     jetstream.AckAllPolicy,
 		FilterSubject: topicname, // 指定sub
 	})
 
@@ -100,22 +95,7 @@ func (h *Handler) startSub(s jetstream.Stream, streamName, topicname string, f f
 		return errors.Wrapf(err, "startSub CreateOrUpdateConsumer err :%v", err.Error())
 	}
 
-	go func() {
-		consContext, err := c.Consume(func(msg jetstream.Msg) {
-			metadata, _ := msg.Metadata()
-			if metadata != nil {
-				// 執行事件
-				f(msg.Data())
-				msg.Ack()
-			}
-		})
-
-		if err != nil {
-			h.js.DeleteConsumer(h.ctx, streamName, topicname)
-		}
-
-		defer consContext.Stop()
-	}()
+	h.consumerMap.Store(topicname, c)
 
 	return nil
 }

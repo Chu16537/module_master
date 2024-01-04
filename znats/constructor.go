@@ -3,6 +3,7 @@ package znats
 import (
 	"context"
 	"strings"
+	"sync"
 
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
@@ -14,11 +15,12 @@ type Config struct {
 }
 
 type Handler struct {
-	ctx    context.Context
-	config *Config
-	opts   *nats.Options
-	nc     *nats.Conn
-	js     jetstream.JetStream
+	ctx         context.Context
+	config      *Config
+	opts        *nats.Options
+	nc          *nats.Conn
+	js          jetstream.JetStream
+	consumerMap sync.Map
 }
 
 func New(ctx context.Context, cfg *Config) (*Handler, error) {

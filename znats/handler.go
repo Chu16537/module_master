@@ -2,6 +2,7 @@ package znats
 
 import (
 	"github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
 )
 
@@ -37,18 +38,13 @@ func (h *Handler) SubStream(streamName string, topicname string, f func([]byte))
 	var err error
 
 	// 更新
-	if err := h.delStreamTopic(streamName, topicname); err != nil {
-		return err
-	}
-
-	// 取得 stream
-	s, err := h.createStream(streamName, topicname)
+	err = h.delStreamTopic(streamName, topicname)
 	if err != nil {
 		return err
 	}
 
-	//開始執行
-	err = h.startSub(s, streamName, topicname, f)
+	// 取得 stream
+	err = h.createStream(streamName, topicname)
 	if err != nil {
 		return err
 	}
@@ -56,7 +52,47 @@ func (h *Handler) SubStream(streamName string, topicname string, f func([]byte))
 	return nil
 }
 
+// 取得sub msg
+func (h *Handler) GetMsg(streamName string, topicName string, f func([]byte), count int) {
+	v, isLoad := h.consumerMap.Load(topicName)
+
+	if !isLoad {
+		h.SubStream(streamName, topicName, f)
+		v, isLoad = h.consumerMap.Load(topicName)
+		if !isLoad {
+			return
+		}
+	}
+
+	c, ok := v.(jetstream.Consumer)
+
+	if !ok {
+		return
+	}
+
+	msgBatch, err := c.Fetch(count)
+	if err != nil {
+		return
+	}
+
+	msgs := msgBatch.Messages()
+	msgLen := len(msgs)
+	idx := 0
+	for msg := range msgs {
+		//消費資料
+		f(msg.Data())
+		idx++
+
+		//最後一筆資料 通知ack
+		if idx == msgLen-1 {
+			msg.Ack()
+		}
+	}
+}
+
 // 取消訂閱
 func (h *Handler) UnSub(streamName string, topicname string) {
 	h.js.DeleteConsumer(h.ctx, streamName, topicname)
+
+	h.consumerMap.Delete(topicname)
 }
