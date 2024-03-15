@@ -13,7 +13,7 @@ import (
 const defaultFuncCount = 5 // 每个级别默认的函数数量
 
 type Config struct {
-	WaitTime int // 等待時間
+	WaitTime int // 等待時間(秒)
 }
 
 type Handler struct {

@@ -1,4 +1,4 @@
-// Copyright 2022-2023 The NATS Authors
+// Copyright 2022-2024 The NATS Authors
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -49,6 +49,7 @@ type (
 		consumer *orderedConsumer
 		opts     []PullMessagesOpt
 		done     chan struct{}
+		closed   uint32
 	}
 
 	cursor struct {
@@ -67,9 +68,13 @@ const (
 
 var errOrderedSequenceMismatch = errors.New("sequence mismatch")
 
-// Consume can be used to continuously receive messages and handle them with the provided callback function
+// Consume can be used to continuously receive messages and handle them
+// with the provided callback function. Consume cannot be used concurrently
+// when using ordered consumer.
+//
+// See [Consumer.Consume] for more details.
 func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt) (ConsumeContext, error) {
-	if c.consumerType == consumerTypeNotSet || c.consumerType == consumerTypeConsume && c.currentConsumer == nil {
+	if (c.consumerType == consumerTypeNotSet || c.consumerType == consumerTypeConsume) && c.currentConsumer == nil {
 		err := c.reset()
 		if err != nil {
 			return nil, err
@@ -81,7 +86,7 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 		return nil, ErrOrderConsumerUsedAsFetch
 	}
 	c.consumerType = consumerTypeConsume
-	consumeOpts, err := parseConsumeOpts(opts...)
+	consumeOpts, err := parseConsumeOpts(true, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOption, err)
 	}
@@ -107,12 +112,20 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 			}
 			meta, err := msg.Metadata()
 			if err != nil {
-				c.errHandler(serial)(c.currentConsumer.subscriptions[""], err)
+				sub, ok := c.currentConsumer.getSubscription("")
+				if !ok {
+					return
+				}
+				c.errHandler(serial)(sub, err)
 				return
 			}
 			dseq := meta.Sequence.Consumer
 			if dseq != c.cursor.deliverSeq+1 {
-				c.errHandler(serial)(c.currentConsumer.subscriptions[""], errOrderedSequenceMismatch)
+				sub, ok := c.currentConsumer.getSubscription("")
+				if !ok {
+					return
+				}
+				c.errHandler(serial)(sub, errOrderedSequenceMismatch)
 				return
 			}
 			c.cursor.deliverSeq = dseq
@@ -130,6 +143,13 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 		for {
 			select {
 			case <-c.doReset:
+				if err := c.reset(); err != nil {
+					sub, ok := c.currentConsumer.getSubscription("")
+					if !ok {
+						return
+					}
+					c.errHandler(c.serial)(sub, err)
+				}
 				if c.withStopAfter {
 					select {
 					case c.stopAfter = <-c.stopAfterMsgsLeft:
@@ -139,9 +159,6 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 						sub.Stop()
 						return
 					}
-				}
-				if err := c.reset(); err != nil {
-					c.errHandler(c.serial)(c.currentConsumer.subscriptions[""], err)
 				}
 				if c.stopAfter > 0 {
 					opts = opts[:len(opts)-2]
@@ -155,7 +172,11 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 					opts = append(opts, consumeStopAfterNotify(c.stopAfter, c.stopAfterMsgsLeft))
 				}
 				if _, err := c.currentConsumer.Consume(internalHandler(c.serial), opts...); err != nil {
-					c.errHandler(c.serial)(c.currentConsumer.subscriptions[""], err)
+					sub, ok := c.currentConsumer.getSubscription("")
+					if !ok {
+						return
+					}
+					c.errHandler(c.serial)(sub, err)
 				}
 			case <-sub.done:
 				return
@@ -173,12 +194,15 @@ func (c *orderedConsumer) Consume(handler MessageHandler, opts ...PullConsumeOpt
 
 func (c *orderedConsumer) errHandler(serial int) func(cc ConsumeContext, err error) {
 	return func(cc ConsumeContext, err error) {
+		c.Lock()
+		defer c.Unlock()
 		if c.userErrHandler != nil && !errors.Is(err, errOrderedSequenceMismatch) {
 			c.userErrHandler(cc, err)
 		}
 		if errors.Is(err, ErrNoHeartbeat) ||
 			errors.Is(err, errOrderedSequenceMismatch) ||
-			errors.Is(err, ErrConsumerDeleted) {
+			errors.Is(err, ErrConsumerDeleted) ||
+			errors.Is(err, ErrConsumerNotFound) {
 			// only reset if serial matches the current consumer serial and there is no reset in progress
 			if serial == c.serial && atomic.LoadUint32(&c.resetInProgress) == 0 {
 				atomic.StoreUint32(&c.resetInProgress, 1)
@@ -188,9 +212,13 @@ func (c *orderedConsumer) errHandler(serial int) func(cc ConsumeContext, err err
 	}
 }
 
-// Messages returns [MessagesContext], allowing continuously iterating over messages on a stream.
+// Messages returns MessagesContext, allowing continuously iterating
+// over messages on a stream. Messages cannot be used concurrently
+// when using ordered consumer.
+//
+// See [Consumer.Messages] for more details.
 func (c *orderedConsumer) Messages(opts ...PullMessagesOpt) (MessagesContext, error) {
-	if c.consumerType == consumerTypeNotSet || c.consumerType == consumerTypeConsume && c.currentConsumer == nil {
+	if (c.consumerType == consumerTypeNotSet || c.consumerType == consumerTypeConsume) && c.currentConsumer == nil {
 		err := c.reset()
 		if err != nil {
 			return nil, err
@@ -202,7 +230,7 @@ func (c *orderedConsumer) Messages(opts ...PullMessagesOpt) (MessagesContext, er
 		return nil, ErrOrderConsumerUsedAsFetch
 	}
 	c.consumerType = consumerTypeConsume
-	consumeOpts, err := parseMessagesOpts(opts...)
+	consumeOpts, err := parseMessagesOpts(true, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s", ErrInvalidOption, err)
 	}
@@ -233,7 +261,11 @@ func (c *orderedConsumer) Messages(opts ...PullMessagesOpt) (MessagesContext, er
 func (s *orderedSubscription) Next() (Msg, error) {
 	for {
 		currentConsumer := s.consumer.currentConsumer
-		msg, err := currentConsumer.subscriptions[""].Next()
+		sub, ok := currentConsumer.getSubscription("")
+		if !ok {
+			return nil, ErrMsgIteratorClosed
+		}
+		msg, err := sub.Next()
 		if err != nil {
 			if errors.Is(err, ErrMsgIteratorClosed) {
 				s.Stop()
@@ -261,13 +293,13 @@ func (s *orderedSubscription) Next() (Msg, error) {
 		}
 		meta, err := msg.Metadata()
 		if err != nil {
-			s.consumer.errHandler(s.consumer.serial)(currentConsumer.subscriptions[""], err)
+			s.consumer.errHandler(s.consumer.serial)(sub, err)
 			continue
 		}
 		serial := serialNumberFromConsumer(meta.Consumer)
 		dseq := meta.Sequence.Consumer
 		if dseq != s.consumer.cursor.deliverSeq+1 {
-			s.consumer.errHandler(serial)(currentConsumer.subscriptions[""], errOrderedSequenceMismatch)
+			s.consumer.errHandler(serial)(sub, errOrderedSequenceMismatch)
 			continue
 		}
 		s.consumer.cursor.deliverSeq = dseq
@@ -277,18 +309,40 @@ func (s *orderedSubscription) Next() (Msg, error) {
 }
 
 func (s *orderedSubscription) Stop() {
-	s.consumer.currentConsumer.Lock()
-	defer s.consumer.currentConsumer.Unlock()
-	if s.consumer.currentConsumer.subscriptions[""] == nil {
+	if !atomic.CompareAndSwapUint32(&s.closed, 0, 1) {
 		return
 	}
-	s.consumer.currentConsumer.subscriptions[""].Stop()
+	sub, ok := s.consumer.currentConsumer.getSubscription("")
+	if !ok {
+		return
+	}
+	s.consumer.currentConsumer.Lock()
+	defer s.consumer.currentConsumer.Unlock()
+	sub.Stop()
 	close(s.done)
 }
 
-// Fetch is used to retrieve up to a provided number of messages from a stream.
-// This method will always send a single request and wait until either all messages are retrieved
-// or context reaches its deadline.
+func (s *orderedSubscription) Drain() {
+	if !atomic.CompareAndSwapUint32(&s.closed, 0, 1) {
+		return
+	}
+	sub, ok := s.consumer.currentConsumer.getSubscription("")
+	if !ok {
+		return
+	}
+	s.consumer.currentConsumer.Lock()
+	defer s.consumer.currentConsumer.Unlock()
+	sub.Drain()
+	close(s.done)
+}
+
+// Fetch is used to retrieve up to a provided number of messages from a
+// stream. This method will always send a single request and wait until
+// either all messages are retrieved or request times out.
+//
+// It is not efficient to use Fetch with on an ordered consumer, as it will
+// reset the consumer for each subsequent Fetch call.
+// Consider using [Consumer.Consume] or [Consumer.Messages] instead.
 func (c *orderedConsumer) Fetch(batch int, opts ...FetchOpt) (MessageBatch, error) {
 	if c.consumerType == consumerTypeConsume {
 		return nil, ErrOrderConsumerUsedAsConsume
@@ -315,9 +369,13 @@ func (c *orderedConsumer) Fetch(batch int, opts ...FetchOpt) (MessageBatch, erro
 	return msgs, nil
 }
 
-// FetchBytes is used to retrieve up to a provided bytes from the stream.
-// This method will always send a single request and wait until provided number of bytes is
-// exceeded or request times out.
+// FetchBytes is used to retrieve up to a provided bytes from the
+// stream. This method will always send a single request and wait until
+// provided number of bytes is exceeded or request times out.
+//
+// It is not efficient to use FetchBytes with on an ordered consumer, as it will
+// reset the consumer for each subsequent Fetch call.
+// Consider using [Consumer.Consume] or [Consumer.Messages] instead.
 func (c *orderedConsumer) FetchBytes(maxBytes int, opts ...FetchOpt) (MessageBatch, error) {
 	if c.consumerType == consumerTypeConsume {
 		return nil, ErrOrderConsumerUsedAsConsume
@@ -341,8 +399,14 @@ func (c *orderedConsumer) FetchBytes(maxBytes int, opts ...FetchOpt) (MessageBat
 	return msgs, nil
 }
 
-// FetchNoWait is used to retrieve up to a provided number of messages from a stream.
-// This method will always send a single request and immediately return up to a provided number of messages
+// FetchNoWait is used to retrieve up to a provided number of messages
+// from a stream. This method will always send a single request and
+// immediately return up to a provided number of messages or wait until
+// at least one message is available or request times out.
+//
+// It is not efficient to use FetchNoWait with on an ordered consumer, as it will
+// reset the consumer for each subsequent Fetch call.
+// Consider using [Consumer.Consume] or [Consumer.Messages] instead.
 func (c *orderedConsumer) FetchNoWait(batch int) (MessageBatch, error) {
 	if c.consumerType == consumerTypeConsume {
 		return nil, ErrOrderConsumerUsedAsConsume
@@ -358,6 +422,13 @@ func (c *orderedConsumer) FetchNoWait(batch int) (MessageBatch, error) {
 	return c.currentConsumer.FetchNoWait(batch)
 }
 
+// Next is used to retrieve the next message from the stream. This
+// method will block until the message is retrieved or timeout is
+// reached.
+//
+// It is not efficient to use Next with on an ordered consumer, as it will
+// reset the consumer for each subsequent Fetch call.
+// Consider using [Consumer.Consume] or [Consumer.Messages] instead.
 func (c *orderedConsumer) Next(opts ...FetchOpt) (Msg, error) {
 	res, err := c.Fetch(1, opts...)
 	if err != nil {
@@ -366,6 +437,9 @@ func (c *orderedConsumer) Next(opts ...FetchOpt) (Msg, error) {
 	msg := <-res.Messages()
 	if msg != nil {
 		return msg, nil
+	}
+	if res.Error() == nil {
+		return nil, nats.ErrTimeout
 	}
 	return nil, res.Error()
 }
@@ -386,13 +460,20 @@ func (c *orderedConsumer) reset() error {
 	defer c.Unlock()
 	defer atomic.StoreUint32(&c.resetInProgress, 0)
 	if c.currentConsumer != nil {
+		sub, ok := c.currentConsumer.getSubscription("")
+		c.currentConsumer.Lock()
+		if ok {
+			sub.Stop()
+		}
+		consName := c.currentConsumer.CachedInfo().Name
+		c.currentConsumer.Unlock()
 		var err error
 		for i := 0; ; i++ {
 			if c.cfg.MaxResetAttempts > 0 && i == c.cfg.MaxResetAttempts {
 				return fmt.Errorf("%w: maximum number of delete attempts reached: %s", ErrOrderedConsumerReset, err)
 			}
 			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-			err = c.jetStream.DeleteConsumer(ctx, c.stream, c.currentConsumer.CachedInfo().Name)
+			err = c.jetStream.DeleteConsumer(ctx, c.stream, consName)
 			cancel()
 			if err != nil {
 				if errors.Is(err, ErrConsumerNotFound) {
@@ -501,6 +582,9 @@ func messagesStopAfterNotify(numMsgs int, msgsLeftAfterStop chan int) PullMessag
 	})
 }
 
+// Info returns information about the ordered consumer.
+// Note that this method will fetch the latest instance of the
+// consumer from the server, which can be deleted by the library at any time.
 func (c *orderedConsumer) Info(ctx context.Context) (*ConsumerInfo, error) {
 	c.Lock()
 	defer c.Unlock()
@@ -519,11 +603,17 @@ func (c *orderedConsumer) Info(ctx context.Context) (*ConsumerInfo, error) {
 		}
 		return nil, resp.Error
 	}
+	if resp.Error == nil && resp.ConsumerInfo == nil {
+		return nil, ErrConsumerNotFound
+	}
 
 	c.currentConsumer.info = resp.ConsumerInfo
 	return resp.ConsumerInfo, nil
 }
 
+// CachedInfo returns cached information about the consumer currently
+// used by the ordered consumer. Cached info will be updated on every call
+// to [Consumer.Info] or on consumer reset.
 func (c *orderedConsumer) CachedInfo() *ConsumerInfo {
 	c.Lock()
 	defer c.Unlock()

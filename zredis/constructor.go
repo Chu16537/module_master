@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Addrs    []string
+	Addr     string
 	Password string // 设置密码
 	// DialTimeout  time.Duration // 设置连接超时
 	// ReadTimeout  time.Duration // 设置读取超时
@@ -19,16 +19,16 @@ type Config struct {
 type Handler struct {
 	ctx    context.Context
 	config *Config
-	client *redis.ClusterClient
-	opts   *redis.ClusterOptions
+	client *redis.Client
+	opts   *redis.Options
 }
 
 func New(ctx context.Context, cfg *Config) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
 		config: cfg,
-		opts: &redis.ClusterOptions{
-			Addrs:        cfg.Addrs,
+		opts: &redis.Options{
+			Addr:         cfg.Addr,
 			Password:     cfg.Password,
 			DialTimeout:  5 * time.Second,
 			ReadTimeout:  5 * time.Second,
@@ -64,7 +64,7 @@ func (h *Handler) connect() bool {
 	h.close()
 
 	// 建立連線
-	client := redis.NewClusterClient(h.opts)
+	client := redis.NewClient(h.opts)
 	_, err := client.Ping(h.ctx).Result()
 	if err != nil {
 		return false
@@ -81,6 +81,6 @@ func (h *Handler) close() {
 	}
 }
 
-func (h *Handler) GetClient() *redis.ClusterClient {
+func (h *Handler) GetClient() *redis.Client {
 	return h.client
 }
