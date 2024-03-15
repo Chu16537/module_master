@@ -1,19 +1,64 @@
 package zmongo
 
-import "context"
+import (
+	"fmt"
+	"time"
+
+	"github.com/Chu16537/gomodule/zgracefulshutdown"
+	"github.com/Chu16537/gomodule/ztime"
+)
+
+var readDB *Handler
+var writeDB *Handler
 
 // 創建 讀寫DB
-func NewReadWriteDB(ctx context.Context, readConf *Config, writeConf *Config) (readDB *Handler, writeDB *Handler, err error) {
+func NewReadWriteDB(level int, readConf *Config, writeConf *Config) error {
 
-	readDB, err = New(ctx, readConf)
+	ctx, _ := zgracefulshutdown.GetLevelCxt(level)
+
+	rDB, err := New(ctx, readConf)
 	if err != nil {
-		return
+		return err
 	}
 
-	writeDB, err = New(ctx, writeConf)
+	wDB, err := New(ctx, writeConf)
 	if err != nil {
-		return
+		return err
 	}
 
-	return
+	zgracefulshutdown.AddshutdownFunc(level, readDB.Done)
+	zgracefulshutdown.AddshutdownFunc(level, writeDB.Done)
+
+	readDB = rDB
+	writeDB = wDB
+
+	check()
+
+	return nil
+}
+
+// 檢查是否連線正常
+func check() {
+	interval := 10 * time.Second
+
+	f := func(tick *time.Ticker) {
+		for {
+			select {
+			case <-tick.C:
+				if err := readDB.Check(); err != nil {
+					fmt.Println("readDB check err", err)
+				}
+
+				if err := writeDB.Check(); err != nil {
+					fmt.Println("readDB check err", err)
+				}
+			}
+		}
+	}
+
+	go ztime.RunTick(interval, f)
+}
+
+func GetDB() (r *Handler, w *Handler) {
+	return readDB, writeDB
 }
