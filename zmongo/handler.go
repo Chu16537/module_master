@@ -8,57 +8,50 @@ import (
 	"github.com/Chu16537/gomodule/ztime"
 )
 
-var readDB *Handler
-var writeDB *Handler
-
 // 創建 讀寫DB
-func NewReadWriteDB(level int, readConf *Config, writeConf *Config) error {
+func NewMgo(level int, readConf *Config, writeConf *Config) (rc *Handler, wc *Handler, err error) {
 
 	ctx, _ := zgracefulshutdown.GetLevelCxt(level)
 
-	rDB, err := New(ctx, readConf)
+	readHandler, err := New(ctx, readConf)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	wDB, err := New(ctx, writeConf)
+	writeHandler, err := New(ctx, writeConf)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	zgracefulshutdown.AddshutdownFunc(level, readDB.Done)
-	zgracefulshutdown.AddshutdownFunc(level, writeDB.Done)
+	zgracefulshutdown.AddshutdownFunc(level, readHandler.Done)
+	zgracefulshutdown.AddshutdownFunc(level, writeHandler.Done)
 
-	readDB = rDB
-	writeDB = wDB
+	rc = readHandler
+	wc = writeHandler
 
-	check()
+	// 連線存活確認
+	func() {
+		f := func(tick *time.Ticker) {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-tick.C:
+					if err := readHandler.Check(); err != nil {
+						fmt.Println("mongo readHandler check err", err)
+					}
 
-	return nil
-}
-
-// 檢查是否連線正常
-func check() {
-	interval := 10 * time.Second
-
-	f := func(tick *time.Ticker) {
-		for {
-			select {
-			case <-tick.C:
-				if err := readDB.Check(); err != nil {
-					fmt.Println("readDB check err", err)
-				}
-
-				if err := writeDB.Check(); err != nil {
-					fmt.Println("readDB check err", err)
+					if err := writeHandler.Check(); err != nil {
+						fmt.Println("mongo writeHandler check err", err)
+					}
 				}
 			}
 		}
-	}
 
-	go ztime.RunTick(interval, f)
-}
+		interval := 10 * time.Second
 
-func GetDB() (r *Handler, w *Handler) {
-	return readDB, writeDB
+		go ztime.RunTick(interval, f)
+	}()
+
+	return
 }
