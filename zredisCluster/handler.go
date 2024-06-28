@@ -19,6 +19,12 @@ func (h *Handler) UpdateTTL(ctx context.Context, key string, second int64) error
 	return h.client.Expire(ctx, key, d).Err()
 }
 
+// 執行lua語法
+func (h *Handler) RunLua(ctx context.Context, luaScript string, keys []string, args ...interface{}) (interface{}, error) {
+	r, err := h.client.Eval(ctx, luaScript, keys, args).Result()
+	return r, err
+}
+
 // 取得
 func (h *Handler) Get(ctx context.Context, key string) (string, error) {
 	return h.client.Get(ctx, key).Result()
@@ -89,15 +95,6 @@ func (h *Handler) HIncrBy(ctx context.Context, key string, field string, value i
 	return h.client.HIncrBy(ctx, key, field, value).Result()
 }
 
-func (h *Handler) RunLua(ctx context.Context, luaScript string, keys []string, args ...interface{}) (interface{}, error) {
-	r, err := h.client.Eval(ctx, luaScript, keys, args).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	return r, nil
-}
-
 // 增加 list 資料 從最後新增
 func (h *Handler) SetListFromLast(ctx context.Context, key string, values ...interface{}) error {
 	return h.client.RPush(ctx, key, values).Err()
@@ -112,4 +109,38 @@ func (h *Handler) SetListFromFirst(ctx context.Context, key string, values ...in
 // start 負數代表從後面開始 stop = -1 代表取得最後
 func (h *Handler) GetList(ctx context.Context, key string, start, stop int64) ([]string, error) {
 	return h.client.LRange(ctx, key, start, stop).Result()
+}
+
+// 新增 / 更新 score
+func (h *Handler) AddAndUpdateZset(ctx context.Context, key string, score float64, member string) error {
+	return h.client.ZAdd(ctx, key, redis.Z{Score: score, Member: member}).Err()
+}
+
+// 取得 member 的 score
+func (h *Handler) GetZsetMember(ctx context.Context, key string, member string) (float64, error) {
+	return h.client.ZScore(ctx, key, member).Result()
+}
+
+// 取得 範圍內的 member
+func (h *Handler) GetZsetRange(ctx context.Context, key string, min, max string, values ...int64) ([]string, error) {
+
+	opt := &redis.ZRangeBy{
+		Min: min,
+		Max: max,
+	}
+
+	switch len(values) {
+	case 1:
+		opt.Offset = values[0]
+	case 2:
+		opt.Offset = values[0]
+		opt.Count = values[1]
+	}
+
+	return h.client.ZRangeByScore(ctx, key, opt).Result()
+}
+
+// 刪除 members
+func (h *Handler) DelZsetMember(ctx context.Context, key string, member []string) error {
+	return h.client.ZRem(ctx, key, member).Err()
 }
