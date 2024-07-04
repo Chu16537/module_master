@@ -13,72 +13,72 @@ func run(h *zredisCluster.Handler) {
 
 	ctx := context.TODO()
 
-	key := "testKey"
+	// key := "testKey"
 
-	err := h.Set(ctx, key, "aaa", -1)
-	if err != nil {
-		fmt.Println("set", err)
-	}
+	// err := h.Set(ctx, key, "aaa", -1)
+	// if err != nil {
+	// 	fmt.Println("set", err)
+	// }
 
-	s, err := h.Get(ctx, key)
-	if err != nil {
-		fmt.Println("get", err)
-	} else {
-		fmt.Println("get s", s)
-	}
+	// s, err := h.Get(ctx, key)
+	// if err != nil {
+	// 	fmt.Println("get", err)
+	// } else {
+	// 	fmt.Println("get s", s)
+	// }
 
-	i, err := h.Exists(ctx, key)
-	if err != nil {
-		fmt.Println("Exists", err)
-	} else {
-		fmt.Println("Exists", i)
-	}
+	// i, err := h.Exists(ctx, key)
+	// if err != nil {
+	// 	fmt.Println("Exists", err)
+	// } else {
+	// 	fmt.Println("Exists", i)
+	// }
 
-	err = h.Del(ctx, key)
-	if err != nil {
-		fmt.Println("Del", err)
-	}
+	// err = h.Del(ctx, key)
+	// if err != nil {
+	// 	fmt.Println("Del", err)
+	// }
 
-	err = h.Del(ctx, key)
-	if err != nil {
-		fmt.Println("Del", err)
-	}
+	// err = h.Del(ctx, key)
+	// if err != nil {
+	// 	fmt.Println("Del", err)
+	// }
 
-	i, err = h.Exists(ctx, key)
-	if err != nil {
-		fmt.Println("Exists", err)
-	} else {
-		fmt.Println("Exists", i)
-	}
+	// i, err = h.Exists(ctx, key)
+	// if err != nil {
+	// 	fmt.Println("Exists", err)
+	// } else {
+	// 	fmt.Println("Exists", i)
+	// }
 
-	hashKey := "testHashKey"
+	// hashKey := "testHashKey"
 
-	setMap := map[string]interface{}{
-		"a": "aa",
-		"s": 11,
-		"d": "dd",
-	}
+	// setMap := map[string]interface{}{
+	// 	"a": "aa",
+	// 	"s": 11,
+	// 	"d": "dd",
+	// }
 
-	err = h.HSet(ctx, hashKey, setMap)
-	if err != nil {
-		fmt.Println("HSet", err)
-	}
+	// err = h.HSet(ctx, hashKey, setMap)
+	// if err != nil {
+	// 	fmt.Println("HSet", err)
+	// }
 
-	keys, err := h.HKeys(ctx, hashKey)
-	if err != nil {
-		fmt.Println("HSet", err)
-	} else {
-		for i, v := range keys {
-			fmt.Println("keys", i, v)
-		}
-	}
+	// keys, err := h.HKeys(ctx, hashKey)
+	// if err != nil {
+	// 	fmt.Println("HSet", err)
+	// } else {
+	// 	for i, v := range keys {
+	// 		fmt.Println("keys", i, v)
+	// 	}
+	// }
 
-	err = h.HDel(ctx, hashKey, "a", "s", "d")
-	if err != nil {
-		fmt.Println("HDel", err)
-	}
+	// err = h.HDel(ctx, hashKey, "a", "s", "d")
+	// if err != nil {
+	// 	fmt.Println("HDel", err)
+	// }
 
-	listKey := "testListKey"
+	// listKey := "testListKey"
 	// err = h.SetListFromLast(ctx, listKey, "apple", "banana", "cherry")
 	// if err != nil {
 	// 	panic(err)
@@ -94,13 +94,24 @@ func run(h *zredisCluster.Handler) {
 	// 	panic(err)
 	// }
 
-	fruits, err := h.GetList(ctx, listKey, 1, -1)
-	if err != nil {
-		panic(err)
-	} else {
-		for i, v := range fruits {
-			fmt.Println("fruits", i, v)
+	// fruits, err := h.GetList(ctx, listKey, 1, -1)
+	// if err != nil {
+	// 	panic(err)
+	// } else {
+	// 	for i, v := range fruits {
+	// 		fmt.Println("fruits", i, v)
+	// 	}
+	// }
+
+	incrKey := "incrKey"
+
+	for i := 0; i < 10; i++ {
+		i, err := h.IncrBy(ctx, incrKey, 1)
+		if err != nil {
+			fmt.Println("err", err)
+			return
 		}
+		fmt.Println("i", i)
 	}
 
 }
@@ -126,7 +137,7 @@ func Test_A(t *testing.T) {
 
 	// 为了演示，这里只是等待一段时间然后退出
 	fmt.Println("Running your application...")
-	time.Sleep(10 * time.Second)
+	time.Sleep(2 * time.Second)
 	fmt.Println("Application finished.")
 }
 

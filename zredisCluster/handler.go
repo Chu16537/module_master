@@ -34,8 +34,8 @@ func (h *Handler) Set(ctx context.Context, key string, value interface{}, second
 	return h.client.Set(ctx, key, value, d).Err()
 }
 
-func (h *Handler) IncrBy(ctx context.Context, key string, value int64) error {
-	return h.client.IncrBy(ctx, key, value).Err()
+func (h *Handler) IncrBy(ctx context.Context, key string, value int64) (int64, error) {
+	return h.client.IncrBy(ctx, key, value).Result()
 }
 
 // 刪除
@@ -112,4 +112,9 @@ func (h *Handler) SetListFromFirst(ctx context.Context, key string, values ...in
 // start 負數代表從後面開始 stop = -1 代表取得最後
 func (h *Handler) GetList(ctx context.Context, key string, start, stop int64) ([]string, error) {
 	return h.client.LRange(ctx, key, start, stop).Result()
+}
+
+// pipe
+func (h *Handler) Pipe() redis.Pipeliner {
+	return h.client.TxPipeline()
 }
