@@ -19,24 +19,14 @@ func RunTick(interval time.Duration, f func(tick *time.Ticker)) {
 	f(tick)
 }
 
-// 取得時間格式 2006_01_02
-func GetTimeFormat(t time.Time, format string) string {
-	return t.Format(format)
+// 取得+0時間格式
+func GetTimeFormatUnix(t int64, format string) string {
+	return time.Unix(t, 0).UTC().Format(format)
 }
 
-// 取得時間格式 2006_01_02
-func GetTimeFormatYMD(t time.Time) string {
-	return t.Format("2006_01")
-}
-
-// 取得時間格式 2006_01_02
-func GetIntFormatYMD(t int64) string {
-	return time.Unix(t, 0).UTC().Format("2006_01_02")
-}
-
-// 取得 +0 時區
-func GetTimeZoneZero(t time.Time) time.Time {
-	return t.UTC()
+// 取得+0時間格式
+func GetTimeFormatTime(t time.Time, format string) string {
+	return t.UTC().Format(format)
 }
 
 // 取得 指定地區時間
@@ -76,7 +66,7 @@ func GetDateRange(startTimeUnix, endTimeUnix int64) []string {
 	t := st
 	// 循环生成日期范围
 	for i := range dates {
-		dates[i] = GetIntFormatYMD(t)
+		dates[i] = GetTimeFormatUnix(t, Format_YMD)
 		t += Day_Sceond
 	}
 
