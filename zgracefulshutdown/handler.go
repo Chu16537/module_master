@@ -115,3 +115,8 @@ func GetLevelCxt(level int) (context.Context, context.CancelFunc) {
 
 	return GF.ctxMap[level], GF.cancelMap[level]
 }
+
+// 退出
+func Exit(id int) {
+	os.Exit(id)
+}
