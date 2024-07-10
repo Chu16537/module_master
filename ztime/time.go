@@ -12,6 +12,10 @@ const (
 	Format_YM   = "2006_01"
 )
 
+func GetZero() time.Time {
+	return time.Now().UTC()
+}
+
 // 每 tick 執行事件
 func RunTick(interval time.Duration, f func(tick *time.Ticker)) {
 	tick := time.NewTicker(interval)

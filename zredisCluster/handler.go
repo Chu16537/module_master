@@ -149,3 +149,13 @@ func (h *Handler) GetZsetRange(ctx context.Context, key string, min, max string,
 func (h *Handler) DelZsetMember(ctx context.Context, key string, member []string) error {
 	return h.client.ZRem(ctx, key, member).Err()
 }
+
+// 取得機器編號
+func (h *Handler) GetNodeID(rds *redis.ClusterClient, ctx context.Context) (int64, error) {
+	n, err := rds.IncrBy(ctx, Key_Node, 1).Result()
+	if err != nil {
+		return -1, err
+	}
+
+	return n, nil
+}
