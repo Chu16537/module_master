@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Chu16537/gomodule/mjson"
+	"github.com/Chu16537/module_master/mjson"
 )
 
 var (

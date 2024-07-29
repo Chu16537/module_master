@@ -7,11 +7,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/gomodule/errorcode"
-	"github.com/Chu16537/gomodule/hmgo"
-	"github.com/Chu16537/gomodule/mmgo"
-	"github.com/Chu16537/gomodule/muid"
-	"github.com/Chu16537/gomodule/proto/db"
+	"github.com/Chu16537/module_master/errorcode"
+	"github.com/Chu16537/module_master/hmgo"
+	"github.com/Chu16537/module_master/mmgo"
+	"github.com/Chu16537/module_master/muid"
+	"github.com/Chu16537/module_master/proto/db"
 )
 
 var h *hmgo.Handler

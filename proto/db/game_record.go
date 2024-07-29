@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/module_master/errorcode"
 	"go.mongodb.org/mongo-driver/bson"
 )
 

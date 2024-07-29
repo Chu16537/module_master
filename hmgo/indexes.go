@@ -3,7 +3,7 @@ package hmgo
 import (
 	"context"
 
-	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/module_master/errorcode"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

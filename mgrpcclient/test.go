@@ -6,7 +6,7 @@ import (
 	"io"
 	"time"
 
-	"github.com/Chu16537/gomodule/mgrpc/test"
+	"github.com/Chu16537/module_master/mgrpc/test"
 	"google.golang.org/grpc"
 )
 

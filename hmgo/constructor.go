@@ -3,7 +3,7 @@ package hmgo
 import (
 	"context"
 
-	"github.com/Chu16537/gomodule/mmgo"
+	"github.com/Chu16537/module_master/mmgo"
 )
 
 type Handler struct {

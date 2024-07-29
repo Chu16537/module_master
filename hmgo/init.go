@@ -3,9 +3,9 @@ package hmgo
 import (
 	"context"
 
-	"github.com/Chu16537/gomodule/errorcode"
-	"github.com/Chu16537/gomodule/mtime"
-	"github.com/Chu16537/gomodule/proto/db"
+	"github.com/Chu16537/module_master/errorcode"
+	"github.com/Chu16537/module_master/mtime"
+	"github.com/Chu16537/module_master/proto/db"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

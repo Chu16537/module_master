@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/gomodule/mredisCluster"
+	"github.com/Chu16537/module_master/mredisCluster"
 )
 
 func run(h *mredisCluster.Handler) {

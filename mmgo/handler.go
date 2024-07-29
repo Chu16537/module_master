@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Chu16537/gomodule/mgracefulshutdown"
-	"github.com/Chu16537/gomodule/mtime"
+	"github.com/Chu16537/module_master/mgracefulshutdown"
+	"github.com/Chu16537/module_master/mtime"
 )
 
 // 創建 讀寫DB

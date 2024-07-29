@@ -1,10 +1,9 @@
-module github.com/Chu16537/gomodule
+module github.com/Chu16537/module_master
 
 go 1.20
 
 require (
 	github.com/bytedance/sonic v1.11.3
-	github.com/fatih/structs v1.1.0
 	github.com/nats-io/nats.go v1.33.1
 	github.com/pkg/errors v0.9.1
 	github.com/redis/go-redis/v9 v9.5.1

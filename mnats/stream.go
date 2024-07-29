@@ -1,7 +1,7 @@
 package mnats
 
 import (
-	"github.com/Chu16537/gomodule/utils"
+	"github.com/Chu16537/module_master/utils"
 	"github.com/pkg/errors"
 
 	"github.com/nats-io/nats.go/jetstream"

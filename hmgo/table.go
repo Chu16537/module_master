@@ -3,8 +3,8 @@ package hmgo
 import (
 	"context"
 
-	"github.com/Chu16537/gomodule/errorcode"
-	"github.com/Chu16537/gomodule/proto/db"
+	"github.com/Chu16537/module_master/errorcode"
+	"github.com/Chu16537/module_master/proto/db"
 )
 
 // 取得 table
