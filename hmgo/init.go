@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/gomodule/mtime"
 	"github.com/Chu16537/gomodule/proto/db"
-	"github.com/Chu16537/gomodule/ztime"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -105,7 +105,7 @@ func (h *Handler) EveryDay(ctx context.Context, unixTime int64, days int) *error
 
 	cis := []*CreateIndex{}
 	for i := 0; i < days; i++ {
-		date := ztime.GetTimeFormatUnix(unixTime+int64(ztime.Day_Sceond*i), ztime.Format_YMD)
+		date := mtime.GetTimeFormatUnix(unixTime+int64(mtime.Day_Sceond*i), mtime.Format_YMD)
 
 		// wallet log
 		wl := &CreateIndex{

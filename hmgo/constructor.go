@@ -3,17 +3,17 @@ package hmgo
 import (
 	"context"
 
-	"github.com/Chu16537/gomodule/zmongo"
+	"github.com/Chu16537/gomodule/mmgo"
 )
 
 type Handler struct {
 	ctx    context.Context
 	cancel context.CancelFunc
-	read   *zmongo.Handler
-	write  *zmongo.Handler
+	read   *mmgo.Handler
+	write  *mmgo.Handler
 }
 
-func New(ctx context.Context, cancel context.CancelFunc, read *zmongo.Handler, write *zmongo.Handler) (*Handler, error) {
+func New(ctx context.Context, cancel context.CancelFunc, read *mmgo.Handler, write *mmgo.Handler) (*Handler, error) {
 	return &Handler{
 		ctx:    ctx,
 		cancel: cancel,

@@ -9,9 +9,9 @@ import (
 
 	"github.com/Chu16537/gomodule/errorcode"
 	"github.com/Chu16537/gomodule/hmgo"
+	"github.com/Chu16537/gomodule/mmgo"
+	"github.com/Chu16537/gomodule/muid"
 	"github.com/Chu16537/gomodule/proto/db"
-	"github.com/Chu16537/gomodule/zmongo"
-	"github.com/Chu16537/gomodule/zuid"
 )
 
 var h *hmgo.Handler
@@ -19,7 +19,7 @@ var h *hmgo.Handler
 func init() {
 	ctx := context.Background()
 
-	conf := &zmongo.Config{
+	conf := &mmgo.Config{
 		// Addr: "mongodb://mongo1:27017,mongo2:27017,mongo3:27017/?replicaSet=rs0",
 		Addr: "mongodb://127.0.0.1:27017/",
 		// Addr:     "mongodb://127.0.0.1:27017/?directConnection=true",
@@ -28,13 +28,13 @@ func init() {
 		Password: "",
 	}
 
-	readHandler, err := zmongo.New(ctx, conf)
+	readHandler, err := mmgo.New(ctx, conf)
 	if err != nil {
 		fmt.Println("readHandler", err)
 		return
 	}
 
-	writeHandler, err := zmongo.New(ctx, conf)
+	writeHandler, err := mmgo.New(ctx, conf)
 	if err != nil {
 		fmt.Println("writeHandler", err)
 		return
@@ -377,7 +377,7 @@ func TestGetGameRecord(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		gr := &db.GameRecord{
-			GameRecordID: zuid.GetUID(),
+			GameRecordID: muid.GetUID(),
 			CreateTime:   time.Now().UTC().Unix() + int64(86400*i),
 			ClubID:       uint64(i),
 			TableID:      table.ID,

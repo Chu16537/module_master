@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/gomodule/mtime"
 	"github.com/Chu16537/gomodule/proto/db"
-	"github.com/Chu16537/gomodule/ztime"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 // 取得 UserRecord
 func (h *Handler) GetUserRecord(ctx context.Context, filter *db.UserRecordOpt, opts *db.FindOpt) ([]*db.UserRecord, int64, *errorcode.Error) {
-	dates := ztime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
+	dates := mtime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
 
 	pipeline := make([]bson.M, len(dates)+2)
 
@@ -73,7 +73,7 @@ func (h *Handler) GetUserRecord(ctx context.Context, filter *db.UserRecordOpt, o
 // 創建指定日期 UserRecord_日期
 // datas 只能放相同日期的資料
 func (h *Handler) CreateUserRecord(ctx context.Context, data []*db.UserRecord) *errorcode.Error {
-	col := h.write.GetDB().Collection(db.ColName_UserRecord + ztime.GetTimeFormatUnix(data[0].CreateTime, ztime.Format_YMD))
+	col := h.write.GetDB().Collection(db.ColName_UserRecord + mtime.GetTimeFormatUnix(data[0].CreateTime, mtime.Format_YMD))
 
 	// 只有一筆資料
 	if len(data) == 1 {
@@ -101,7 +101,7 @@ func (h *Handler) CreateUserRecord(ctx context.Context, data []*db.UserRecord) *
 // map[2024_04_16:-7 2024_04_17:50]
 func (h *Handler) GetUserRecordTotalResultBalance(ctx context.Context, filter *db.UserRecordOpt) (map[string]int64, *errorcode.Error) {
 	// 取得日期範圍
-	dates := ztime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
+	dates := mtime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
 
 	// 构建聚合管道
 	pipeline := make([]bson.M, len(dates)+2)

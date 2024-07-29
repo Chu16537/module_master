@@ -4,13 +4,13 @@ import (
 	"context"
 
 	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/gomodule/mtime"
 	"github.com/Chu16537/gomodule/proto/db"
-	"github.com/Chu16537/gomodule/ztime"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 func (h *Handler) GetWalletLog(ctx context.Context, filter *db.WalletLogOpt, opts *db.FindOpt) ([]*db.WalletLog, int64, *errorcode.Error) {
-	dates := ztime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
+	dates := mtime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
 
 	pipeline := make([]bson.M, len(dates)+2)
 
@@ -69,7 +69,7 @@ func (h *Handler) GetWalletLog(ctx context.Context, filter *db.WalletLogOpt, opt
 
 // 創建 wallet log
 func (h *Handler) createWalletLog(ctx context.Context, logs []*db.WalletLog) *errorcode.Error {
-	col := h.write.GetDB().Collection(db.ColName_WalletLog + ztime.GetTimeFormatUnix(logs[0].CreateTime, ztime.Format_YMD))
+	col := h.write.GetDB().Collection(db.ColName_WalletLog + mtime.GetTimeFormatUnix(logs[0].CreateTime, mtime.Format_YMD))
 
 	// 将 []*db.WalletLog 转换为 []interface{}
 	iLogs := make([]interface{}, len(logs))

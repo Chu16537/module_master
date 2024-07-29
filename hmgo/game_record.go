@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/Chu16537/gomodule/errorcode"
+	"github.com/Chu16537/gomodule/mtime"
 	"github.com/Chu16537/gomodule/proto/db"
-	"github.com/Chu16537/gomodule/ztime"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
 // 取得 GameRecord
 func (h *Handler) GetGameRecord(ctx context.Context, filter *db.GameRecordOpt, opts *db.FindOpt) ([]*db.GameRecord, int64, *errorcode.Error) {
-	dates := ztime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
+	dates := mtime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
 
 	pipeline := make([]bson.M, len(dates)+2)
 
@@ -71,7 +71,7 @@ func (h *Handler) GetGameRecord(ctx context.Context, filter *db.GameRecordOpt, o
 
 // 創建 GameRecord
 func (h *Handler) createGameRecord(ctx context.Context, gr *db.GameRecord) *errorcode.Error {
-	col := h.write.GetDB().Collection(db.ColName_GameRecord + ztime.GetTimeFormatUnix(gr.CreateTime, ztime.Format_YMD))
+	col := h.write.GetDB().Collection(db.ColName_GameRecord + mtime.GetTimeFormatUnix(gr.CreateTime, mtime.Format_YMD))
 
 	if _, err := col.InsertOne(ctx, gr); err != nil {
 		return errorcode.Server(err)
