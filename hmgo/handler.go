@@ -71,7 +71,7 @@ func (h *Handler) CreateClub(ctx context.Context, account string, password strin
 		return nil, nil, err
 	}
 
-	return club, clubUserInfo, errorcode.New(errorcode.Success, nil)
+	return club, clubUserInfo, errorcode.Success()
 }
 
 /*
@@ -92,7 +92,11 @@ func (h *Handler) JoinClub(ctx context.Context, account string, password string,
 	// 事務流程
 	f := func(trans *Handler, sctx mongo.SessionContext) (interface{}, *errorcode.Error) {
 		cuiOpt := &db.ClubUserInfoOpt{
-			Account: account,
+			ClubID: clubID,
+			OR: &db.ClubUserInfoOR{
+				Account:  account,
+				NickName: nickname,
+			},
 		}
 
 		acs, err := trans.GetClubUserInfo(sctx, cuiOpt, nil)
@@ -102,7 +106,7 @@ func (h *Handler) JoinClub(ctx context.Context, account string, password string,
 
 		// 有資料 不能創建
 		if len(acs) > 0 {
-			return nil, errorcode.New(errorcode.Club_User_Account_Exist, fmt.Errorf("account:%v is exist", account))
+			return nil, errorcode.New(errorcode.Club_User_Account_Exist, fmt.Errorf("account:%v or nickname:%v is exist", account, nickname))
 		}
 
 		// 取得id
@@ -127,7 +131,7 @@ func (h *Handler) JoinClub(ctx context.Context, account string, password string,
 		return nil, err
 	}
 
-	return cui, errorcode.New(errorcode.Success, nil)
+	return cui, errorcode.Success()
 }
 
 /*
@@ -146,7 +150,7 @@ func (h *Handler) IsClubUserInfoPresident(ctx context.Context, opt *db.ClubUserI
 		return nil, errorcode.NotClubPermissions(opt.UserID, opt.ClubID)
 	}
 
-	return cui[0], errorcode.New(errorcode.Success, nil)
+	return cui[0], errorcode.Success()
 }
 
 /*
@@ -245,7 +249,7 @@ func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, 
 		return err
 	}
 
-	return errorcode.New(errorcode.Success, nil)
+	return errorcode.Success()
 
 }
 
@@ -386,7 +390,7 @@ func (h *Handler) CreateGameWallet(ctx context.Context, userID uint64, tableID u
 		return nil, err
 	}
 
-	return gw, errorcode.New(errorcode.Success, nil)
+	return gw, errorcode.Success()
 }
 
 /*
@@ -549,7 +553,7 @@ func (h *Handler) UpdateGameWalletBalance(ctx context.Context, userID uint64, ta
 		return 0, 0, err
 	}
 
-	return newClubBalance, newGameBalance, errorcode.New(errorcode.Success, nil)
+	return newClubBalance, newGameBalance, errorcode.Success()
 }
 
 /*
@@ -668,7 +672,7 @@ func (h *Handler) DeleteGameWallet(ctx context.Context, gwOpt *db.GameWalletOpt,
 		return err
 	}
 
-	return errorcode.New(errorcode.Success, nil)
+	return errorcode.Success()
 }
 
 /*
@@ -789,5 +793,5 @@ func (h *Handler) CreateGameRecord(ctx context.Context, gr *db.GameRecord, urs [
 		return err
 	}
 
-	return errorcode.New(errorcode.Success, nil)
+	return errorcode.Success()
 }

@@ -1,19 +1,27 @@
 package mlog
 
+import "github.com/Chu16537/module_master/errorcode"
+
 type ILog interface {
-	Log(level int, msg interface{})
-	Debug(msg interface{})
-	Info(msg interface{})
-	Warn(msg interface{})
-	Error(msg interface{})
+	Debug(fnName string, msg interface{})
+	Info(fnName string, msg interface{})
+	Warn(funcname string, msg *errorcode.Error)
+	Error(funcname string, msg *errorcode.Error)
+}
+
+type Log struct {
+	LV       string
+	FuncName string
+	Code     int
+	Msg      interface{}
 }
 
 type Handler struct {
-	Name string
+	Addr string
 }
 
-func New(name string) ILog {
+func New(addr string) ILog {
 	return &Handler{
-		Name: name,
+		Addr: addr,
 	}
 }

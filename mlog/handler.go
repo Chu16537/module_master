@@ -1,34 +1,53 @@
 package mlog
 
-import "fmt"
+import (
+	"fmt"
 
-func (h *Handler) Log(level int, msg interface{}) {
-	switch level {
-	case Level_Debug:
-		h.Debug(msg)
-	case Level_Info:
-		h.Info(msg)
-	case Level_Warn:
-		h.Warn(msg)
-	case Level_Error:
-		h.Error(msg)
-	default:
-		h.Debug(msg)
+	"github.com/Chu16537/module_master/errorcode"
+)
+
+// 不上傳到遠端
+func (h *Handler) Debug(fnName string, msg interface{}) {
+	l := Log{
+		LV:       "debug",
+		FuncName: fnName,
+		Msg:      msg,
 	}
+
+	fmt.Println(l)
 }
 
-func (h *Handler) Debug(msg interface{}) {
-	fmt.Println("Debug", msg)
+// 上傳到遠端
+func (h *Handler) Info(fnName string, msg interface{}) {
+	l := Log{
+		LV:       "info",
+		FuncName: fnName,
+		Msg:      msg,
+	}
+
+	fmt.Println(l)
 }
 
-func (h *Handler) Info(msg interface{}) {
-	fmt.Println("Info", msg)
+// 可忽略的錯誤 上傳到遠端
+func (h *Handler) Warn(fnName string, msg *errorcode.Error) {
+	l := Log{
+		LV:       "warn",
+		FuncName: fnName,
+		Code:     msg.Code(),
+		Msg:      fmt.Sprintf("%+v", msg.Err()),
+	}
+
+	fmt.Println(l)
 }
 
-func (h *Handler) Warn(msg interface{}) {
-	fmt.Println("Warn", msg)
-}
+// 錯誤 上傳到遠端
+func (h *Handler) Error(fnName string, msg *errorcode.Error) {
+	l := Log{
+		LV:       "error",
+		FuncName: fnName,
+		Code:     msg.Code(),
+		Msg:      fmt.Sprintf("%+v", msg.Err()),
+	}
 
-func (h *Handler) Error(msg interface{}) {
-	fmt.Println("Error", msg)
+	fmt.Println(l)
 }

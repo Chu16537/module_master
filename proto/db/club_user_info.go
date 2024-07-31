@@ -41,6 +41,12 @@ type ClubUserInfoOpt struct {
 	Password    string
 	Permissions []int // 要查詢的權限
 	Token       string
+	OR          *ClubUserInfoOR
+}
+
+type ClubUserInfoOR struct {
+	Account  string
+	NickName string
 }
 
 // 更新權限
@@ -81,6 +87,20 @@ func (o *ClubUserInfoOpt) Filter_Mgo() bson.M {
 
 	if o.Token != "" {
 		filter["token"] = o.Token
+	}
+
+	if o.OR != nil {
+		or := []bson.M{}
+
+		if o.OR.Account != "" {
+			or = append(or, bson.M{"account": o.OR.Account})
+		}
+
+		if o.OR.NickName != "" {
+			or = append(or, bson.M{"nick_name": o.OR.NickName})
+		}
+
+		filter["$or"] = or
 	}
 
 	return filter

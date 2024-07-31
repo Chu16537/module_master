@@ -26,6 +26,12 @@ func (e *Error) Err() error {
 	return e.err
 }
 
+func Success() *Error {
+	return &Error{
+		code: SuccessCode,
+		err:  nil,
+	}
+}
 func Server(err error) *Error {
 	return &Error{
 		code: Server_Error,
@@ -33,10 +39,17 @@ func Server(err error) *Error {
 	}
 }
 
-func DataFormatFail(s string) *Error {
+func DataUnmarshalError(s string) *Error {
 	return &Error{
-		code: Data_Format_Error,
-		err:  errors.Errorf("data format err:%s", s),
+		code: Data_Unmarshal_Error,
+		err:  errors.Errorf("data unmarshal err:%s", s),
+	}
+}
+
+func DataError(data interface{}) *Error {
+	return &Error{
+		code: Data_Error,
+		err:  errors.Errorf("data :%v", data),
 	}
 }
 

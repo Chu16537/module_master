@@ -1,14 +1,15 @@
 package errorcode
 
 const (
-	Success = 0 // 成功
-	Err     = 1 // 系統錯誤
+	SuccessCode = 0 // 成功
+	ErrorCode   = 1 // 錯誤
 
 	// 系統
-	Server_Error      = 10001 // server錯誤
-	Data_Format_Error = 10002 // 資料格式錯誤
-	Data_Is_Exist     = 10003 // 資料已經存在
-	Data_Not_Exist    = 10004 // 資料不存在
+	Server_Error         = 10001 // server錯誤
+	Data_Unmarshal_Error = 10002 // 資料Unmarshal錯誤
+	Data_Error           = 10003 // 資料錯誤 Unmarshal 成功但內容不正確
+	Data_Is_Exist        = 10004 // 資料已經存在
+	Data_Not_Exist       = 10005 // 資料不存在
 
 	// 俱樂部
 	Club_Not_Exist            = 20001 // 俱樂部不存在
