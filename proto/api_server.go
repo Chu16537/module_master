@@ -27,25 +27,28 @@ type LoginRes struct {
 	TotalWin          uint64 `json:"total_win"`
 }
 
-// type LogoutReq struct {
-// }
+type LogoutReq struct {
+}
 
-// type LogoutRes struct {
-// }
+type LogoutRes struct {
+}
 
-// type ChangePasswordReq struct {
-// 	NewPassword string `json:"new_password"`
-// }
+type ChangePasswordReq struct {
+	NewPassword string `json:"new_password"`
+}
 
-// type ChangePasswordRes struct {
-// }
+type ChangePasswordRes struct {
+}
 
-// type QueryBalanceReq struct {
-// }
+type GetUserDataReq struct {
+}
 
-// type QueryBalanceRes struct {
-// 	Balance uint64 `json:"balance"`
-// }
+type GetUserDataRes struct {
+	Permissions int    `json:"permissions"`
+	Balance     uint64 `json:"balance"`
+	TotalBet    uint64 `json:"total_bet"`
+	TotalWin    uint64 `json:"total_win"`
+}
 
 // type TransBalanceReq struct {
 // 	TagUserID int64  `json:"tag_user_id"` // 目標玩家
@@ -160,6 +163,17 @@ type LoginRes struct {
 // }
 // type DelClubRes struct {
 // }
+
+type GetClubInfoReq struct{}
+
+type GetClubInfoRes struct {
+	ClubID         uint64 `json:"club_id"`         //  id
+	ClubName       string `json:"name"`            // 名稱
+	PresidentName  string `json:"president_name"`  // 會長名稱
+	Content        string `json:"content"`         // 公告
+	InvitationCode string `json:"invitation_code"` // 邀請碼 用於創建帳號時使用
+}
+
 type JoinClubReq struct {
 	Account        string `json:"account"`         // 帳號
 	Password       string `json:"password"`        // 密碼
