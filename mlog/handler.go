@@ -3,51 +3,73 @@ package mlog
 import (
 	"fmt"
 
-	"github.com/Chu16537/module_master/errorcode"
+	"github.com/sirupsen/logrus"
 )
 
-// 不上傳到遠端
-func (h *Handler) Debug(fnName string, msg interface{}) {
-	l := Log{
-		LV:       "debug",
-		FuncName: fnName,
-		Msg:      msg,
-	}
-
-	fmt.Println(l)
+type ILog interface {
+	Debug(opt *LogData)
+	Info(opt *LogData)
+	Warn(opt *LogData)
+	Error(opt *LogData)
 }
 
-// 上傳到遠端
-func (h *Handler) Info(fnName string, msg interface{}) {
-	l := Log{
-		LV:       "info",
-		FuncName: fnName,
-		Msg:      msg,
+func (l *Log) initial(opt *LogData) logrus.Fields {
+	l.handler.createNewFile()
+
+	f := logrus.Fields{}
+
+	if opt == nil {
+		return f
 	}
 
-	fmt.Println(l)
+	if opt.Tracer != "" {
+		f["tracer"] = opt.Tracer
+	}
+
+	if opt.FnName != "" {
+		f["topic"] = fmt.Sprintf("%v_%v", l.name, opt.FnName)
+	} else {
+		f["topic"] = l.name
+	}
+
+	if opt.Err != nil {
+		f["code"] = opt.Err.Code()
+	}
+
+	return f
+}
+func (l *Log) Debug(opt *LogData) {
+	fields := l.initial(opt)
+	if opt.Data != nil {
+		logrus.WithFields(fields).Debug(opt.Data)
+	} else {
+		logrus.WithFields(fields).Debug("")
+	}
 }
 
-// 可忽略的錯誤 上傳到遠端
-func (h *Handler) Warn(fnName string, msg *errorcode.Error) {
-	l := Log{
-		LV:       "warn",
-		FuncName: fnName,
-		Code:     msg.Code(),
-		Msg:      fmt.Sprintf("%+v", msg.Err()),
+func (l *Log) Info(opt *LogData) {
+	fields := l.initial(opt)
+	if opt.Data != nil {
+		logrus.WithFields(fields).Info(opt.Data)
+	} else {
+		logrus.WithFields(fields).Info("")
 	}
-
-	fmt.Println(l)
 }
 
-// 錯誤 上傳到遠端
-func (h *Handler) Error(fnName string, msg *errorcode.Error) {
-	l := Log{
-		LV:       "error",
-		FuncName: fnName,
-		Code:     msg.Code(),
-		Msg:      fmt.Sprintf("%+v", msg.Err()),
+func (l *Log) Warn(opt *LogData) {
+	fields := l.initial(opt)
+	if opt.Err.Err() != nil {
+		logrus.WithFields(fields).Warn(fmt.Sprintf("%+v", opt.Err.Err()))
+	} else {
+		logrus.WithFields(fields).Warn("")
 	}
+}
 
-	fmt.Println(l)
+func (l *Log) Error(opt *LogData) {
+	fields := l.initial(opt)
+	if opt.Err.Err() != nil {
+		logrus.WithFields(fields).Error(fmt.Sprintf("%+v", opt.Err.Err()))
+	} else {
+		logrus.WithFields(fields).Error("")
+	}
 }
