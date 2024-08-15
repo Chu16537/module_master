@@ -160,7 +160,8 @@ func (h *Handler) IsClubUserInfoPresident(ctx context.Context, opt *db.ClubUserI
 
 測試:完成
 */
-func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, tagUserID uint64, clubID uint64, amount uint64, orderID string, createTime int64) *errorcode.Error {
+func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, tagUserID uint64, clubID uint64, amount uint64, orderID string, createTime int64) (uint64, *errorcode.Error) {
+	var nowBalance uint64
 	// 事務流程
 	f := func(trans *Handler, sctx mongo.SessionContext) (interface{}, *errorcode.Error) {
 		// presidentUserID 權限判斷
@@ -210,6 +211,8 @@ func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, 
 			Balance: pUser.Balance - userAmount,
 		}
 
+		nowBalance = update[0].Balance
+
 		update[1] = &db.UpdateBalanceInfo{
 			UserID:  tagUserID,
 			ClubID:  clubID,
@@ -246,11 +249,10 @@ func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, 
 	err := h.startTransaction(ctx, f)
 
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return errorcode.Success()
-
+	return nowBalance, errorcode.Success()
 }
 
 /*

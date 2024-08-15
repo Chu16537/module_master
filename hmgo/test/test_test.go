@@ -259,7 +259,7 @@ func TestGameWallet(t *testing.T) {
 
 	fmt.Println("user", cui1.UserID)
 
-	err = h.TransBalanceClub(ctx, cui.UserID, cui1.UserID, club.ID, 1000, fmt.Sprintf("%v_%v_%v", "order", cui.UserID, cui1.UserID), time.Now().Unix())
+	_, err = h.TransBalanceClub(ctx, cui.UserID, cui1.UserID, club.ID, 1000, fmt.Sprintf("%v_%v_%v", "order", cui.UserID, cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return
@@ -339,7 +339,7 @@ func TestGetGameRecord(t *testing.T) {
 		return
 	}
 
-	err = h.TransBalanceClub(ctx, cui.UserID, cui1.UserID, club.ID, 10000, fmt.Sprintf("%v_%v_%v", "order", cui.UserID, cui1.UserID), time.Now().Unix())
+	_, err = h.TransBalanceClub(ctx, cui.UserID, cui1.UserID, club.ID, 10000, fmt.Sprintf("%v_%v_%v", "order", cui.UserID, cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return

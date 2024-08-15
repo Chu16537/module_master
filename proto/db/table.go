@@ -2,7 +2,10 @@ package db
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/Chu16537/module_master/errorcode"
+	"github.com/pkg/errors"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -63,48 +66,48 @@ type GameConfig2 struct {
 }
 
 // 驗證 牌桌的 GameSetting 是否正確
-func VerifyTableGameSetting(gameID int, gameConfig []byte) bool {
+func VerifyTableGameSetting(gameID int, gameConfig []byte) *errorcode.Error {
 	switch gameID {
 	case 1:
 		return verifyTableGame1(gameConfig)
 	default:
-		return false
+		return errorcode.New(errorcode.Game_ID_Error, errors.New(fmt.Sprintf("not gameID:%v", gameID)))
+
 	}
 }
 
 // 遊戲1
-func verifyTableGame1(data []byte) bool {
-
+func verifyTableGame1(data []byte) *errorcode.Error {
 	gc := &GameConfig1{}
 	err := json.Unmarshal(data, gc)
 	if err != nil {
-		return false
+		return errorcode.Server(err)
 	}
 
 	// 資料驗證
 
 	if gc.MaxPlayerCount <= 0 {
-		return false
+		return errorcode.New(errorcode.Game_Setting_Error, errors.New("MaxPlayerCount error"))
 	}
 
 	if len(gc.Chips) < 1 {
-		return false
+		return errorcode.New(errorcode.Game_Setting_Error, errors.New("Chips error"))
 	}
 
 	if len(gc.UpperBetLimitZone) < 1 {
-		return false
+		return errorcode.New(errorcode.Game_Setting_Error, errors.New("UpperBetLimitZone error"))
 	}
 
 	// 這3個長度要相等
-	if len(gc.UpperBetLimitZone) != len(gc.Odds) || len(gc.Odds) != len(gc.EffectiveBet) {
-		return false
+	if len(gc.UpperBetLimitZone) != len(gc.Odds) || len(gc.UpperBetLimitZone) != len(gc.EffectiveBet) || len(gc.Odds) != len(gc.EffectiveBet) {
+		return errorcode.New(errorcode.Game_Setting_Error, errors.New("UpperBetLimitZone Odds EffectiveBet error"))
 	}
 
 	if gc.Rtp < 0 {
-		return false
+		return errorcode.New(errorcode.Game_Setting_Error, errors.New("Rtp error"))
 	}
 
-	return true
+	return nil
 }
 
 type TableOpt struct {

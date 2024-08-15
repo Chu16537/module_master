@@ -23,6 +23,8 @@ const (
 	Table_LV_Insufficient = 30002 // 牌桌等級不足
 	Table_Status_Error    = 30003 // 牌桌狀態錯誤
 	Game_Not_Type         = 30004 // 沒有此遊戲類型
+	Game_ID_Error         = 30005 // 遊戲ID錯誤
+	Game_Setting_Error    = 30006 // 遊戲設定驗證錯誤
 
 	// 遊戲
 	GameWallet_Not_Exist    = 40001 // 錢包不存在

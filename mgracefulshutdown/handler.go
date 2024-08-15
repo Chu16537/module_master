@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const defaultFuncCount = 5 // 每个级别默认的函数数量
-
 type Config struct {
 	WaitTime int // 等待時間(秒)
 }
@@ -96,8 +94,8 @@ func AddshutdownFunc(level int, f func()) {
 	defer GF.mu.Unlock()
 
 	if _, ok := GF.FuncMap[level]; !ok {
-		GF.FuncMap[level] = make([]func(), defaultFuncCount)
-		GF.FuncMap[level] = append(GF.FuncMap[level], f)
+		GF.FuncMap[level] = make([]func(), 1)
+		GF.FuncMap[level][0] = f
 	} else {
 		GF.FuncMap[level] = append(GF.FuncMap[level], f)
 	}

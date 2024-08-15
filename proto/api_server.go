@@ -1,5 +1,7 @@
 package proto
 
+import "github.com/Chu16537/module_master/proto/db"
+
 // backend_web 格式
 type CommRes struct {
 	Code int         `json:"code"`
@@ -184,16 +186,52 @@ type JoinClubReq struct {
 type JoinClubRes struct {
 }
 
-// type LeaveClubReq struct {
-// }
-// type LeaveClubRes struct {
-// }
-// type TransBalanceToClubUserReq struct {
-// }
-// type TransBalanceToClubUserRes struct {
-// }
-// type UpdatePermissionsClubReq struct {
-// }
+type TransBalanceClubeReq struct {
+	ClubID    uint64 `json:"club_id"`
+	TagUserID uint64 `json:"tagUser_id"`
+	Amount    uint64 `json:"amount"`
+}
+type TransBalanceClubeRes struct {
+	Balance uint64 `json:"balance"`
+}
 
-// type UpdatePermissionsClubRes struct {
-// }
+type UpdateClubContentReq struct {
+	Content string `json:"content"`
+}
+type UpdateClubContentRes struct {
+}
+
+type UpdateClubMemberPermissionsReq struct {
+	TagUserID   uint64 `json:"tagUser_id"`
+	Permissions int    `json:"permissions"`
+}
+
+type UpdateClubMemberPermissionsRes struct {
+}
+
+type GetTableReq struct {
+	Start uint64
+	Limit uint64
+}
+
+type GetTableRes struct {
+	Tables []*db.Table `json:"tables"`
+}
+
+type UpdateTableGameReq struct {
+	TableID    uint64 `json:"table_id"`
+	GameID     int    `json:"game_id"`
+	GameConfig []byte `json:"game_config"` // 每個遊戲設定不同
+}
+
+type UpdateTableGameRes struct {
+	Table *db.Table `json:"table"`
+}
+
+type UpdateTableStatusReq struct {
+	TableID uint64 `json:"table_id"`
+	Status  int    `json:"status"`
+}
+
+type UpdateTableStatusRes struct {
+}
