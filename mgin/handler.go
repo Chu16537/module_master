@@ -1,11 +1,24 @@
 package mgin
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/gin-gonic/gin"
 )
+
+func (h *Handler) GetRoutine() *gin.Engine {
+	return h.routine
+}
+
+func GetToken(c *gin.Context) string {
+	return c.Request.Header.Get("X-Token")
+}
+
+func GetCtx(c *gin.Context) context.Context {
+	return c.Request.Context()
+}
 
 // 請求返回 timeout
 // 使用 StatusOK 原因連線成功，但是業務邏輯失敗

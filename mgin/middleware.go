@@ -2,16 +2,19 @@ package mgin
 
 import (
 	"context"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
+func (h *Handler) AddMiddleware(f func() gin.HandlerFunc) {
+	h.routine.Use(f())
+}
+
 // 中间件 timeout
-func middlewareTimeout(timeout time.Duration) gin.HandlerFunc {
+func (h *Handler) middlewareTimeout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 为请求创建一个带超时的 context
-		ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeoutDuration)
 		defer cancel()
 
 		// 使用 context 替换原始的请求 context

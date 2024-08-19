@@ -1,6 +1,8 @@
 package mgin
 
 import (
+	"context"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,62 +18,72 @@ type Config struct {
 	TimeoutSecond int
 }
 
-type handler struct {
-	Config          *Config
-	Routine         *gin.Engine
-	TimeoutDuration time.Duration
+type Handler struct {
+	ctx             context.Context
+	config          *Config
+	routine         *gin.Engine
+	timeoutDuration time.Duration
+	srv             *http.Server
 }
 
-var h *handler
-
-func New(config *Config) error {
+func New(ctx context.Context, config *Config) (*Handler, error) {
 	// 基本判斷
 	if config.Addr == "" {
-		return errors.New("gin new error addr nil")
+		return nil, errors.New("gin new error addr nil")
 	}
 
 	if config.TimeoutSecond == 0 {
 		config.TimeoutSecond = 5
 	}
 
-	h = &handler{
-		Config:          config,
-		TimeoutDuration: time.Duration(time.Duration(config.TimeoutSecond) * time.Second),
+	h := &Handler{
+		ctx:             ctx,
+		config:          config,
+		timeoutDuration: time.Duration(time.Duration(config.TimeoutSecond) * time.Second),
 	}
 
 	routine := gin.Default()
-	routine.Use(middlewareTimeout(h.TimeoutDuration))
+	routine.Use(h.middlewareTimeout())
 
 	// show swag
-	if h.Config.IsSwag {
+	if h.config.IsSwag {
 		routine.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
-	h.Routine = routine
+	h.routine = routine
 
-	return nil
+	return h, nil
 }
 
-func Get() *handler {
-	return h
+func (h *Handler) Done() {
+	h.srv.Shutdown(h.ctx)
 }
 
-func Run() error {
+func (h *Handler) Run() error {
+	// 配置 HTTP 服务器
+	h.srv = &http.Server{
+		Addr:    h.config.Addr,
+		Handler: h.routine,
+	}
+
 	errChan := make(chan error, 1)
 
 	go func() {
-		errChan <- h.Routine.Run(h.Config.Addr)
+		err := h.srv.ListenAndServe()
+
+		if err != nil && err != http.ErrServerClosed {
+			errChan <- err
+		}
 	}()
 
-	err := <-errChan
-
-	if err != nil {
+	// 等待n秒判斷是否有錯
+	select {
+	case err := <-errChan:
 		return err
+
+	case <-time.After(5 * time.Second):
+		// 等待5秒發現沒有錯誤
+		return nil
 	}
-
-	return nil
-}
-
-func Done() {
 
 }
