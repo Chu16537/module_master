@@ -10,6 +10,7 @@ const (
 	Data_Error           = 10003 // 資料錯誤 Unmarshal 成功但內容不正確
 	Data_Is_Exist        = 10004 // 資料已經存在
 	Data_Not_Exist       = 10005 // 資料不存在
+	Timeout              = 10006 // 超時
 
 	// 俱樂部
 	Club_Not_Exist            = 20001 // 俱樂部不存在

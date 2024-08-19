@@ -50,7 +50,7 @@ func formatErrorMessage(errMsg string) string {
 
 // 創建新的log file
 func (h *handler) createNewFile() {
-	if h.config.LogFilePath == "" {
+	if h.config.FilePath == "" {
 		return
 	}
 
@@ -59,7 +59,7 @@ func (h *handler) createNewFile() {
 	// 假如不同日期
 	if h.currentDate != nowFormat {
 
-		fp := filepath.Join(h.config.LogFilePath, fmt.Sprintf("%s_%s.log", h.config.LogFileName, nowFormat))
+		fp := filepath.Join(h.config.FilePath, fmt.Sprintf("%s_%s.log", h.config.FileName, nowFormat))
 
 		// 確保目錄存在
 		err := os.MkdirAll(filepath.Dir(fp), os.ModePerm)

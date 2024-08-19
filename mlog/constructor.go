@@ -11,8 +11,8 @@ import (
 )
 
 type Config struct {
-	LogFilePath  string
-	LogFileName  string
+	FilePath     string
+	FileName     string
 	ElasticURL   string
 	ElasticIndex string
 }
@@ -47,8 +47,8 @@ func New(config *Config, t time.Time) error {
 	}
 
 	// 輸出到本地
-	if config.LogFilePath != "" {
-		fp := filepath.Join(config.LogFilePath, fmt.Sprintf("%s_%s.log", config.LogFileName, h.currentDate))
+	if config.FilePath != "" {
+		fp := filepath.Join(config.FilePath, fmt.Sprintf("%s_%s.log", config.FileName, h.currentDate))
 
 		// 確保目錄存在
 		err := os.MkdirAll(filepath.Dir(fp), os.ModePerm)
