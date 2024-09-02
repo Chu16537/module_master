@@ -88,10 +88,10 @@ func ClubUserBalanceLess(userID uint64, nowBalance uint64, amount uint64) *Error
 	}
 }
 
-func TableNotExist(tableID uint64) *Error {
+func TableNotExist(clubID, tableID uint64) *Error {
 	return &Error{
 		code: Table_Not_Exist,
-		err:  errors.Errorf("tableID:%v not exist", tableID),
+		err:  errors.Errorf("clubID:%v tableID:%v not exist", clubID, tableID),
 	}
 }
 

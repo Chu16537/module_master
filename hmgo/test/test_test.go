@@ -275,7 +275,7 @@ func TestGameWallet(t *testing.T) {
 		return
 	}
 
-	gw, err := h.CreateGameWallet(ctx, cui1.UserID, table.ID, 500, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
+	gw, err := h.CreateGameWallet(ctx, cui1.UserID, club.ID, table.ID, 500, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return
@@ -283,7 +283,7 @@ func TestGameWallet(t *testing.T) {
 
 	fmt.Println("gw balance", gw.Balance)
 
-	c, g, err := h.UpdateGameWalletBalance(ctx, cui1.UserID, table.ID, 500, fmt.Sprintf("%v_%v", "test_UpdateGameWalletBalance_order", cui1.UserID), time.Now().Unix())
+	c, g, err := h.UpdateGameWalletBalance(ctx, cui1.UserID, club.ID, table.ID, 500, fmt.Sprintf("%v_%v", "test_UpdateGameWalletBalance_order", cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return
@@ -355,13 +355,13 @@ func TestGetGameRecord(t *testing.T) {
 		return
 	}
 
-	_, err = h.CreateGameWallet(ctx, cui.UserID, table.ID, 10000, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
+	_, err = h.CreateGameWallet(ctx, cui.UserID, club.ID, table.ID, 10000, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return
 	}
 
-	_, err = h.CreateGameWallet(ctx, cui1.UserID, table.ID, 10000, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
+	_, err = h.CreateGameWallet(ctx, cui1.UserID, club.ID, table.ID, 10000, time.Now().Unix(), fmt.Sprintf("%v_%v", "test_CreateGameWallet_order", cui1.UserID), time.Now().Unix())
 	if err != nil {
 		showErr(t, err)
 		return

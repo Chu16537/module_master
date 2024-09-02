@@ -262,9 +262,10 @@ func (h *Handler) TransBalanceClub(ctx context.Context, presidentUserID uint64, 
 
 測試:完成
 */
-func (h *Handler) CreateGameWallet(ctx context.Context, userID uint64, tableID uint64, amount uint64, delTime int64, orderID string, createTime int64) (*db.GameWallet, *errorcode.Error) {
+func (h *Handler) CreateGameWallet(ctx context.Context, userID uint64, clubID uint64, tableID uint64, amount uint64, delTime int64, orderID string, createTime int64) (*db.GameWallet, *errorcode.Error) {
 	gw := &db.GameWallet{
 		UserID:  userID,
+		ClubID:  clubID,
 		TableID: tableID,
 		DelTime: delTime,
 	}
@@ -283,7 +284,7 @@ func (h *Handler) CreateGameWallet(ctx context.Context, userID uint64, tableID u
 
 		// 牌桌不存在
 		if len(ts) <= 0 {
-			return nil, errorcode.TableNotExist(tableID)
+			return nil, errorcode.TableNotExist(clubID, tableID)
 		}
 
 		// 取得俱樂部會員資料
@@ -404,7 +405,7 @@ func (h *Handler) CreateGameWallet(ctx context.Context, userID uint64, tableID u
 
 測試:完成
 */
-func (h *Handler) UpdateGameWalletBalance(ctx context.Context, userID uint64, tableID uint64, amount int64, orderID string, createTime int64) (uint64, uint64, *errorcode.Error) {
+func (h *Handler) UpdateGameWalletBalance(ctx context.Context, userID uint64, clubID uint64, tableID uint64, amount int64, orderID string, createTime int64) (uint64, uint64, *errorcode.Error) {
 	var (
 		newClubBalance uint64 = 0
 		newGameBalance uint64 = 0
@@ -414,7 +415,8 @@ func (h *Handler) UpdateGameWalletBalance(ctx context.Context, userID uint64, ta
 	f := func(trans *Handler, sctx mongo.SessionContext) (interface{}, *errorcode.Error) {
 		// 查詢牌桌
 		tOpt := &db.TableOpt{
-			ID: tableID,
+			ID:     tableID,
+			ClubID: clubID,
 		}
 
 		ts, err := trans.GetTable(sctx, tOpt, nil)
@@ -424,7 +426,7 @@ func (h *Handler) UpdateGameWalletBalance(ctx context.Context, userID uint64, ta
 
 		// 牌桌不存在
 		if len(ts) <= 0 {
-			return nil, errorcode.TableNotExist(tableID)
+			return nil, errorcode.TableNotExist(clubID, tableID)
 		}
 
 		// 取得俱樂部會員資料
