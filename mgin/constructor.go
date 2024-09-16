@@ -24,9 +24,10 @@ type Handler struct {
 	routine         *gin.Engine
 	timeoutDuration time.Duration
 	srv             *http.Server
+	timeoutFunc     func(c *gin.Context)
 }
 
-func New(ctx context.Context, config *Config) (*Handler, error) {
+func New(ctx context.Context, config *Config, timeoutFn func(c *gin.Context)) (*Handler, error) {
 	// 基本判斷
 	if config.Addr == "" {
 		return nil, errors.New("gin new error addr nil")
@@ -36,10 +37,16 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 		config.TimeoutSecond = 5
 	}
 
+	tFn := timeoutBase
+	if timeoutFn != nil {
+		tFn = timeoutFn
+	}
+
 	h := &Handler{
 		ctx:             ctx,
 		config:          config,
 		timeoutDuration: time.Duration(time.Duration(config.TimeoutSecond) * time.Second),
+		timeoutFunc:     tFn,
 	}
 
 	routine := gin.Default()
@@ -86,4 +93,12 @@ func (h *Handler) Run() error {
 		return nil
 	}
 
+}
+
+func timeoutBase(c *gin.Context) {
+	res := gin.H{
+		"msg": "timeout",
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, res)
 }

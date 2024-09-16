@@ -21,6 +21,7 @@ func (o *FindOpt) ToMgo() {
 	if o.Limit == 0 {
 		o.Limit = 1
 	}
+
 }
 
 type UpdateBalanceInfo struct {

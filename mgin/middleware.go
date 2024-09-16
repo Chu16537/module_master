@@ -22,19 +22,20 @@ func (h *Handler) middlewareTimeout() gin.HandlerFunc {
 
 		// 创建一个 channel 来监听请求是否完成
 		done := make(chan struct{})
-
+		// 使用 Goroutine 处理请求
 		go func() {
-			// 调用下一个中间件/处理器
 			c.Next()
-			close(done)
+			defer close(done)
 		}()
 
 		select {
 		case <-ctx.Done():
-			ResponseTimeout(c)
+			h.timeoutFunc(c)
+			return
 		case <-done:
-			// 请求正常完成並回覆使用者，继续执行
-
+			// 请求正常完成，继续执行
+			return
 		}
+
 	}
 }

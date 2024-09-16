@@ -99,7 +99,8 @@ func (h *Handler) CreateUserRecord(ctx context.Context, data []*db.UserRecord) *
 
 // 取得 指定日期的 ResultBalance總和
 // map[2024_04_16:-7 2024_04_17:50]
-func (h *Handler) GetUserRecordTotalResultBalance(ctx context.Context, filter *db.UserRecordOpt) (map[string]int64, *errorcode.Error) {
+// func (h *Handler) GetUserRecordTotalResultBalance(ctx context.Context, filter *db.UserRecordOpt) (map[string]int64, *errorcode.Error) {
+func (h *Handler) GetUserRecordTotalResultBalance(ctx context.Context, filter *db.UserRecordOpt) ([]*db.UserRecordTotalResult, *errorcode.Error) {
 	// 取得日期範圍
 	dates := mtime.GetDateRange(filter.StartTimeUnix, filter.EndTimeUnix)
 
@@ -140,9 +141,18 @@ func (h *Handler) GetUserRecordTotalResultBalance(ctx context.Context, filter *d
 	}
 
 	// 格式化输出
-	output := make(map[string]int64)
-	for _, result := range results {
-		output[result["_id"].(string)] = result["total"].(int64)
+	// output := make(map[string]int64)
+	// for _, result := range results {
+	// 	output[result["_id"].(string)] = result["total"].(int64)
+	// }
+
+	// 格式化输出
+	output := make([]*db.UserRecordTotalResult, len(results))
+	for i, result := range results {
+		output[i] = &db.UserRecordTotalResult{
+			Date:  result["_id"].(string),
+			Total: result["total"].(int64),
+		}
 	}
 
 	return output, nil

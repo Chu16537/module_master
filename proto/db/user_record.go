@@ -76,3 +76,8 @@ func (o *UserRecordOpt) Filter_Mgo() bson.M {
 
 	return filter
 }
+
+type UserRecordTotalResult struct {
+	Date  string
+	Total int64
+}

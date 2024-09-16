@@ -2,10 +2,17 @@ package proto
 
 import "github.com/Chu16537/module_master/proto/db"
 
-// backend_web 格式
 type CommRes struct {
 	Code int         `json:"code"`
 	Data interface{} `json:"data"`
+}
+
+// 查詢共用findopt
+type FindOpt struct {
+	Start         uint64 `json:"start"`
+	Limit         uint64 `json:"limit"`
+	StartTimeUnix int64  `json:"start_timeunix"`
+	EndTimeUnix   int64  `json:"end_timeunix"`
 }
 
 type LoginReq struct {
@@ -52,120 +59,6 @@ type GetUserDataRes struct {
 	TotalWin    uint64 `json:"total_win"`
 }
 
-// type TransBalanceReq struct {
-// 	TagUserID int64  `json:"tag_user_id"` // 目標玩家
-// 	Balance   uint64 `json:"balance"`     // 只可以>0
-// }
-
-// type TransBalanceRes struct {
-// 	Balance uint64 `json:"balance"` // 轉帳後剩餘金額
-// }
-
-// type TransBalanceMainToClubReq struct {
-// 	ClubID  uint64 `json:"club_id"` // 俱樂部編號
-// 	Balance uint64 `json:"balance"` // 金額
-// }
-
-// type TransBalanceMainToClubRes struct {
-// 	MainBalance uint64 `json:"main_balance"` // 主錢包
-// 	ClubBalance uint64 `json:"club_balance"` // 俱樂部金額
-// }
-// type TransBalanceClubToRefundReq struct {
-// 	ClubID  uint64 `json:"club_id"` // 俱樂部編號
-// 	Balance uint64 `json:"balance"` // 金額
-// }
-
-// type TransBalanceClubToRefundRes struct {
-// 	RefundBalance uint64 `json:"refund_balance"` // 退款錢包
-// 	ClubBalance   uint64 `json:"club_balance"`   // 俱樂部金額
-// }
-// type TransBalanceRefundToMainReq struct {
-// 	Balance uint64 `json:"balance"` // 金額
-// }
-
-// type TransBalanceRefundToMainRes struct {
-// 	MainBalance   uint64 `json:"main_balance"`   // 主錢包
-// 	RefundBalance uint64 `json:"refund_balance"` // 退款錢包
-// }
-
-// type StartGameReq struct {
-// 	GameID int `json:"game_id"`
-// }
-
-// type StartGameRes struct {
-// 	Url string `json:"url"`
-// }
-
-// type GetRecordReq struct {
-// 	StartDate string `json:"start_date"`
-// 	EndDate   string `json:"end_date"`
-// }
-
-// type GetRecordMonthReq struct {
-// 	StartDate string `json:"start_date"` // 2024-01-01
-// 	EndDate   string `json:"end_date"`   // 2024-03-31 以當天日期為結束
-// }
-
-// type GetRecordMonthRes struct {
-// 	Record []UserRevenue `json:"record"`
-// }
-
-// type UserRevenue struct {
-// 	Date    string `json:"date"`    // 2024-03-22
-// 	Balance int64  `json:"balance"` // 當天勝負金額
-// }
-
-// type GetRecordDayReq struct {
-// 	Date string `json:"date"` // 2024-01-01
-// }
-
-// type GetRecordDayRes struct {
-// 	Record []RecordDay `json:"record"`
-// }
-
-// type RecordDay struct {
-// 	// 遊戲結果
-// }
-
-// type GetTableInfoReq struct {
-// }
-
-// type GetTableInfoRes struct {
-// }
-
-// type CreateTableReq struct {
-// }
-
-// type CreateTableRes struct {
-// }
-
-// type UpdateTableReq struct {
-// }
-
-// type UpdateTableRes struct {
-// }
-
-// type StopTableReq struct {
-// }
-
-// type StopTableRes struct {
-// }
-
-// type DelTableReq struct {
-// }
-
-// type DelTableRes struct {
-// }
-
-// type CreateClubReq struct {
-// }
-// type CreateClubRes struct {
-// }
-// type DelClubReq struct {
-// }
-// type DelClubRes struct {
-// }
-
 type GetClubInfoReq struct{}
 
 type GetClubInfoRes struct {
@@ -210,8 +103,9 @@ type UpdateClubMemberPermissionsRes struct {
 }
 
 type GetTableReq struct {
-	Start uint64
-	Limit uint64
+	FindOpt
+	Status int `json:"status"`
+	GameID int `json:"game_id"`
 }
 
 type GetTableRes struct {
@@ -220,7 +114,6 @@ type GetTableRes struct {
 
 type UpdateTableGameReq struct {
 	TableID    uint64 `json:"table_id"`
-	GameID     int    `json:"game_id"`
 	GameConfig []byte `json:"game_config"` // 每個遊戲設定不同
 }
 
@@ -234,4 +127,46 @@ type UpdateTableStatusReq struct {
 }
 
 type UpdateTableStatusRes struct {
+}
+
+type GetUserRecordTotalReq struct {
+	FindOpt
+}
+
+type GetUserRecordTotalRes struct {
+	RecordTotalData []RecordTotalData `json:"datas"`
+}
+
+type RecordTotalData struct {
+	Date  string `json:"date"`
+	Total int64  `json:"total"`
+}
+
+type GetUserRecordReq struct {
+	FindOpt
+}
+
+type GetUserRecordRes struct {
+	UserRecordData []UserRecordData `json:"datas"`
+	Total          int64            `json:"total"`
+}
+
+type UserRecordData struct {
+	UserID        uint64 `json:"user_id"`
+	GameRecordID  string `json:"game_record_id"`
+	CreateTime    int64  `json:"create_time"`
+	ClubID        uint64 `json:"club_id"`
+	TableID       uint64 `json:"table_id"`
+	GameID        int    `json:"game_id"`
+	GameType      int    `json:"game_type"`
+	ResultBalance int64  `json:"result_balance"`
+	GameResult    []byte `json:"game_result"`
+	Info          []byte `json:"info"`
+}
+
+type LaunchGameReq struct {
+}
+
+type LaunchGameRes struct {
+	Url string `json:"url"`
 }
