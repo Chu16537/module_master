@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mtime"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
+	Name         string
 	FilePath     string
-	FileName     string
 	ElasticURL   string
 	ElasticIndex string
 }
@@ -28,9 +29,17 @@ type handler struct {
 	currentDate string // 目前日期
 }
 
-var h *handler
+var (
+	h          *handler
+	serverName string
+)
 
 func New(config *Config, t time.Time) error {
+	if config.Name == "" {
+		errors.New("name is nil")
+	}
+	serverName = config.Name
+
 	opt := &logOpt{
 		JSONFormatter: logrus.JSONFormatter{
 			TimestampFormat: time.RFC3339,
@@ -48,7 +57,7 @@ func New(config *Config, t time.Time) error {
 
 	// 輸出到本地
 	if config.FilePath != "" {
-		fp := filepath.Join(config.FilePath, fmt.Sprintf("%s_%s.log", config.FileName, h.currentDate))
+		fp := filepath.Join(config.FilePath, fmt.Sprintf("%s_%s.log", config.Name, h.currentDate))
 
 		// 確保目錄存在
 		err := os.MkdirAll(filepath.Dir(fp), os.ModePerm)

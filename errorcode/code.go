@@ -11,6 +11,7 @@ const (
 	Data_Is_Exist        = 10004 // 資料已經存在
 	Data_Not_Exist       = 10005 // 資料不存在
 	Timeout              = 10006 // 超時
+	Token_Not_Exist      = 10007 // token不存在
 
 	// 俱樂部
 	Club_Not_Exist            = 20001 // 俱樂部不存在
@@ -32,7 +33,6 @@ const (
 	GameWallet_Balacne_Less = 40002 // 錢包金額不足
 
 	// Redis
-	Token_Not_Exist = 50001 // token不存在
 
 	// api_server
 	Account_Length_Error   = 60001 // account 長度錯誤

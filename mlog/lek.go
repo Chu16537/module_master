@@ -51,6 +51,7 @@ func (hook *ElasticsearchHook) Fire(entry *logrus.Entry) error {
 		Body:       &buf,
 		Refresh:    "true",
 	}
+
 	res, err := req.Do(context.Background(), hook.client)
 	if err != nil {
 		return err

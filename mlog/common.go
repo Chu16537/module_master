@@ -7,18 +7,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mtime"
 	"github.com/sirupsen/logrus"
 )
-
-type LogData struct {
-	Level  logrus.Level
-	Tracer string // 會重複 追蹤使用 可能有一個請求 執行多個服務/多個模組
-	FnName string
-	Data   interface{}
-	Err    *errorcode.Error
-}
 
 // UTCFormatter 自訂的 JSON 格式化器，強制使用 UTC 時間
 type logOpt struct {
@@ -59,7 +50,7 @@ func (h *handler) createNewFile() {
 	// 假如不同日期
 	if h.currentDate != nowFormat {
 
-		fp := filepath.Join(h.config.FilePath, fmt.Sprintf("%s_%s.log", h.config.FileName, nowFormat))
+		fp := filepath.Join(h.config.FilePath, fmt.Sprintf("%s_%s.log", h.config.Name, nowFormat))
 
 		// 確保目錄存在
 		err := os.MkdirAll(filepath.Dir(fp), os.ModePerm)

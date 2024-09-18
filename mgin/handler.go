@@ -3,6 +3,7 @@ package mgin
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,6 +18,15 @@ func GetToken(c *gin.Context) string {
 
 func GetRequestID(c *gin.Context) string {
 	return c.Request.Header.Get("X-RequestID")
+}
+
+func GetAllPath(c *gin.Context) string {
+	return c.Request.URL.Path
+}
+
+// 確認最後的路徑是否正確
+func IsLastPath(c *gin.Context, s string) bool {
+	return strings.HasSuffix(c.Request.URL.Path, s)
 }
 
 func GetCtx(c *gin.Context) context.Context {

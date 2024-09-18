@@ -17,6 +17,7 @@ func (l *Log) initial(opt *LogData) logrus.Fields {
 	l.handler.createNewFile()
 
 	f := logrus.Fields{}
+	f["server"] = serverName
 
 	if opt == nil {
 		return f
