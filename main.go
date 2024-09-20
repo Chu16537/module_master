@@ -13,7 +13,7 @@ import (
 func main() {
 	conf := mlog.Config{
 		FilePath: "./logs/",
-		FileName: "admin",
+		Name:     "admin",
 		// ElasticURL:   "http://localhost:9200", // Elasticsearch 的 URL
 		// ElasticIndex: "logs_index",            // Elasticsearch 中的索引名称
 	}

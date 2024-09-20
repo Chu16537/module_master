@@ -27,6 +27,7 @@ type handler struct {
 	file        *os.File
 	t           time.Time
 	currentDate string // 目前日期
+	nodeId      int64
 }
 
 var (
