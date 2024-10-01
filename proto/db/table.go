@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	Table_Status_Unable     = 0 // 未啟用 會長不能使用
+	Table_Status_Unable     = 0 // 未啟用 會長不能使用 只有admin 可以使用
 	Table_Status_Enable     = 1 // 啟用 但不能創建房間 會長 可以更改遊戲設定 會長可以更改狀態為創建
 	Table_Status_WaitCreate = 2 // 等待創建 rs 會查詢 並且創建房間
 	Table_Status_CreateIng  = 3 // 創建中 rs 把查詢到的 Table_Status_WaitCreate 改為 Table_Status_CreateIng 準備創建

@@ -104,8 +104,8 @@ type UpdateClubMemberPermissionsRes struct {
 
 type GetTableReq struct {
 	FindOpt
-	Status int `json:"status"`
-	GameID int `json:"game_id"`
+	Status int   `json:"status"`
+	GameID int64 `json:"game_id"`
 }
 
 type GetTableRes struct {

@@ -4,18 +4,54 @@ package commongrpc;
 option go_package = "./commongrpc";
 
 
-message UnaryRPCReq{
-    int32 EventCode = 1; 
-    bytes Data = 2; 
+message UnaryRPCReq {
+    oneof Data {
+        GetTableReq GetTableReq = 1;
+        UpdateTableGameReq UpdateTableGameReq = 2;
+    }
 }
 
 message UnaryRPCRes{
     int32 ErrorCode = 1; 
     string Message = 2; 
+    oneof Data {
+        GetTableRes GetTableRes = 3;
+        UpdateTableGameRes UpdateTableGameRes = 4;
+        UpdateTableStatusRes UpdateTableStatusRes =5;
+    }
 }
 
 
+message GetTableReq{
+    uint64 Start = 1;
+    uint64 Limit = 2;
+    uint64 ClubID = 3;
+    int64 GameID = 4;
+    repeated int32 Status = 5;
+}
 
+message GetTableRes{
+
+}
+
+message UpdateTableGameReq{
+    int64 TableId = 1; 
+    bytes GameConfig = 2;
+}
+
+message UpdateTableGameRes{
+
+}
+
+message UpdateTableStatusReq{
+    int64 TableId = 1; 
+    bytes GameConfig = 2;
+    int32 Status = 3;
+}
+
+message UpdateTableStatusRes{
+
+}
 
 
 service Commongrpc {
