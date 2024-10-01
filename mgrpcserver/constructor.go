@@ -17,20 +17,20 @@ type Config struct {
 	ReStartCount  int // 重啟次數
 }
 
-type handler struct {
+type Handler struct {
 	ctx      context.Context
 	config   *Config
 	listener *net.Listener
 	server   *grpc.Server
 }
 
-func New(ctx context.Context, config *Config) (*handler, error) {
+func New(ctx context.Context, config *Config) (*Handler, error) {
 	// 基本判斷
 	if config.Addr == "" {
 		return nil, errors.New("gin new error addr nil")
 	}
 
-	h := new(handler)
+	h := new(Handler)
 	h.ctx = ctx
 	h.config = config
 
@@ -47,29 +47,47 @@ func New(ctx context.Context, config *Config) (*handler, error) {
 }
 
 // 關閉
-func (h *handler) Done() {
+func (h *Handler) Done() {
 	if h.server != nil {
 		h.server.Stop()
 	}
 }
 
 // 檢查連線
-func (h *handler) Check() error {
+func (h *Handler) Check() error {
 	return nil
 }
 
 // 啟動 server
 // 必須註冊完 proto
-func (h *handler) Run() error {
-	return h.server.Serve(*h.listener)
+func (h *Handler) Run() error {
+	errChan := make(chan error, 1)
+
+	go func() {
+		err := h.server.Serve(*h.listener)
+
+		if err != nil {
+			errChan <- err
+		}
+	}()
+
+	// 等待n秒判斷是否有錯
+	select {
+	case err := <-errChan:
+		return err
+
+	case <-time.After(5 * time.Second):
+		// 等待5秒發現沒有錯誤
+		return nil
+	}
 }
 
-func (h *handler) Get() *grpc.Server {
+func (h *Handler) Get() *grpc.Server {
 	return h.server
 }
 
 // 循環啟動
-func (h *handler) LoopRun(count int) {
+func (h *Handler) LoopRun(count int) {
 	go func() {
 		if err := h.server.Serve(*h.listener); err != nil {
 			// 超過次數
