@@ -1,6 +1,8 @@
 package mgrpcserver
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -9,57 +11,65 @@ import (
 )
 
 type Config struct {
-	Addr         string
-	ReStartTime  int // 重啟時間
-	ReStartCount int // 重啟次數
+	Addr          string
+	TimeoutSecond int
+	ReStartTime   int // 重啟時間
+	ReStartCount  int // 重啟次數
 }
 
-type Handler struct {
+type handler struct {
+	ctx      context.Context
 	config   *Config
 	listener *net.Listener
 	server   *grpc.Server
 }
 
-func New(conf *Config) (*Handler, error) {
-	handler := new(Handler)
-	handler.config = conf
+func New(ctx context.Context, config *Config) (*handler, error) {
+	// 基本判斷
+	if config.Addr == "" {
+		return nil, errors.New("gin new error addr nil")
+	}
 
-	listener, err := net.Listen("tcp", handler.config.Addr)
+	h := new(handler)
+	h.ctx = ctx
+	h.config = config
+
+	listener, err := net.Listen("tcp", h.config.Addr)
 
 	if err != nil {
 		return nil, fmt.Errorf("grpc server Listen err", err)
 	}
 
-	handler.listener = &listener
-	handler.server = grpc.NewServer()
+	h.listener = &listener
+	h.server = grpc.NewServer()
 
-	return handler, nil
+	return h, nil
 }
 
 // 關閉
-func (h *Handler) Done() {
+func (h *handler) Done() {
 	if h.server != nil {
 		h.server.Stop()
 	}
 }
 
 // 檢查連線
-func (h *Handler) Check() error {
+func (h *handler) Check() error {
 	return nil
 }
 
 // 啟動 server
 // 必須註冊完 proto
-func (h *Handler) Run() error {
+func (h *handler) Run() error {
 	return h.server.Serve(*h.listener)
 }
 
-func (h *Handler) Get() *grpc.Server {
+func (h *handler) Get() *grpc.Server {
 	return h.server
 }
 
 // 循環啟動
-func (h *Handler) LoopRun(count int) {
+func (h *handler) LoopRun(count int) {
 	go func() {
 		if err := h.server.Serve(*h.listener); err != nil {
 			// 超過次數

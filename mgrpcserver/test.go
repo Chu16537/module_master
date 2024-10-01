@@ -15,7 +15,7 @@ func Test() {
 	config := &Config{
 		Addr: ":50051",
 	}
-	h, err := New(config)
+	h, err := New(context.Background(), config)
 
 	if err != nil {
 		fmt.Println("err", err)

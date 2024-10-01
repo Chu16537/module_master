@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package commongrpc;
+option go_package = "./commongrpc";
+
+
+message UnaryRPCReq{
+    int32 EventCode = 1; 
+    bytes Data = 2; 
+}
+
+message UnaryRPCRes{
+    int32 ErrorCode = 1; 
+    string Message = 2; 
+}
+
+
+
+
+
+service Commongrpc {
+    rpc UnaryRPC(stream UnaryRPCReq)returns(stream UnaryRPCRes){}
+}
