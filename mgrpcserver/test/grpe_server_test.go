@@ -23,10 +23,9 @@ func TestServer(t *testing.T) {
 
 	opt := []grpc.ServerOption{}
 
-	// cgs := CommonGrpcServer()
+	cgs := CommonGrpcServer()
 
-	// h, err := mgrpcserver.New(context.Background(), config, cgs, opt...)
-	h, err := mgrpcserver.New(context.Background(), config, nil, opt...)
+	h, err := mgrpcserver.New(context.Background(), config, cgs, opt...)
 
 	if err != nil {
 		fmt.Println("err", err)
@@ -69,7 +68,7 @@ func CommonGrpcServer() *CommongrpcServer {
 
 // UnaryRPC implements commongrpc.CommongrpcServer.
 func (c *CommongrpcServer) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*commongrpc.UnaryRPCRes, error) {
-	fmt.Println("a UnaryRPC 1")
+	fmt.Println("a UnaryRPC 1", req.LogData.Tracer)
 	res := &commongrpc.UnaryRPCRes{
 		EventCode: 10000,
 	}

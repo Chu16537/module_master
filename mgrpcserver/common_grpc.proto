@@ -3,19 +3,21 @@ syntax = "proto3";
 package commongrpc;
 option go_package = "./commongrpc";
 
+message LogData {
+   string Tracer = 1;
+}
 
 message UnaryRPCReq {
-    int32 EventCode =1;
-    bytes Data = 2;
-    bytes LogData = 3;
+    LogData LogData = 1;
+    int32 EventCode =2;
+    bytes Data = 3;
 }
 
 message UnaryRPCRes{
     int32 EventCode =1;
     bytes Data = 2;
-    bytes LogData = 3;
-    int32 ErrorCode = 4;
-    string Message = 5;
+    int32 ErrorCode = 3;
+    string Message = 4;
 }
 
 
