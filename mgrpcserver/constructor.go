@@ -3,10 +3,10 @@ package mgrpcserver
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net"
 	"time"
 
+	"github.com/Chu16537/module_master/mgrpcserver/commongrpc"
 	"google.golang.org/grpc"
 )
 
@@ -18,30 +18,42 @@ type Config struct {
 }
 
 type Handler struct {
-	ctx      context.Context
-	config   *Config
-	listener *net.Listener
-	server   *grpc.Server
+	ctx        context.Context
+	config     *Config
+	listener   *net.Listener
+	server     *grpc.Server
+	rpcHandler IRPCHandler
+	timeout    time.Duration
 }
 
-func New(ctx context.Context, config *Config) (*Handler, error) {
+type IRPCHandler interface {
+	UnaryRPC(context.Context, *commongrpc.UnaryRPCReq) (*commongrpc.UnaryRPCRes, error)
+}
+
+var h *Handler
+
+func New(ctx context.Context, config *Config, rpch IRPCHandler, opt ...grpc.ServerOption) (*Handler, error) {
 	// 基本判斷
 	if config.Addr == "" {
-		return nil, errors.New("gin new error addr nil")
+		return nil, errors.New("grpc new error addr nil")
 	}
 
-	h := new(Handler)
+	listener, err := net.Listen("tcp", config.Addr)
+	if err != nil {
+		return nil, err
+	}
+
+	h = new(Handler)
 	h.ctx = ctx
 	h.config = config
-
-	listener, err := net.Listen("tcp", h.config.Addr)
-
-	if err != nil {
-		return nil, fmt.Errorf("grpc server Listen err", err)
-	}
+	h.rpcHandler = rpch
+	h.timeout = time.Duration(config.TimeoutSecond) * time.Second
 
 	h.listener = &listener
-	h.server = grpc.NewServer()
+
+	h.server = grpc.NewServer(opt...)
+
+	commongrpc.RegisterCommongrpcServer(h.server, h)
 
 	return h, nil
 }

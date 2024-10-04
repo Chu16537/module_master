@@ -12,6 +12,7 @@ const (
 	Data_Not_Exist       = 10005 // 資料不存在
 	Timeout              = 10006 // 超時
 	Token_Not_Exist      = 10007 // token不存在
+	Handler_Not_Exist    = 10008 // handler 不存在
 
 	// 俱樂部
 	Club_Not_Exist            = 20001 // 俱樂部不存在
