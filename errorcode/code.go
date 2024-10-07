@@ -42,4 +42,6 @@ const (
 	NickName_Length_Error  = 60003 // nickname 長度錯誤
 	Account_Password_Error = 60003 // 帳號或密碼錯誤
 
+	// 內部服務
+	RoomServer_Req_Error = 70001 // room server 請求錯誤
 )

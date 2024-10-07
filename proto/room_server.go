@@ -3,9 +3,9 @@ package proto
 import "github.com/Chu16537/module_master/proto/db"
 
 const (
-	GET_TABLE           = 1
-	UPDATE_TABLE_GAME   = 2
-	UPDATE_TABLE_STATUS = 3
+	RS_GET_TABLE           = 1
+	RS_UPDATE_TABLE_GAME   = 2
+	RS_UPDATE_TABLE_STATUS = 3
 )
 
 type RSGetTableReq struct {

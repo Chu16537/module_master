@@ -39,26 +39,26 @@ func TestClient(t *testing.T) {
 		LogData: &commongrpc.LogData{
 			Tracer: "test_client",
 		},
-		EventCode: proto.GET_TABLE,
+		EventCode: proto.RS_GET_TABLE,
 		Data:      rb,
 	}
-	res, err := h.UnaryRPC(context.Background(), req)
-	if err != nil {
-		fmt.Println("err", err)
+	res, errC := h.UnaryRPC(context.Background(), req)
+	if errC != nil {
+		fmt.Println("errC", errC)
 	}
 
 	fmt.Println("res", res)
 
-	res, err = h.UnaryRPC(context.Background(), req)
-	if err != nil {
-		fmt.Println("err", err)
+	res, errC = h.UnaryRPC(context.Background(), req)
+	if errC != nil {
+		fmt.Println("errC", errC)
 	}
 
 	fmt.Println("res", res)
 
-	res, err = h.UnaryRPC(context.Background(), req)
-	if err != nil {
-		fmt.Println("err", err)
+	res, errC = h.UnaryRPC(context.Background(), req)
+	if errC != nil {
+		fmt.Println("errC", errC)
 	}
 
 	fmt.Println("res", res)
