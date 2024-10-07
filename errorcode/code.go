@@ -23,12 +23,17 @@ const (
 	Club_User_Account_Exist   = 20005 // 玩家帳號已經存在
 
 	// 牌桌
-	Table_Not_Exist       = 30001 // 牌桌不存在
-	Table_LV_Insufficient = 30002 // 牌桌等級不足
-	Table_Status_Error    = 30003 // 牌桌狀態錯誤
-	Game_Not_Type         = 30004 // 沒有此遊戲類型
-	Game_ID_Error         = 30005 // 遊戲ID錯誤
-	Game_Setting_Error    = 30006 // 遊戲設定驗證錯誤
+	Table_Not_Exist       = 30001  // 牌桌不存在
+	Table_LV_Insufficient = 30002  // 牌桌等級不足
+	Table_Status_Error    = 30003  // 牌桌狀態錯誤
+	Game_Not_Type         = 30004  // 沒有此遊戲類型
+	Game_ID_Error         = 30005  // 遊戲ID錯誤
+	Game_Setting_Error    = 30006  // 遊戲設定驗證錯誤
+	Game_Setting_Error_1  = 300061 // 遊戲設定驗證錯誤
+	Game_Setting_Error_2  = 300062 // 遊戲設定驗證錯誤
+	Game_Setting_Error_3  = 300063 // 遊戲設定驗證錯誤
+	Game_Setting_Error_4  = 300064 // 遊戲設定驗證錯誤
+	Game_Setting_Error_5  = 300065 // 遊戲設定驗證錯誤
 
 	// 遊戲
 	GameWallet_Not_Exist    = 40001 // 錢包不存在
