@@ -1,35 +1,41 @@
-package zgrpcclient
+package mgrpcclient
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	"github.com/Chu16537/module_master/mgrpc/commongrpc"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/keepalive"
 )
 
 type Config struct {
-	Addr string
+	Addr          string
+	TimeoutSecond int
 }
 type Handler struct {
 	ctx    context.Context
 	config *Config
 	conn   *grpc.ClientConn
+	client commongrpc.CommongrpcClient
 }
 
 func New(cxt context.Context, conf *Config) (*Handler, error) {
-	handler := new(Handler)
+	h := new(Handler)
 
-	handler.ctx = cxt
-	handler.config = conf
+	h.ctx = cxt
+	h.config = conf
 
-	if err := handler.connect(); err != nil {
-		return nil, fmt.Errorf("grpc connect err", err)
+	err := h.connect()
+	if err != nil {
+		return nil, err
 	}
 
-	return handler, nil
+	h.client = commongrpc.NewCommongrpcClient(h.conn)
+
+	return h, nil
 }
 
 // 關閉

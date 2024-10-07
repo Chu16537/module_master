@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mgrpcserver"
-	"github.com/Chu16537/module_master/mgrpcserver/commongrpc"
+	"github.com/Chu16537/module_master/mgrpc/commongrpc"
+	"github.com/Chu16537/module_master/mgrpc/mgrpcserver"
 	"google.golang.org/grpc"
 )
 

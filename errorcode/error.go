@@ -46,6 +46,13 @@ func DataUnmarshalError(s string) *Error {
 	}
 }
 
+func DataMarshalError(s string) *Error {
+	return &Error{
+		code: Data_Marshal_Error,
+		err:  errors.Errorf("data marshal err:%s", s),
+	}
+}
+
 func DataError(data interface{}) *Error {
 	return &Error{
 		code: Data_Error,

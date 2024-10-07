@@ -7,12 +7,13 @@ const (
 	// 系統
 	Server_Error         = 10001 // server錯誤
 	Data_Unmarshal_Error = 10002 // 資料Unmarshal錯誤
-	Data_Error           = 10003 // 資料錯誤 Unmarshal 成功但內容不正確
-	Data_Is_Exist        = 10004 // 資料已經存在
-	Data_Not_Exist       = 10005 // 資料不存在
-	Timeout              = 10006 // 超時
-	Token_Not_Exist      = 10007 // token不存在
-	Handler_Not_Exist    = 10008 // handler 不存在
+	Data_Marshal_Error   = 10003 // 資料Unmarshal錯誤
+	Data_Error           = 10004 // 資料錯誤 Unmarshal 成功但內容不正確
+	Data_Is_Exist        = 10005 // 資料已經存在
+	Data_Not_Exist       = 10006 // 資料不存在
+	Timeout              = 10007 // 超時
+	Token_Not_Exist      = 10008 // token不存在
+	Handler_Not_Exist    = 10009 // handler 不存在
 
 	// 俱樂部
 	Club_Not_Exist            = 20001 // 俱樂部不存在
