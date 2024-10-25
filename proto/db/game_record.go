@@ -1,10 +1,10 @@
 package db
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/Chu16537/module_master/errorcode"
+	"github.com/Chu16537/module_master/mjson"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -39,7 +39,7 @@ func (g *GameRecord) GetUserRecord() ([]*UserRecord, *errorcode.Error) {
 	switch g.GameType {
 	case GameType_Multiple:
 		info := &GameRecordInfoMultiple{}
-		err := json.Unmarshal(g.Info, info)
+		err := mjson.Unmarshal(g.Info, info)
 		if err != nil {
 			return nil, errorcode.Server(err)
 		}

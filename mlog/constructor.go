@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mtime"
+	"github.com/Chu16537/module_master/muid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -27,7 +28,8 @@ type handler struct {
 	file        *os.File
 	t           time.Time
 	currentDate string // 目前日期
-	nodeId      int64
+	// nodeId      int64
+	node *muid.Handler
 }
 
 var (
@@ -35,7 +37,7 @@ var (
 	serverName string
 )
 
-func New(config *Config, t time.Time) error {
+func New(config *Config, node *muid.Handler) error {
 	if config.Name == "" {
 		errors.New("name is nil")
 	}
@@ -52,8 +54,9 @@ func New(config *Config, t time.Time) error {
 
 	h = &handler{
 		config:      config,
-		t:           t,
-		currentDate: mtime.GetTimeFormatTime(t, mtime.Format_YMD),
+		t:           mtime.GetZero(),
+		currentDate: mtime.GetTimeFormatTime(mtime.GetZero(), mtime.Format_YMD),
+		node:        node,
 	}
 
 	// 輸出到本地

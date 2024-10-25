@@ -2,19 +2,22 @@ package test_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/hmgo"
+	"github.com/Chu16537/module_master/mjson"
 	"github.com/Chu16537/module_master/mmgo"
 	"github.com/Chu16537/module_master/muid"
 	"github.com/Chu16537/module_master/proto/db"
 )
 
-var h *hmgo.Handler
+var (
+	h    *hmgo.Handler
+	node *muid.Handler
+)
 
 func init() {
 	ctx := context.Background()
@@ -59,6 +62,8 @@ func init() {
 		fmt.Println("EveryDay", err)
 		return
 	}
+
+	node = muid.New(time.Now().Unix())
 }
 
 func showErr(t *testing.T, err *errorcode.Error) {
@@ -377,7 +382,7 @@ func TestGetGameRecord(t *testing.T) {
 
 	for i := 0; i < count; i++ {
 		gr := &db.GameRecord{
-			GameRecordID: muid.GetUID(),
+			GameRecordID: fmt.Sprint(node.CreateID()),
 			CreateTime:   time.Now().UTC().Unix() + int64(86400*i),
 			ClubID:       uint64(i),
 			TableID:      table.ID,
@@ -398,7 +403,7 @@ func TestGetGameRecord(t *testing.T) {
 				TotalEffectiveBet: 6.6 * float64(v),
 			}
 
-			infoByte, err := json.Marshal(infoMap[v])
+			infoByte, err := mjson.Marshal(infoMap[v])
 			if err != nil {
 				fmt.Println("Marshal", err)
 				return

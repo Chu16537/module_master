@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/Chu16537/module_master/errorcode"
-	"github.com/Chu16537/module_master/muid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -27,7 +26,7 @@ type LogData struct {
 func NewLogData(fnName string) *LogData {
 	l := new(LogData)
 	l.FnName = fnName
-	l.Tracer = fmt.Sprintf("%v_%v", muid.CreatRandomString(10), h.nodeId)
+	l.Tracer = fmt.Sprintf("%v_%v", h.node.CreatRandomString(10), h.node.CreateID())
 
 	return l
 }

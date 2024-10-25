@@ -3,10 +3,10 @@ package mlog
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
+	"github.com/Chu16537/module_master/mjson"
 	"github.com/elastic/go-elasticsearch/v7"
 	"github.com/elastic/go-elasticsearch/v7/esapi"
 	"github.com/sirupsen/logrus"
@@ -39,7 +39,7 @@ func newElasticsearchHook(elasticURL, index string) (*ElasticsearchHook, error) 
 func (hook *ElasticsearchHook) Fire(entry *logrus.Entry) error {
 	// 格式化日志条目为 JSON
 	var buf bytes.Buffer
-	encoder := json.NewEncoder(&buf)
+	encoder := mjson.NewEncoder(&buf)
 	if err := encoder.Encode(entry.Data); err != nil {
 		return err
 	}
