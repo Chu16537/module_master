@@ -20,7 +20,8 @@ func TestMain(t *testing.T) {
 		AliveTimeoutSecond: 10,
 	}
 
-	uid := muid.New(1)
+	muid.New(1)
+	uid := muid.Get()
 
 	logConfig := &mlog.Config{
 		Name: "test_ws",
@@ -49,4 +50,6 @@ type aa struct{}
 func (a *aa) ReadMessage(req *mwebscoketserver.ClientReq) {
 
 	fmt.Println(req.Id)
+
+	mwebscoketserver.Response(nil)
 }

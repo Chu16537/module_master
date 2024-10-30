@@ -8,88 +8,59 @@ import (
 )
 
 type ILog interface {
-	Debug(opt *LogData)
-	Info(opt *LogData)
-	Warn(opt *LogData)
-	Error(opt *LogData)
+	New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error)
 }
-
 type LogData struct {
-	Level  logrus.Level
-	Server string
-	Tracer string // 會重複 追蹤使用 可能有一個請求 執行多個服務/多個模組
-	FnName string
-	Data   interface{}
-	Err    *errorcode.Error
+	Level  logrus.Level     // 日誌級別
+	Server string           // 伺服器名稱
+	Tracer string           // 追蹤 ID，便於在分散式系統中追蹤多個日誌請求
+	FnName string           // 方法名稱或主題，標識日誌記錄所屬的功能模組。
+	Data   interface{}      // 日誌中包含的主要資料
+	Err    *errorcode.Error // 錯誤信息，使用自定義的 errorcode
 }
 
-func NewLogData(fnName string) *LogData {
-	l := new(LogData)
-	l.FnName = fnName
-	l.Tracer = fmt.Sprintf("%v_%v", h.node.CreatRandomString(10), h.node.CreateID())
+func (l *Log) New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error) {
+	if tracer == "" {
+		tracer = fmt.Sprintf("%v_%v", h.node.CreatRandomString(10), h.node.CreateID())
+	}
 
-	return l
+	fields := logrus.Fields{
+		"server": serverName,
+		"tracer": tracer,
+		"topic":  fmt.Sprintf("%v_%v", l.name, fnName),
+	}
+
+	if err != nil {
+		fields["code"] = err.GetCode()
+	}
+
+	entry := logrus.WithFields(fields)
+
+	msg := l.formatMessage(level, data, err)
+
+	switch level {
+	case logrus.DebugLevel:
+		entry.Debug(msg)
+	case logrus.InfoLevel:
+		entry.Info(msg)
+	case logrus.WarnLevel:
+		entry.Warn(msg)
+	case logrus.ErrorLevel:
+		entry.Error(msg)
+	}
+
 }
 
-func (l *Log) initial(opt *LogData) logrus.Fields {
-	l.handler.createNewFile()
-
-	f := logrus.Fields{}
-	f["server"] = serverName
-
-	if opt == nil {
-		return f
-	}
-
-	if opt.Tracer != "" {
-		f["tracer"] = opt.Tracer
-	}
-
-	if opt.FnName != "" {
-		f["topic"] = fmt.Sprintf("%v_%v", l.name, opt.FnName)
+func (l *Log) formatMessage(level logrus.Level, data interface{}, err *errorcode.Error) interface{} {
+	if level == logrus.WarnLevel || level == logrus.ErrorLevel {
+		if err != nil && err.GetErr() != nil {
+			return fmt.Sprintf("%+v", err.GetErr())
+		}
 	} else {
-		f["topic"] = l.name
+		if data != nil {
+			return data
+		}
 	}
 
-	if opt.Err != nil {
-		f["code"] = opt.Err.Code()
-	}
-
-	return f
-}
-
-func (l *Log) Debug(opt *LogData) {
-	fields := l.initial(opt)
-	if opt.Data != nil {
-		logrus.WithFields(fields).Debug(opt.Data)
-	} else {
-		logrus.WithFields(fields).Debug("")
-	}
-}
-
-func (l *Log) Info(opt *LogData) {
-	fields := l.initial(opt)
-	if opt.Data != nil {
-		logrus.WithFields(fields).Info(opt.Data)
-	} else {
-		logrus.WithFields(fields).Info("")
-	}
-}
-
-func (l *Log) Warn(opt *LogData) {
-	fields := l.initial(opt)
-	if opt.Err.Err() != nil {
-		logrus.WithFields(fields).Warn(fmt.Sprintf("%+v", opt.Err.Err()))
-	} else {
-		logrus.WithFields(fields).Warn("")
-	}
-}
-
-func (l *Log) Error(opt *LogData) {
-	fields := l.initial(opt)
-	if opt.Err.Err() != nil {
-		logrus.WithFields(fields).Error(fmt.Sprintf("%+v", opt.Err.Err()))
-	} else {
-		logrus.WithFields(fields).Error("")
-	}
+	return ""
 }

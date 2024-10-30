@@ -2,7 +2,7 @@ package mwebscoketserver
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -10,10 +10,10 @@ import (
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mjson"
 	"github.com/Chu16537/module_master/mlog"
-	"github.com/Chu16537/module_master/mtime"
 	"github.com/Chu16537/module_master/muid"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
@@ -23,13 +23,13 @@ type Config struct {
 }
 
 type Handler struct {
-	ctx      context.Context
-	config   *Config
-	log      mlog.ILog
-	ws       http.Server
-	upgrader websocket.Upgrader
-	ih       IHandler
-
+	ctx       context.Context
+	config    *Config
+	log       mlog.ILog
+	ws        http.Server
+	upgrader  websocket.Upgrader
+	ih        IHandler
+	time      time.Time
 	uid       *muid.Handler
 	lock      sync.RWMutex
 	clientMap map[int64]IClient // map[唯一編號]IClient
@@ -59,6 +59,7 @@ func New(ctx context.Context, config *Config, uid *muid.Handler, log mlog.ILog, 
 		ctx:       ctx,
 		config:    config,
 		log:       log,
+		time:      time.Now().UTC(),
 		upgrader:  upgrader,
 		ih:        ih,
 		uid:       uid,
@@ -100,28 +101,21 @@ func checkAlive() {
 	for {
 		select {
 		case <-h.ctx.Done():
-			opt := &mlog.LogData{
-				Data: "mwebscoketserver done",
-			}
-			h.log.Info(opt)
+			h.log.New(logrus.InfoLevel, "checkAlive", "", "mwebscoketserver done", nil)
 			return
-		case <-ticker.C:
-			nowUnix := time.Now().Unix()
-			h.lock.RLocker().Lock()
-			for _, client := range h.clientMap {
-				// 最新的請求時間更後面
-				if nowUnix < client.GetLastReadMsgTime() {
-					continue
-				}
 
+		case <-ticker.C:
+			nowUnix := h.time.Unix()
+			h.lock.Lock()
+			for id, client := range h.clientMap {
 				// 一段時間內沒有送請求
 				if nowUnix-client.GetLastReadMsgTime() > int64(h.config.AliveTimeoutSecond) {
-					// 斷線
-					client.Done()
+					client.Done()           // 斷開客戶端連線
+					delete(h.clientMap, id) // 從 map 中移除
 				}
 			}
 
-			h.lock.RLocker().Unlock()
+			h.lock.Unlock()
 		}
 	}
 }
@@ -130,17 +124,15 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 将 HTTP 连接升级为 WebSocket 连接
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		opt := &mlog.LogData{
-			Err: errorcode.Server(err),
-		}
-		h.log.Error(opt)
+		h.log.New(logrus.ErrorLevel, "ServeHTTP", "", nil, errorcode.Server(err))
 		return
 	}
 
-	sendChan := make(chan []byte, 32)
+	sendChan := make(chan []byte, 128)
 	clientId := h.uid.CreateID()
 
 	defer func() {
+		close(sendChan)
 		conn.Close()
 
 		h.lock.Lock()
@@ -172,70 +164,55 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			opt := &mlog.LogData{
-				Err: errorcode.Server(err),
-			}
-			h.log.Error(opt)
+			h.log.New(logrus.ErrorLevel, "reading", "", nil, errorcode.Server(err))
 			return
 		}
 
-		// 格式轉換 有錯誤當作他亂打請求
+		// 格式轉換 有錯誤
 		req := &ClientReq{}
 		err = mjson.Unmarshal(msg, req)
 		if err != nil {
-			client.WriteMessage([]byte(reqUnmarshalErr))
-			opt := &mlog.LogData{
-				Err: errorcode.Server(err),
-			}
-			h.log.Warn(opt)
+			er := errorcode.DataUnmarshalError(string(msg))
+			h.log.New(logrus.WarnLevel, "reading", "", nil, er)
+
+			b, _ := json.Marshal(er)
+			conn.WriteMessage(websocket.TextMessage, b)
 			continue
 		}
 
 		req.NewID(client.GetUid())
 
 		// 更新最後請求時間
-		client.SetLastReadMsgTime(mtime.GetZero().Unix())
+		client.UpdateLastReadTime(h.time.Unix())
 
 		// 請求實作
 		h.ih.ReadMessage(req)
 	}
-
-	fmt.Println("asd")
 }
 
 func (h *Handler) sending(conn *websocket.Conn, sender <-chan []byte) {
 	for msg := range sender {
 		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			opt := &mlog.LogData{
-				Err: errorcode.Server(err),
-			}
-			h.log.Error(opt)
+			h.log.New(logrus.ErrorLevel, "sending", "", nil, errorcode.Server(err))
 		}
 	}
 }
 
 // 返回請求資料
-func (h *Handler) Response(res *ClientRes) {
+func Response(res *ClientRes) {
 	reqId, clientId := res.GetId()
 
 	c, ok := h.clientMap[clientId]
 
+	// 代表使用者斷線
 	if !ok {
-		// 代表使用者斷線
-		opt := &mlog.LogData{
-			Err: errorcode.Server(errors.Errorf("clientId:%v is disconnect", clientId)),
-		}
-		h.log.Warn(opt)
 		return
 	}
 
 	res.Id = reqId
 	resByte, err := mjson.Marshal(res)
 	if err != nil {
-		opt := &mlog.LogData{
-			Err: errorcode.Server(errors.Errorf("clientId:%v res marshal err data:%v", clientId, res)),
-		}
-		h.log.Error(opt)
+		h.log.New(logrus.ErrorLevel, "Response", "", nil, errorcode.Server(errors.Errorf("clientId:%v res marshal err data:%v", clientId, res)))
 		return
 	}
 

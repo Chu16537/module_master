@@ -10,7 +10,8 @@ import (
 
 func TestMain(t *testing.T) {
 
-	h := muid.New(1)
+	muid.New(1)
+	h := muid.Get()
 
 	aa := make(chan int64, 1000)
 

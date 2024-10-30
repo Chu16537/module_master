@@ -23,7 +23,7 @@ func (h *Handler) startTransaction(ctx context.Context, fn func(h *Handler, sess
 
 		if e != nil {
 			err = e
-			return nil, e.Err()
+			return nil, e.GetErr()
 		}
 
 		err = nil

@@ -4,15 +4,14 @@ import (
 	"math/rand"
 	"sync/atomic"
 	"time"
-	"unsafe"
 
 	"github.com/Chu16537/module_master/mtime"
 	"github.com/rs/xid"
 )
 
 const (
-	// 定義字母和數字的字元集
-	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charset        = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	maxSequenceVal = uint32(1<<32 - 1) // 避免sequence溢位的最大值
 )
 
 type Handler struct {
@@ -24,30 +23,35 @@ type Handler struct {
 	sequenceBits  uintptr
 	instanceMask  int64
 	tailBits      uintptr
+	randGen       *rand.Rand
 }
 
 var h *Handler
 
-func New(node int64) *Handler {
-
+func New(node int64) {
 	var (
 		sequence     uint32  = 0
-		sequenceBits uintptr = unsafe.Sizeof(sequence) * 8
+		sequenceBits uintptr = uintptr(32)
 		instanceMask         = node << int64(sequenceBits)
-		tailBits     uintptr = sequenceBits
+		tailBits     uintptr = uintptr(32 + 22)
 	)
+
+	t := mtime.GetZero()
 
 	h = &Handler{
 		node:          node,
 		uid:           xid.New().String(),
-		time:          mtime.GetZero(),
-		lastTimestamp: mtime.GetZero().UnixNano(),
+		time:          t,
+		lastTimestamp: t.UnixNano(),
 		sequence:      sequence,
 		sequenceBits:  sequenceBits,
 		instanceMask:  instanceMask,
 		tailBits:      tailBits,
+		randGen:       rand.New(rand.NewSource(t.UnixNano())),
 	}
+}
 
+func Get() *Handler {
 	return h
 }
 
@@ -55,9 +59,14 @@ func New(node int64) *Handler {
 func (h *Handler) CreateID() int64 {
 	nowTimestamp := time.Now().UnixNano() >> int64(h.tailBits)
 
-	// 同一時間創建增加sequence
+	// 同一時間戳下，防止sequence溢位
 	if h.lastTimestamp == nowTimestamp {
-		atomic.AddUint32(&h.sequence, 1)
+		if atomic.AddUint32(&h.sequence, 1) > maxSequenceVal {
+			for nowTimestamp <= h.lastTimestamp {
+				nowTimestamp = h.time.UnixNano() >> int64(h.tailBits)
+			}
+			h.sequence = 0
+		}
 	} else {
 		h.sequence = 0
 	}
@@ -65,26 +74,14 @@ func (h *Handler) CreateID() int64 {
 	h.lastTimestamp = nowTimestamp
 
 	return nowTimestamp<<int64(h.tailBits) | h.instanceMask | int64(h.sequence)
-
 }
 
 // 隨機字符串生成函數
 func (h *Handler) CreatRandomString(length int) string {
-	// 預先生成隨機數的 buffer
-	seededRand := rand.New(rand.NewSource(h.CreateID()))
 	result := make([]byte, length)
-	buffer := make([]byte, 10) // 用來批量生成隨機數字節
 	charsetLength := len(charset)
-
-	for i := 0; i < length; i += 10 {
-		// 批量生成隨機數
-		seededRand.Read(buffer)
-
-		// 將隨機數轉換為對應的字母和數字
-		for j := 0; j < 10 && i+j < length; j++ {
-			// 這裡使用 buffer[j] % charsetLength 來確保隨機數在字符集範圍內
-			result[i+j] = charset[int(buffer[j])%charsetLength]
-		}
+	for i := 0; i < length; i++ {
+		result[i] = charset[h.randGen.Intn(charsetLength)]
 	}
 	return string(result)
 }

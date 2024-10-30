@@ -63,11 +63,12 @@ func init() {
 		return
 	}
 
-	node = muid.New(time.Now().Unix())
+	muid.New(time.Now().Unix())
+	node = muid.Get()
 }
 
 func showErr(t *testing.T, err *errorcode.Error) {
-	t.Errorf("code:%v \n err:%+v", err.Code(), err.Err())
+	t.Errorf("code:%v \n err:%+v", err.GetCode(), err.GetErr())
 }
 
 func TestClub(t *testing.T) {

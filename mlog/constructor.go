@@ -13,10 +13,10 @@ import (
 )
 
 type Config struct {
-	Name         string
-	FilePath     string
-	ElasticURL   string
-	ElasticIndex string
+	Name         string // 伺服器名稱，用於標識日誌來源
+	FilePath     string // 本地日誌檔案路徑
+	ElasticURL   string // Elasticsearch 伺服器 URL，用於將日誌輸出到 Elasticsearch
+	ElasticIndex string // Elasticsearch 索引，用於分組管理日誌
 }
 
 type Log struct {
@@ -24,12 +24,11 @@ type Log struct {
 	name    string
 }
 type handler struct {
-	config      *Config
-	file        *os.File
-	t           time.Time
-	currentDate string // 目前日期
-	// nodeId      int64
-	node *muid.Handler
+	config      *Config       // 配置信息
+	file        *os.File      // 當前日誌檔案指標
+	t           time.Time     // 當前日誌的日期時間
+	currentDate string        // 當前日期
+	node        *muid.Handler // 節點標識
 }
 
 var (
@@ -43,6 +42,7 @@ func New(config *Config, node *muid.Handler) error {
 	}
 	serverName = config.Name
 
+	// 設定日誌格式
 	opt := &logOpt{
 		JSONFormatter: logrus.JSONFormatter{
 			TimestampFormat: time.RFC3339,
