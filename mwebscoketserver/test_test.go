@@ -26,7 +26,7 @@ func TestMain(t *testing.T) {
 	logConfig := &mlog.Config{
 		Name: "test_ws",
 	}
-	err := mlog.New(logConfig, uid)
+	err := mlog.New(logConfig)
 	if err != nil {
 		fmt.Println("log", err)
 		return

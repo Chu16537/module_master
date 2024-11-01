@@ -20,10 +20,6 @@ type LogData struct {
 }
 
 func (l *Log) New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error) {
-	if tracer == "" {
-		tracer = fmt.Sprintf("%v_%v", h.node.CreatRandomString(10), h.node.CreateID())
-	}
-
 	fields := logrus.Fields{
 		"server": serverName,
 		"tracer": tracer,

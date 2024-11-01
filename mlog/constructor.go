@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mtime"
-	"github.com/Chu16537/module_master/muid"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -24,11 +23,10 @@ type Log struct {
 	name    string
 }
 type handler struct {
-	config      *Config       // 配置信息
-	file        *os.File      // 當前日誌檔案指標
-	t           time.Time     // 當前日誌的日期時間
-	currentDate string        // 當前日期
-	node        *muid.Handler // 節點標識
+	config      *Config   // 配置信息
+	file        *os.File  // 當前日誌檔案指標
+	t           time.Time // 當前日誌的日期時間
+	currentDate string    // 當前日期
 }
 
 var (
@@ -36,7 +34,7 @@ var (
 	serverName string
 )
 
-func New(config *Config, node *muid.Handler) error {
+func New(config *Config) error {
 	if config.Name == "" {
 		errors.New("name is nil")
 	}
@@ -56,7 +54,6 @@ func New(config *Config, node *muid.Handler) error {
 		config:      config,
 		t:           mtime.GetZero(),
 		currentDate: mtime.GetTimeFormatTime(mtime.GetZero(), mtime.Format_YMD),
-		node:        node,
 	}
 
 	// 輸出到本地
