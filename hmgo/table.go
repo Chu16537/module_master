@@ -36,6 +36,14 @@ func (h *Handler) GetTableCount(ctx context.Context, filter *db.TableOpt) (int64
 
 // 創建 table
 func (h *Handler) CreateTable(ctx context.Context, data *db.Table) *errorcode.Error {
+	// 取得id
+	tableID, errC := h.incr(ctx, db.ColName_Table)
+	if errC != nil {
+		return errC
+	}
+
+	data.ID = uint64(tableID)
+
 	err := h.create(ctx, db.ColName_Table, data)
 	if err != nil {
 		return errorcode.Server(err)
