@@ -3,6 +3,7 @@ package mredisCluster
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -118,7 +119,16 @@ func (h *Handler) Pipe() redis.Pipeliner {
 
 // 新增 / 更新 score
 func (h *Handler) AddAndUpdateZset(ctx context.Context, key string, score float64, member string) error {
-	return h.client.ZAdd(ctx, key, redis.Z{Score: score, Member: member}).Err()
+	// 刪除指定 score 的 member
+	_, err := h.client.ZRemRangeByScore(ctx, Key_Node, fmt.Sprintf("%f", score), fmt.Sprintf("%f", score)).Result()
+	if err != nil {
+		return err
+	}
+	err = h.client.ZAdd(ctx, key, redis.Z{Score: score, Member: member}).Err()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // 取得 member 的 score
@@ -148,4 +158,15 @@ func (h *Handler) GetZsetRange(ctx context.Context, key string, min, max string,
 // 刪除 members
 func (h *Handler) DelZsetMember(ctx context.Context, key string, member []string) error {
 	return h.client.ZRem(ctx, key, member).Err()
+}
+
+// 取得 node score
+func (h *Handler) GetNode(ctx context.Context, unix int64, incrementSecond int) (int64, error) {
+	keys := []string{Key_Node}
+	values := []interface{}{unix, incrementSecond}
+	nodeId, err := h.RunLua(ctx, LuaGetNode, keys, values...)
+	if err != nil {
+		return 0, err
+	}
+	return nodeId.(int64), err
 }

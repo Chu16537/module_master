@@ -1,6 +1,7 @@
 package mtime
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -17,15 +18,23 @@ func GetZero() time.Time {
 }
 
 // 每 tick 執行事件
-func RunTick(interval time.Duration, f func(tick *time.Ticker)) {
+func RunTick(ctx context.Context, interval time.Duration, f func()) {
 	tick := time.NewTicker(interval)
 	defer tick.Stop()
-	f(tick)
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-tick.C:
+			f()
+		}
+	}
 }
 
 // 取得+0時間格式
-func GetTimeFormatUnix(t int64, format string) string {
-	return time.Unix(t, 0).UTC().Format(format)
+func GetTimeFormatUnix(unix int64, format string) string {
+	return time.Unix(unix, 0).UTC().Format(format)
 }
 
 // 取得+0時間格式

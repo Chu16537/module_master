@@ -13,6 +13,22 @@ func run(h *mredisCluster.Handler) {
 
 	ctx := context.TODO()
 
+	unix := time.Now().Unix()
+
+	node, err := h.GetNode(ctx, unix, 600)
+	if err != nil {
+		fmt.Println("err", err)
+		return
+	}
+
+	fmt.Println("node", node)
+
+	err = h.AddAndUpdateZset(ctx, mredisCluster.Key_Node, float64(node), "100")
+	if err != nil {
+		fmt.Println("err", err)
+		return
+	}
+
 	// key := "testKey"
 
 	// err := h.Set(ctx, key, "aaa", -1)
@@ -103,16 +119,16 @@ func run(h *mredisCluster.Handler) {
 	// 	}
 	// }
 
-	incrKey := "incrKey"
+	// incrKey := "incrKey"
 
-	for i := 0; i < 10; i++ {
-		i, err := h.IncrBy(ctx, incrKey, 1)
-		if err != nil {
-			fmt.Println("err", err)
-			return
-		}
-		fmt.Println("i", i)
-	}
+	// for i := 0; i < 10; i++ {
+	// 	i, err := h.IncrBy(ctx, incrKey, 1)
+	// 	if err != nil {
+	// 		fmt.Println("err", err)
+	// 		return
+	// 	}
+	// 	fmt.Println("i", i)
+	// }
 
 }
 func Test_A(t *testing.T) {
