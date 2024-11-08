@@ -23,10 +23,10 @@ type Log struct {
 	name    string
 }
 type handler struct {
-	config      *Config   // 配置信息
-	file        *os.File  // 當前日誌檔案指標
-	t           time.Time // 當前日誌的日期時間
-	currentDate string    // 當前日期
+	config *Config  // 配置信息
+	file   *os.File // 當前日誌檔案指標
+
+	currentDate string // 當前日期
 }
 
 var (
@@ -48,11 +48,9 @@ func New(config *Config) error {
 	logrus.SetFormatter(opt)
 	logrus.SetLevel(logrus.DebugLevel)
 
-	t := time.Now()
 	h = &handler{
 		config:      config,
-		t:           t,
-		currentDate: mtime.GetTimeFormatTime(t, mtime.Format_YMD),
+		currentDate: mtime.GetTimeFormatTime(time.Now(), mtime.Format_YMD),
 	}
 
 	// 輸出到本地

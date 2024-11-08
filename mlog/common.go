@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/Chu16537/module_master/mtime"
 	"github.com/sirupsen/logrus"
@@ -45,8 +46,7 @@ func (h *handler) createNewFile() {
 		return
 	}
 
-	nowFormat := mtime.GetTimeFormatTime(h.t, mtime.Format_YMD)
-
+	nowFormat := mtime.GetTimeFormatTime(time.Now(), mtime.Format_YMD)
 	// 假如不同日期
 	if h.currentDate != nowFormat {
 
