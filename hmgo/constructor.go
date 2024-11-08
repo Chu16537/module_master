@@ -22,6 +22,11 @@ func New(ctx context.Context, cancel context.CancelFunc, read *mmgo.Handler, wri
 	}, nil
 }
 
+func (h *Handler) Done() {
+	h.read.Done()
+	h.write.Done()
+}
+
 func (h *Handler) trans() *Handler {
 	return &Handler{
 		read:  h.write,
