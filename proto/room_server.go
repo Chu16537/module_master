@@ -26,10 +26,11 @@ type RSUpdateTableGameRes struct {
 	Table *db.Table `json:"table"`
 }
 
-type RSUpdateTableStatusReq struct {
-	TableOpt *db.TableOpt
-	Status   int `json:"status"`
+type RSUpdateTableReq struct {
+	TableOpt   *db.TableOpt
+	Status     int   `json:"status"`
+	ExpireTime int64 `json:"expire_time"`
 }
 
-type RSUpdateTableStatusRes struct {
+type RSUpdateTableRes struct {
 }

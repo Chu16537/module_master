@@ -12,8 +12,9 @@ type CreateClubRes struct {
 }
 
 type CreateTableReq struct {
-	ClubID     string `json:"club_id"`     // 俱樂部名稱id
+	ClubID     uint64 `json:"club_id"`     // 俱樂部名稱id
 	ExpireTime int64  `json:"expire_time"` // 到期時間
+	GameID     int    `json:"game_id"`     // 遊戲編號
 }
 
 type CreateTableRes struct {

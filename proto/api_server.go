@@ -104,8 +104,9 @@ type UpdateClubMemberPermissionsRes struct {
 
 type GetTableReq struct {
 	FindOpt
-	Status int   `json:"status"`
-	GameID int64 `json:"game_id"`
+	ClubID uint64 `json:"club_id"`
+	Status []int  `json:"status"`
+	GameID int64  `json:"game_id"`
 }
 
 type GetTableRes struct {
@@ -121,12 +122,13 @@ type UpdateTableGameRes struct {
 	Table *db.Table `json:"table"`
 }
 
-type UpdateTableStatusReq struct {
-	TableID uint64 `json:"table_id"`
-	Status  int    `json:"status"`
+type UpdateTableReq struct {
+	TableID    uint64 `json:"table_id"`
+	Status     int    `json:"status"`
+	ExpireTime int64  `json:"expire_time"`
 }
 
-type UpdateTableStatusRes struct {
+type UpdateTableRes struct {
 }
 
 type GetUserRecordTotalReq struct {
