@@ -30,15 +30,13 @@ type handler struct {
 }
 
 var (
-	h          *handler
-	serverName string
+	h *handler
 )
 
 func New(config *Config) error {
 	if config.Name == "" {
-		errors.New("name is nil")
+		return errors.New("name is nil")
 	}
-	serverName = config.Name
 
 	// 設定日誌格式
 	opt := &logOpt{
@@ -50,10 +48,11 @@ func New(config *Config) error {
 	logrus.SetFormatter(opt)
 	logrus.SetLevel(logrus.DebugLevel)
 
+	t := time.Now()
 	h = &handler{
 		config:      config,
-		t:           mtime.GetZero(),
-		currentDate: mtime.GetTimeFormatTime(mtime.GetZero(), mtime.Format_YMD),
+		t:           t,
+		currentDate: mtime.GetTimeFormatTime(t, mtime.Format_YMD),
 	}
 
 	// 輸出到本地

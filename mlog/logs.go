@@ -20,8 +20,10 @@ type LogData struct {
 }
 
 func (l *Log) New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error) {
+
+	l.handler.createNewFile()
 	fields := logrus.Fields{
-		"server": serverName,
+		"server": l.handler.config.Name,
 		"tracer": tracer,
 		"topic":  fmt.Sprintf("%v_%v", l.name, fnName),
 	}

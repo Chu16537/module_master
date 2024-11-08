@@ -13,10 +13,6 @@ const (
 	Format_YM   = "2006_01"
 )
 
-func GetZero() time.Time {
-	return time.Now().UTC()
-}
-
 // 每 tick 執行事件
 func RunTick(ctx context.Context, interval time.Duration, f func()) {
 	tick := time.NewTicker(interval)
@@ -30,6 +26,11 @@ func RunTick(ctx context.Context, interval time.Duration, f func()) {
 			f()
 		}
 	}
+}
+
+// 取得當前增減x秒後的時間
+func GetNowTimeOffset(second int) time.Time {
+	return time.Now().Add(time.Duration(second) * time.Second)
 }
 
 // 取得+0時間格式

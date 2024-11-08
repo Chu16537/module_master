@@ -5,7 +5,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Chu16537/module_master/mtime"
 	"github.com/rs/xid"
 )
 
@@ -36,7 +35,7 @@ func New(node int64) {
 		tailBits     uintptr = uintptr(32 + 22)
 	)
 
-	t := mtime.GetZero()
+	t := time.Now()
 
 	h = &Handler{
 		node:          node,
