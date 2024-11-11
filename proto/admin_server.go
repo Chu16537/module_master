@@ -11,8 +11,17 @@ type CreateClubReq struct {
 type CreateClubRes struct {
 }
 
+type UpdateClubReq struct {
+	ClubID     uint64 `json:"club_id"`     // 俱樂部id
+	Status     int    `json:"status"`      // 狀態
+	ExpireTime int64  `json:"expire_time"` // 到期時間
+}
+
+type UpdateClubRes struct {
+}
+
 type CreateTableReq struct {
-	ClubID     uint64 `json:"club_id"`     // 俱樂部名稱id
+	ClubID     uint64 `json:"club_id"`     // 俱樂部id
 	ExpireTime int64  `json:"expire_time"` // 到期時間
 	GameID     int    `json:"game_id"`     // 遊戲編號
 }

@@ -20,8 +20,7 @@ func TestMain(t *testing.T) {
 		AliveTimeoutSecond: 10,
 	}
 
-	muid.New(1)
-	uid := muid.Get()
+	uid := muid.New(1)
 
 	logConfig := &mlog.Config{
 		Name: "test_ws",

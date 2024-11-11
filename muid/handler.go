@@ -27,7 +27,7 @@ type Handler struct {
 
 var h *Handler
 
-func New(node int64) {
+func New(node int64) *Handler {
 	var (
 		sequence     uint32  = 0
 		sequenceBits uintptr = uintptr(32)
@@ -48,9 +48,7 @@ func New(node int64) {
 		tailBits:      tailBits,
 		randGen:       rand.New(rand.NewSource(t.UnixNano())),
 	}
-}
 
-func Get() *Handler {
 	return h
 }
 

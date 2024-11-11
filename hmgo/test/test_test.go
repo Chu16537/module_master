@@ -63,8 +63,7 @@ func init() {
 		return
 	}
 
-	muid.New(time.Now().Unix())
-	node = muid.Get()
+	node = muid.New(time.Now().Unix())
 }
 
 func showErr(t *testing.T, err *errorcode.Error) {
