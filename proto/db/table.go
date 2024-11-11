@@ -52,6 +52,13 @@ type TableOpt struct {
 	GameID        int64
 	Status        []int
 	DelExpireTime int64
+
+	DelOpt *DelTableOpt
+}
+
+type DelTableOpt struct {
+	Status        []int
+	DelExpireTime int64
 }
 
 func (o *TableOpt) Filter_Mgo() bson.M {
@@ -79,6 +86,16 @@ func (o *TableOpt) Filter_Mgo() bson.M {
 
 	if o.DelExpireTime > 0 {
 		filter["expire_time"] = bson.M{"$lte": o.DelExpireTime}
+	}
+
+	if o.DelOpt != nil {
+		delete(filter, "status")
+		delete(filter, "expire_time")
+
+		filter["$or"] = []bson.M{
+			{"status": bson.M{"$in": o.Status}},
+			{"expire_time": bson.M{"$lte": o.DelExpireTime}},
+		}
 	}
 
 	return filter
