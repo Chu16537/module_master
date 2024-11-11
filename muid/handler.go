@@ -32,7 +32,7 @@ func New(node int64) *Handler {
 		sequence     uint32  = 0
 		sequenceBits uintptr = uintptr(32)
 		instanceMask         = node << int64(sequenceBits)
-		tailBits     uintptr = uintptr(32 + 22)
+		tailBits     uintptr = uintptr(20)
 	)
 
 	t := time.Now()
