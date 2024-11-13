@@ -14,24 +14,32 @@ func TestXxx(t *testing.T) {
 	uid := muid.New(1)
 
 	c := &mconsul.Config{
-		NodeId: uid.CreateID(),
-		Name:   "test_name",
-		Addr:   "192.168.50.80",
-		Port:   8083,
-		Tags:   []string{"a", "b"},
+		ConsulAddr: "192.168.50.80:8500",
+		Scheme:     "http",
+		NodeId:     uid.CreateID(),
+		Name:       "test_name",
+		Addr:       "192.168.50.80",
+		Port:       8081,
+		Tags:       []string{"a", "b"},
 	}
-	fmt.Println(c.NodeId)
-	mconsul.New()
 
-	err := mconsul.RegisterService(c)
+	fmt.Println(c.NodeId)
+
+	mc, err := mconsul.New(c)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	a, err := mconsul.GetServer(c.Name)
-	if err != nil {
-		fmt.Println(err)
+	eC := mc.RegisterService()
+	if eC != nil {
+		fmt.Println(eC)
+		return
+	}
+
+	a, eC := mc.GetServer(c.Name)
+	if eC != nil {
+		fmt.Println(eC)
 		return
 	}
 
