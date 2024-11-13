@@ -1,0 +1,3 @@
+consul:
+  consuladdr: "localhost:8500"
+  schema: "http"

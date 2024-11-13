@@ -1,0 +1,3 @@
+grpc:
+  addr: ":50051"
+  timeoutsecond: 5
