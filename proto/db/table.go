@@ -8,9 +8,8 @@ const (
 	Table_Status_Unable     = 0 // 未啟用 會長不能使用 只有admin 可以使用
 	Table_Status_Enable     = 1 // 啟用 但不能創建房間 會長 可以更改遊戲設定 會長可以更改狀態為創建
 	Table_Status_WaitCreate = 2 // 等待創建 rs 會查詢 並且創建房間
-	Table_Status_CreateIng  = 3 // 創建中 rs 把查詢到的 Table_Status_WaitCreate 改為 Table_Status_CreateIng 準備創建
-	Table_Status_Playing    = 4 // gs 創建成功 創建失敗改為 Table_Status_WaitCreate
-	Table_Status_Trans      = 5 // 房間轉換gs  gs1>rs>gs2 gs2把狀態改為 Table_Status_Playing
+	Table_Status_Playing    = 3 // gs 創建成功 創建失敗改為 Table_Status_WaitCreate
+	Table_Status_Trans      = 4 // 房間轉換gs  gs1>rs>gs2 gs2把狀態改為 Table_Status_Playing
 )
 
 type Table struct {
@@ -53,10 +52,16 @@ type TableOpt struct {
 	Status        []int
 	DelExpireTime int64
 
-	DelOpt *DelTableOpt
+	DelOpt    *TableOptDel
+	CreateOpt *TableOptCreate
 }
 
-type DelTableOpt struct {
+type TableOptDel struct {
+	Status        []int
+	DelExpireTime int64
+}
+
+type TableOptCreate struct {
 	Status        []int
 	DelExpireTime int64
 }
@@ -89,12 +94,16 @@ func (o *TableOpt) Filter_Mgo() bson.M {
 	}
 
 	if o.DelOpt != nil {
-		delete(filter, "status")
-		delete(filter, "expire_time")
-
 		filter["$or"] = []bson.M{
-			{"status": bson.M{"$in": o.Status}},
-			{"expire_time": bson.M{"$lte": o.DelExpireTime}},
+			{"status": bson.M{"$in": o.DelOpt.Status}},
+			{"expire_time": bson.M{"$lte": o.DelOpt.DelExpireTime}},
+		}
+	}
+
+	if o.CreateOpt != nil {
+		filter["$and"] = []bson.M{
+			{"status": bson.M{"$in": o.CreateOpt.Status}},
+			{"expire_time": bson.M{"$gt": o.CreateOpt.DelExpireTime}},
 		}
 	}
 

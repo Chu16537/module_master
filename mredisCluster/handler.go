@@ -2,9 +2,10 @@ package mredisCluster
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
+
+	"github.com/pkg/errors"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -169,4 +170,40 @@ func (h *Handler) GetNode(ctx context.Context, unix int64, incrementSecond int) 
 		return 0, err
 	}
 	return nodeId.(int64), err
+}
+
+// 取得key & lock
+func (h *Handler) GetKeyAndLock(ctx context.Context, key string, second int) error {
+	success, err := h.client.SetNX(ctx, key, "", time.Duration(second*int(time.Second))).Result()
+	if !success && err == nil {
+		return errors.New("lock fail")
+	}
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 取得zset最小/大 的n個
+func (h *Handler) GetScore(ctx context.Context, key string, isMin bool, count int) ([]redis.Z, error) {
+	var (
+		result []redis.Z
+		err    error
+	)
+
+	if isMin {
+		// 使用 ZRANGE 獲取最小 n 個分數及其對應的成員
+		result, err = h.client.ZRangeWithScores(ctx, key, 0, int64(count-1)).Result()
+	} else {
+		// 使用 ZREVRANGE 獲取最大的 n 個分數及其對應的成員
+		result, err = h.client.ZRevRangeWithScores(ctx, key, 0, int64(count-1)).Result()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }

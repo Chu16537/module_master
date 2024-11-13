@@ -14,19 +14,22 @@ const (
 	-- 使用哈希標籤來確保操作的是同一哈希槽
 	-- zset_key = zset_key .. "{node_slot}"  -- 為 zset_key 加上哈希標籤
 	
-	local new_member = tostring(start_time + increment)
 
 	while true do
 		-- 取得範圍內的成員和分數
 		local members = redis.call("ZRANGEBYSCORE", zset_key, min_score, max_score, "WITHSCORES")
 		for i = 1, #members, 2 do
 			local member = tonumber(members[i])
+			-- 提取小數點前的數字部分
+			local integer_part = tonumber(string.match(member, "^(%d+)"))
+
 			local score = tonumber(members[i + 1])
 
 			-- 判斷 member 是否小於 start_time
-			if member < start_time then
+			if integer_part < start_time then
 				-- 刪除原有的成員，然後更新分數
 				redis.call("ZREMRANGEBYSCORE", zset_key, score, score)  -- 刪除指定 score 的成員
+				local new_member = tostring(start_time + increment).. "." ..tostring(score)
 				redis.call("ZADD", zset_key, score, new_member)
 				return score
 			end
@@ -46,11 +49,13 @@ const (
 				
 				-- 設定新的成員，score 為最後一個 score + 1，member 設為 start_time + increment
 				local new_score = last_score + 1
+				local new_member = tostring(start_time + increment).. "." ..tostring(new_score)
 				redis.call("ZADD", zset_key, new_score, new_member)
 				return new_score
 			else
 				-- 如果沒有符合條件的成員，直接創建新的 member
 				local new_score = 0
+				local new_member = tostring(start_time + increment).. "." ..tostring(new_score)
 				redis.call("ZADD", zset_key, new_score, new_member)
 				return new_score
 			end
