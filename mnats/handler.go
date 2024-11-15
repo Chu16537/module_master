@@ -1,98 +1,95 @@
 package mnats
 
 import (
+	"fmt"
+
+	"github.com/Chu16537/module_master/proto"
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
 )
 
 // 推送
-func (h *Handler) Pub(topicName string, data []byte) error {
-	if err := h.nc.Publish(topicName, data); err != nil {
-		return errors.Wrapf(err, "nc Publish err :%v", err.Error())
+func (h *Handler) Pub(subject string, data []byte) error {
+	err := h.nc.Publish(subject, data)
+	if err != nil {
+		// 錯誤是 沒有Subject
+		if err.Error() != "nats: no response from stream" {
+			return err
+		}
+
+		//  創建subject
+		err = h.createSubjects(subject)
+		if err != nil {
+			return err
+		}
+
+		err = h.nc.Publish(subject, data)
+		if err != nil {
+			return err
+		}
+
+		return nil
 	}
 
-	return nil
-}
-
-// 推送
-func (h *Handler) PubStream(topicName string, data []byte) error {
-	if _, err := h.js.Publish(h.ctx, topicName, data); err != nil {
-		return errors.Wrapf(err, "js Publish err :%v", err.Error())
-	}
 	return nil
 }
 
 // 訂閱
-func (h *Handler) Sub(topicname string, f func([]byte)) error {
-	if _, err := h.nc.Subscribe(topicname, func(msg *nats.Msg) {
-		f(msg.Data)
-	}); err != nil {
-		return errors.Wrapf(err, "Subscribe err :%v", err.Error())
-	}
-	return nil
-}
+func (h *Handler) Sub(subjectName string, mode SubMode, subChan chan proto.MQSubData) error {
+	h.lock.Lock()
+	defer h.lock.Unlock()
 
-// 訂閱
-func (h *Handler) SubStream(streamName string, topicname string, f func([]byte)) error {
-	var err error
-
-	// 更新
-	err = h.delStreamTopic(streamName, topicname)
+	err := h.createSubjects(subjectName)
 	if err != nil {
 		return err
 	}
 
-	// 取得 stream
-	err = h.createStream(streamName, topicname)
-	if err != nil {
-		return err
+	opts := []nats.SubOpt{}
+
+	switch mode.Mode {
+	case Sub_Mode_Last_Ack:
+		opts = append(opts, nats.Durable(subjectName)) // 從最後ack 開始
+	case Sub_Mode_Last:
+		opts = append(opts, nats.DeliverNew()) // 從訂閱後的最新消息開始
+	case Sub_Mode_Sequence:
+		if mode.StartSequenceID < 1 {
+			mode.StartSequenceID = 1
+		}
+		opts = append(opts, nats.StartSequence(mode.StartSequenceID)) // 從指定的 Sequence 開始
 	}
+
+	// 使用推送型訂閱
+	sub, err := h.js.Subscribe(subjectName, func(msg *nats.Msg) {
+		d := proto.MQSubData{
+			Data: msg.Data,
+		}
+
+		data, err := msg.Metadata()
+		if err != nil {
+			d.SequenceID = 0
+		} else {
+			d.SequenceID = data.Sequence.Consumer
+		}
+
+		subChan <- d
+		msg.Ack()
+	}, opts...)
+
+	if err != nil {
+		return errors.New(err.Error())
+	}
+
+	// 記錄訂閱
+	h.subMap[subjectName] = sub
 
 	return nil
-}
-
-// 取得sub msg
-func (h *Handler) GetMsg(streamName string, topicName string, f func([]byte), count int) {
-	v, isLoad := h.consumerMap.Load(topicName)
-
-	if !isLoad {
-		h.SubStream(streamName, topicName, f)
-		v, isLoad = h.consumerMap.Load(topicName)
-		if !isLoad {
-			return
-		}
-	}
-
-	c, ok := v.(jetstream.Consumer)
-
-	if !ok {
-		return
-	}
-
-	msgBatch, err := c.Fetch(count)
-	if err != nil {
-		return
-	}
-
-	msgs := msgBatch.Messages()
-	msgLen := len(msgs)
-	idx := 0
-	for msg := range msgs {
-		//消費資料
-		f(msg.Data())
-		idx++
-
-		//最後一筆資料 通知ack
-		if idx == msgLen-1 {
-			msg.Ack()
-		}
-	}
 }
 
 // 取消訂閱
-func (h *Handler) UnSub(streamName string, topicname string) {
-	h.js.DeleteConsumer(h.ctx, streamName, topicname)
-
-	h.consumerMap.Delete(topicname)
+func (h *Handler) UnSub(subjectName string) {
+	err := h.subMap[subjectName].Unsubscribe()
+	if err != nil {
+		fmt.Println("UnSub err", err)
+	}
+	delete(h.subMap, subjectName)
 }

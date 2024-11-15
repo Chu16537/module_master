@@ -201,11 +201,12 @@ github.com/modern-go/reflect2
 # github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe
 ## explicit
 github.com/montanaflynn/stats
-# github.com/nats-io/nats.go v1.33.1
+# github.com/nats-io/nats.go v1.37.0
 ## explicit; go 1.20
 github.com/nats-io/nats.go
 github.com/nats-io/nats.go/encoders/builtin
 github.com/nats-io/nats.go/internal/parser
+github.com/nats-io/nats.go/internal/syncx
 github.com/nats-io/nats.go/jetstream
 github.com/nats-io/nats.go/util
 # github.com/nats-io/nkeys v0.4.7

@@ -1,14 +1,18 @@
 package proto
 
-type PubToRoom struct {
+type MQSubData struct {
+	SequenceID uint64 `json:"sequence_id"`
+	Data       []byte `json:"data"`
+}
+type PubToGameServer struct {
 	ReqID     string      `json:"req_id"`     // 請求編號
 	UserID    uint64      `json:"user_id"`    // 玩家編號
-	RoomName  uint64      `json:"room_name"`  // 房間編號
+	TableName uint64      `json:"table_name"` // 房間編號
 	EventCode uint64      `json:"event_code"` // 事件編號
 	Data      interface{} `json:"data"`       // 資料
 }
 
-type PubToGame struct {
+type PubToWebSocketServer struct {
 	ReqID     string      `json:"req_id"`     // 請求編號
 	UserIDs   []uint64    `json:"user_ids"`   // 玩家編號
 	RoomName  uint64      `json:"room_name"`  // 房間編號

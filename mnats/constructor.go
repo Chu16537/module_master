@@ -2,42 +2,54 @@ package mnats
 
 import (
 	"context"
-	"strings"
 	"sync"
 
 	"github.com/nats-io/nats.go"
-	"github.com/nats-io/nats.go/jetstream"
 	"github.com/pkg/errors"
 )
 
 type Config struct {
-	Addrs []string
+	Addr       string // 多個可以使用",區隔 "nats://127.0.0.1:4222,nats://127.0.0.1:6222,nats://127.0.0.1:8222"
+	User       string
+	Password   string
+	StreamName string
 }
 
 type Handler struct {
-	ctx         context.Context
-	config      *Config
-	opts        *nats.Options
-	nc          *nats.Conn
-	js          jetstream.JetStream
-	consumerMap sync.Map
+	ctx    context.Context
+	config *Config
+	opts   []nats.Option
+	nc     *nats.Conn
+	js     nats.JetStreamContext
+
+	lock   sync.Mutex
+	subMap map[string]*nats.Subscription
 }
 
-func New(ctx context.Context, cfg *Config) (*Handler, error) {
+func New(ctx context.Context, config *Config) (*Handler, error) {
 	h := &Handler{
 		ctx:    ctx,
-		config: cfg,
-		opts:   &nats.Options{},
+		config: config,
+		lock:   sync.Mutex{},
+		subMap: make(map[string]*nats.Subscription),
 	}
 
-	if len(h.config.Addrs) > 1 {
-		h.opts.Url = strings.Join(h.config.Addrs, ",")
-	} else {
-		h.opts.Url = h.config.Addrs[0]
+	// 設定opt
+	opts := []nats.Option{}
+	if config.User != "" && config.Password != "" {
+		opts = append(opts, nats.UserInfo(config.User, config.Password))
 	}
 
-	if err := h.connect(); err != nil {
+	h.opts = opts
+
+	err := h.connect()
+	if err != nil {
 		return nil, errors.Wrapf(err, "connect err :%v", err.Error())
+	}
+
+	err = h.createStream(h.config.StreamName)
+	if err != nil {
+		return nil, errors.Wrapf(err, "createStream err :%v", err.Error())
 	}
 
 	return h, nil
@@ -45,6 +57,10 @@ func New(ctx context.Context, cfg *Config) (*Handler, error) {
 
 // 關閉
 func (h *Handler) Done() {
+	for _, v := range h.subMap {
+		v.Unsubscribe()
+	}
+
 	h.close()
 }
 
@@ -62,14 +78,13 @@ func (h *Handler) Check() error {
 func (h *Handler) connect() error {
 	h.close()
 
-	nc, err := nats.Connect(h.opts.Url)
+	nc, err := nats.Connect(h.config.Addr, h.opts...)
 
 	if err != nil {
 		return err
 	}
 
-	js, err := jetstream.New(nc)
-
+	js, err := nc.JetStream()
 	if err != nil {
 		return err
 	}
@@ -82,7 +97,11 @@ func (h *Handler) connect() error {
 
 // 關閉
 func (h *Handler) close() {
-	if h.nc != nil || h.nc.IsConnected() {
+	if h.nc == nil {
+		return
+	}
+
+	if h.nc.IsConnected() {
 		h.nc.Close()
 	}
 }
