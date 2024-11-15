@@ -6,7 +6,6 @@ import (
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mlog"
-	"github.com/sirupsen/logrus"
 )
 
 func Test_A(t *testing.T) {
@@ -25,6 +24,6 @@ func Test_A(t *testing.T) {
 
 	l := mlog.Get("module")
 
-	l.New(logrus.ErrorLevel, "Test_A", "tracer", nil, errorcode.Server(fmt.Errorf("test err")))
-	l.New(logrus.InfoLevel, "Test_A", "tracer2", "test info", errorcode.Server(fmt.Errorf("test err")))
+	l.New(mlog.ErrorLevel, "Test_A", "tracer", nil, errorcode.Server(fmt.Errorf("test err")))
+	l.New(mlog.InfoLevel, "Test_A", "tracer2", "test info", errorcode.Server(fmt.Errorf("test err")))
 }

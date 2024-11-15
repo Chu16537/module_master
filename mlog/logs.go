@@ -8,10 +8,10 @@ import (
 )
 
 type ILog interface {
-	New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error)
+	New(level int, fnName string, tracer string, data interface{}, err *errorcode.Error)
 }
 type LogData struct {
-	Level  logrus.Level     // 日誌級別
+	Level  int              // 日誌級別
 	Server string           // 伺服器名稱
 	Tracer string           // 追蹤 ID，便於在分散式系統中追蹤多個日誌請求
 	FnName string           // 方法名稱或主題，標識日誌記錄所屬的功能模組。
@@ -19,7 +19,7 @@ type LogData struct {
 	Err    *errorcode.Error // 錯誤信息，使用自定義的 errorcode
 }
 
-func (l *Log) New(level logrus.Level, fnName string, tracer string, data interface{}, err *errorcode.Error) {
+func (l *Log) New(level int, fnName string, tracer string, data interface{}, err *errorcode.Error) {
 
 	l.handler.createNewFile()
 	fields := logrus.Fields{
@@ -37,20 +37,20 @@ func (l *Log) New(level logrus.Level, fnName string, tracer string, data interfa
 	msg := l.formatMessage(level, data, err)
 
 	switch level {
-	case logrus.DebugLevel:
+	case DebugLevel:
 		entry.Debug(msg)
-	case logrus.InfoLevel:
+	case InfoLevel:
 		entry.Info(msg)
-	case logrus.WarnLevel:
+	case WarnLevel:
 		entry.Warn(msg)
-	case logrus.ErrorLevel:
+	case ErrorLevel:
 		entry.Error(msg)
 	}
 
 }
 
-func (l *Log) formatMessage(level logrus.Level, data interface{}, err *errorcode.Error) interface{} {
-	if level == logrus.WarnLevel || level == logrus.ErrorLevel {
+func (l *Log) formatMessage(level int, data interface{}, err *errorcode.Error) interface{} {
+	if level == WarnLevel || level == ErrorLevel {
 		if err != nil && err.GetErr() != nil {
 			return fmt.Sprintf("%+v", err.GetErr())
 		}

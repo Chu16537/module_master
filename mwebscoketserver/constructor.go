@@ -13,7 +13,6 @@ import (
 	"github.com/Chu16537/module_master/muid"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type Config struct {
@@ -101,7 +100,7 @@ func checkAlive() {
 	for {
 		select {
 		case <-h.ctx.Done():
-			h.log.New(logrus.InfoLevel, "checkAlive", "", "mwebscoketserver done", nil)
+			h.log.New(mlog.InfoLevel, "checkAlive", "", "mwebscoketserver done", nil)
 			return
 
 		case <-ticker.C:
@@ -124,7 +123,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 将 HTTP 连接升级为 WebSocket 连接
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		h.log.New(logrus.ErrorLevel, "ServeHTTP", "", nil, errorcode.Server(err))
+		h.log.New(mlog.ErrorLevel, "ServeHTTP", "", nil, errorcode.Server(err))
 		return
 	}
 
@@ -164,7 +163,7 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			h.log.New(logrus.ErrorLevel, "reading", "", nil, errorcode.Server(err))
+			h.log.New(mlog.ErrorLevel, "reading", "", nil, errorcode.Server(err))
 			return
 		}
 
@@ -173,7 +172,7 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 		err = mjson.Unmarshal(msg, req)
 		if err != nil {
 			er := errorcode.DataUnmarshalError(string(msg))
-			h.log.New(logrus.WarnLevel, "reading", "", nil, er)
+			h.log.New(mlog.WarnLevel, "reading", "", nil, er)
 
 			b, _ := json.Marshal(er)
 			conn.WriteMessage(websocket.TextMessage, b)
@@ -193,7 +192,7 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 func (h *Handler) sending(conn *websocket.Conn, sender <-chan []byte) {
 	for msg := range sender {
 		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			h.log.New(logrus.ErrorLevel, "sending", "", nil, errorcode.Server(err))
+			h.log.New(mlog.ErrorLevel, "sending", "", nil, errorcode.Server(err))
 		}
 	}
 }
@@ -212,7 +211,7 @@ func Response(res *ClientRes) {
 	res.Id = reqId
 	resByte, err := mjson.Marshal(res)
 	if err != nil {
-		h.log.New(logrus.ErrorLevel, "Response", "", nil, errorcode.Server(errors.Errorf("clientId:%v res marshal err data:%v", clientId, res)))
+		h.log.New(mlog.ErrorLevel, "Response", "", nil, errorcode.Server(errors.Errorf("clientId:%v res marshal err data:%v", clientId, res)))
 		return
 	}
 
