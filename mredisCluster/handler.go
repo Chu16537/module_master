@@ -172,6 +172,16 @@ func (h *Handler) GetNode(ctx context.Context, unix int64, incrementSecond int) 
 	return nodeId.(int64), err
 }
 
+// 取得 node score
+func (h *Handler) UpdateNodeTime(ctx context.Context, nodeId float64, nextUnix int64) error {
+	member := fmt.Sprintf("%v.%v", nodeId, nextUnix)
+	err := h.client.ZAdd(ctx, Key_Node, redis.Z{Score: nodeId, Member: member}).Err()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // 取得key & lock
 func (h *Handler) GetKeyAndLock(ctx context.Context, key string, second int) error {
 	success, err := h.client.SetNX(ctx, key, "", time.Duration(second*int(time.Second))).Result()

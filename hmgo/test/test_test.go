@@ -43,9 +43,9 @@ func init() {
 		return
 	}
 
-	handler, err := hmgo.New(ctx, nil, readHandler, writeHandler)
-	if err != nil {
-		fmt.Println("new", err)
+	handler, ec := hmgo.New(ctx, readHandler, writeHandler)
+	if ec != nil {
+		fmt.Println("new", ec)
 		return
 	}
 

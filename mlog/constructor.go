@@ -29,9 +29,7 @@ type handler struct {
 	currentDate string // 當前日期
 }
 
-var (
-	h *handler
-)
+var h *handler
 
 func New(config *Config) error {
 	if config.Name == "" {
@@ -87,6 +85,10 @@ func New(config *Config) error {
 }
 
 func Get(name string) ILog {
+	if h == nil {
+		panic("mlog nil")
+	}
+
 	return &Log{
 		handler: h,
 		name:    name,

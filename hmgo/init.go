@@ -2,6 +2,7 @@ package hmgo
 
 import (
 	"context"
+	"time"
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mtime"
@@ -87,12 +88,14 @@ func (h *Handler) Init() *errorcode.Error {
 		},
 	}
 
-	err := h.CreateIndexs(h.ctx, cis)
+	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
+	defer cancel()
+	err := h.CreateIndexs(ctx, cis)
 	if err != nil {
 		return err
 	}
 
-	return err
+	return nil
 }
 
 /*
