@@ -1,4 +1,4 @@
-package mrediscluster
+package mredis
 
 type GetScoreInfo struct {
 	Member string

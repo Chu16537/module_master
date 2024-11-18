@@ -1,4 +1,4 @@
-package mrediscluster_test
+package mredis_test
 
 import (
 	"context"
@@ -6,22 +6,23 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mrediscluster"
+	"github.com/Chu16537/module_master/mredis"
+	"github.com/Chu16537/module_master/mredis/hmredis"
 )
 
-func run(h *mrediscluster.Handler) {
+func run(h *mredis.Handler) {
 
 	ctx := context.TODO()
 
-	// unix := time.Now().Unix()
-	// fmt.Println("unix", unix)
-	// gsis, err := hmrediscluster.GetGameServerRank(h, ctx, unix, true, 20)
-	// if err != nil {
-	// 	fmt.Println("err", err)
-	// 	return
-	// }
+	unix := time.Now().Unix()
+	fmt.Println("unix", unix)
+	gsis, err := hmredis.GetGameServerRank(h, ctx, unix, true, 20)
+	if err != nil {
+		fmt.Println("err", err)
+		return
+	}
 
-	// fmt.Println("gsis", gsis)
+	fmt.Println("gsis", gsis)
 
 	// nodeIds := make([]string, len(gsis))
 
@@ -31,7 +32,7 @@ func run(h *mrediscluster.Handler) {
 
 	// fmt.Println("nodeIds", nodeIds)
 
-	// ipMap, err := hmrediscluster.GetGameServerIP(h, ctx, nodeIds)
+	// ipMap, err := hmredis.GetGameServerIP(h, ctx, nodeIds)
 	// if err != nil {
 	// 	fmt.Println("err", err)
 	// 	return
@@ -40,7 +41,7 @@ func run(h *mrediscluster.Handler) {
 	// fmt.Println("ipMap", ipMap)
 
 	// unix2 := time.Now().Unix()
-	// err2 := hmrediscluster.DelGameServerIP(h, ctx, unix2)
+	// err2 := hmredis.DelGameServerIP(h, ctx, unix2)
 	// if err2 != nil {
 	// 	fmt.Println("err", err)
 	// 	return
@@ -49,7 +50,7 @@ func run(h *mrediscluster.Handler) {
 	// var nodeId int64 = 2
 	// unix := time.Now().Unix()
 	// fmt.Println("unix", unix)
-	// err := hmrediscluster.UpdateGameServerRank(h, ctx, "1731913864.2", nodeId, unix, "1.2.3.4")
+	// err := hmredis.UpdateGameServerRank(h, ctx, "1731913864.2", nodeId, unix, "1.2.3.4")
 	// if err != nil {
 	// 	fmt.Println("err", err)
 	// 	return
@@ -66,7 +67,7 @@ func run(h *mrediscluster.Handler) {
 	// 	fmt.Println(i, v.Member, v.Score)
 	// }
 
-	// err = h.AddAndUpdateZset(ctx, mrediscluster.Key_Node, float64(node), "100")
+	// err = h.AddAndUpdateZset(ctx, mredis.Key_Node, float64(node), "100")
 	// if err != nil {
 	// 	fmt.Println("err", err)
 	// 	return
@@ -173,26 +174,26 @@ func run(h *mrediscluster.Handler) {
 	// 	fmt.Println("i", i)
 	// }
 
-	unix := time.Now().Unix()
-	fmt.Println(unix)
-	err := h.UpdateNode(ctx, 0, unix)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// unix := time.Now().Unix()
+	// fmt.Println(unix)
+	// err := h.UpdateNode(ctx, 0, unix)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 
 }
 func Test_A(t *testing.T) {
 	// 创建一个上下文和配置
 	ctx := context.Background()
-	cfg := &mrediscluster.Config{
+	cfg := &mredis.Config{
 		Addrs:    []string{"localhost:7001", "localhost:7002", "localhost:7003", "localhost:7004", "localhost:7005", "localhost:7006"}, // Redis 集群地址
 		Password: "aa",                                                                                                                 // Redis 密码
 	}
 
-	var h *mrediscluster.Handler
+	var h *mredis.Handler
 	// 初始化 Redis 集群连接处理程序
-	h, err := mrediscluster.New(ctx, cfg)
+	h, err := mredis.New(ctx, cfg)
 	if err != nil {
 		fmt.Println("Failed to initialize Redis:", err)
 		return
@@ -208,7 +209,7 @@ func Test_A(t *testing.T) {
 	fmt.Println("Application finished.")
 }
 
-func check(ctx context.Context, h *mrediscluster.Handler) {
+func check(ctx context.Context, h *mredis.Handler) {
 	// 設定檢查秒數
 	checkInterval := 2 * time.Second
 	ticker := time.NewTicker(checkInterval)

@@ -1,4 +1,4 @@
-package mrediscluster
+package mredis
 
 import (
 	"context"

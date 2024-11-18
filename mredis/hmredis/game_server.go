@@ -1,4 +1,4 @@
-package hmrediscluster
+package hmredis
 
 import (
 	"context"
@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/Chu16537/module_master/errorcode"
-	"github.com/Chu16537/module_master/mrediscluster"
+	"github.com/Chu16537/module_master/mredis"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -19,7 +19,7 @@ const (
 )
 
 // 取得 game server 排名
-func GetGameServerRank(h *mrediscluster.Handler, ctx context.Context, unix int64, isMin bool, count int) ([]mrediscluster.GetScoreInfo, *errorcode.Error) {
+func GetGameServerRank(h *mredis.Handler, ctx context.Context, unix int64, isMin bool, count int) ([]mredis.GetScoreInfo, *errorcode.Error) {
 	gsis, err := h.GetScore(ctx, gameServerRank, unix, GameServerRankExpireDuration, isMin, count)
 	if err != nil {
 		return nil, errorcode.New(errorcode.Redis_Error, err)
@@ -29,7 +29,7 @@ func GetGameServerRank(h *mrediscluster.Handler, ctx context.Context, unix int64
 }
 
 // 取得 game server ip
-func GetGameServerIP(h *mrediscluster.Handler, ctx context.Context, nodeIDs []string) (map[string]string, *errorcode.Error) {
+func GetGameServerIP(h *mredis.Handler, ctx context.Context, nodeIDs []string) (map[string]string, *errorcode.Error) {
 	data, err := h.GetClient().HMGet(ctx, gameServerIP, nodeIDs...).Result()
 	if err != nil {
 		return nil, errorcode.New(errorcode.Redis_Error, err)
@@ -46,8 +46,8 @@ func GetGameServerIP(h *mrediscluster.Handler, ctx context.Context, nodeIDs []st
 }
 
 // 刪除 不使用的 game server ip
-func DelGameServerIP(h *mrediscluster.Handler, ctx context.Context, unix int64) *errorcode.Error {
-	result, err := h.RunLua(ctx, mrediscluster.LuaGetGameServerTimeoutMember, []string{gameServerRank}, unix, GameServerRankExpireDuration)
+func DelGameServerIP(h *mredis.Handler, ctx context.Context, unix int64) *errorcode.Error {
+	result, err := h.RunLua(ctx, mredis.LuaGetGameServerTimeoutMember, []string{gameServerRank}, unix, GameServerRankExpireDuration)
 	if err != nil {
 		return errorcode.New(errorcode.Redis_Error, err)
 	}
@@ -82,7 +82,7 @@ func DelGameServerIP(h *mrediscluster.Handler, ctx context.Context, unix int64) 
 }
 
 // 更新 game server score
-func UpdateGameServerRank(h *mrediscluster.Handler, ctx context.Context, oldMember string, nodeId int64, unix int64, ip string) *errorcode.Error {
+func UpdateGameServerRank(h *mredis.Handler, ctx context.Context, oldMember string, nodeId int64, unix int64, ip string) *errorcode.Error {
 	pipe := h.Pipe()
 
 	// 刪除舊資料
