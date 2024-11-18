@@ -1,4 +1,4 @@
-package mredisCluster
+package mrediscluster
 
 import (
 	"context"
@@ -98,14 +98,13 @@ func (h *Handler) HIncrBy(ctx context.Context, key string, field string, value i
 	return h.client.HIncrBy(ctx, key, field, value).Result()
 }
 
-// 增加 list 資料 從最後新增
-func (h *Handler) SetListFromLast(ctx context.Context, key string, values ...interface{}) error {
+// 增加 list 資料
+func (h *Handler) AddList(ctx context.Context, isFirst bool, key string, values ...interface{}) error {
+	if isFirst {
+		return h.client.LPush(ctx, key, values).Err()
+	}
+	// 從最後新增
 	return h.client.RPush(ctx, key, values).Err()
-}
-
-// 增加 list 資料 從頭新增
-func (h *Handler) SetListFromFirst(ctx context.Context, key string, values ...interface{}) error {
-	return h.client.LPush(ctx, key, values).Err()
 }
 
 // 取得 list 資料
@@ -163,9 +162,9 @@ func (h *Handler) DelZsetMember(ctx context.Context, key string, member []string
 }
 
 // 取得 node score
-func (h *Handler) GetNode(ctx context.Context, unix int64, incrementSecond int) (int64, error) {
+func (h *Handler) GetNode(ctx context.Context, unix int64) (int64, error) {
 	keys := []string{Key_Node}
-	values := []interface{}{unix, incrementSecond}
+	values := []interface{}{unix, NodeSecond}
 	nodeId, err := h.RunLua(ctx, LuaGetNode, keys, values...)
 	if err != nil {
 		return 0, err
@@ -173,18 +172,18 @@ func (h *Handler) GetNode(ctx context.Context, unix int64, incrementSecond int) 
 	return nodeId.(int64), err
 }
 
-// 取得 node score
-func (h *Handler) UpdateNodeTime(ctx context.Context, nodeId float64, nextUnix int64) error {
-	member := fmt.Sprintf("%v.%v", nodeId, nextUnix)
-	err := h.client.ZAdd(ctx, Key_Node, redis.Z{Score: nodeId, Member: member}).Err()
+// update node member
+func (h *Handler) UpdateNode(ctx context.Context, nodeID float64, unix int64) error {
+	member := fmt.Sprintf("%v.%v", unix, nodeID)
+	err := h.AddAndUpdateZset(ctx, Key_Node, nodeID, member)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-// 取得key & lock
-func (h *Handler) GetKeyAndLock(ctx context.Context, key string, second int) error {
+// 上鎖
+func (h *Handler) Lock(ctx context.Context, key string, second int) error {
 	success, err := h.client.SetNX(ctx, key, "", time.Duration(second*int(time.Second))).Result()
 	if !success && err == nil {
 		return errors.New("lock fail")

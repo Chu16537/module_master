@@ -1,4 +1,4 @@
-package mredisCluster
+package mrediscluster
 
 const (
 	// 取得node

@@ -1,6 +1,7 @@
-package mredisCluster
+package mrediscluster
 
 const (
-	Key_Node         = "node" // 節點編號(incr)
-	NodeUpdateSecond = 600    // node 更新時間
+	Key_Node         = "node"           // 節點編號(incr)
+	NodeSecond       = 600              // node 時間
+	NodeUpdateSecond = NodeSecond - 100 // node 更新時間
 )
