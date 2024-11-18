@@ -197,11 +197,6 @@ func (h *Handler) GetKeyAndLock(ctx context.Context, key string, second int) err
 	return nil
 }
 
-type GetScoreInfo struct {
-	Member string
-	Score  float64
-}
-
 // 取得zset最小/大 的n個
 func (h *Handler) GetScore(ctx context.Context, key string, unix int64, expireDuration int64, isMin bool, count int) ([]GetScoreInfo, error) {
 	result, err := h.RunLua(ctx, LuaGetScore, []string{key}, unix, expireDuration, isMin, count)

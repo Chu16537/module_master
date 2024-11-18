@@ -13,26 +13,26 @@ func run(h *mredisCluster.Handler) {
 
 	ctx := context.TODO()
 
-	// unix := time.Now().Unix()
+	unix := time.Now().Unix()
 
-	// node, err := h.GetNode(ctx, unix, 600)
-	// if err != nil {
-	// 	fmt.Println("err", err)
-	// 	return
-	// }
-
-	// fmt.Println("node", node)
-
-	key := "game_server_rank"
-	gss, err := h.GetScore(ctx, key, time.Now().Unix(), 30000, true, 30)
+	node, err := h.GetNode(ctx, unix, mredisCluster.NodeUpdateSecond)
 	if err != nil {
 		fmt.Println("err", err)
 		return
 	}
 
-	for i, v := range gss {
-		fmt.Println(i, v.Member, v.Score)
-	}
+	fmt.Println("node", node)
+
+	// key := "game_server_rank"
+	// gss, err := h.GetScore(ctx, key, time.Now().Unix(), 30000, true, 30)
+	// if err != nil {
+	// 	fmt.Println("err", err)
+	// 	return
+	// }
+
+	// for i, v := range gss {
+	// 	fmt.Println(i, v.Member, v.Score)
+	// }
 
 	// err = h.AddAndUpdateZset(ctx, mredisCluster.Key_Node, float64(node), "100")
 	// if err != nil {
