@@ -3,6 +3,7 @@ package mredisCluster
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/pkg/errors"
@@ -196,24 +197,35 @@ func (h *Handler) GetKeyAndLock(ctx context.Context, key string, second int) err
 	return nil
 }
 
+type GetScoreInfo struct {
+	Member string
+	Score  float64
+}
+
 // 取得zset最小/大 的n個
-func (h *Handler) GetScore(ctx context.Context, key string, isMin bool, count int) ([]redis.Z, error) {
-	var (
-		result []redis.Z
-		err    error
-	)
-
-	if isMin {
-		// 使用 ZRANGE 獲取最小 n 個分數及其對應的成員
-		result, err = h.client.ZRangeWithScores(ctx, key, 0, int64(count-1)).Result()
-	} else {
-		// 使用 ZREVRANGE 獲取最大的 n 個分數及其對應的成員
-		result, err = h.client.ZRevRangeWithScores(ctx, key, 0, int64(count-1)).Result()
-	}
-
+func (h *Handler) GetScore(ctx context.Context, key string, unix int64, expireDuration int64, isMin bool, count int) ([]GetScoreInfo, error) {
+	result, err := h.RunLua(ctx, LuaGetScore, []string{key}, unix, expireDuration, isMin, count)
 	if err != nil {
 		return nil, err
 	}
 
-	return result, nil
+	// 將結果轉換為 GetScoreInfo 結構體的切片
+	var scoreInfoList []GetScoreInfo
+	for i := 0; i < len(result.([]interface{})); i += 2 {
+		member := result.([]interface{})[i].(string)
+		score, err := strconv.ParseFloat(result.([]interface{})[i+1].(string), 64)
+		if err != nil {
+			return nil, err
+		}
+
+		// 將每個成員和分數封裝成 GetScoreInfo 結構體
+		scoreInfo := GetScoreInfo{
+			Member: member,
+			Score:  score,
+		}
+		scoreInfoList = append(scoreInfoList, scoreInfo)
+	}
+
+	return scoreInfoList, nil
+
 }
