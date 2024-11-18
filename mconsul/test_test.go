@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mconsul"
+	"github.com/Chu16537/module_master/mjson"
 	"github.com/Chu16537/module_master/muid"
 )
 
@@ -16,14 +17,14 @@ func TestXxx(t *testing.T) {
 	c := &mconsul.Config{
 		ConsulAddr: "192.168.50.80:8500",
 		Scheme:     "http",
-		NodeId:     uid.CreateID(),
+		NodeID:     uid.CreateID(),
 		Name:       "test_name",
 		Addr:       "192.168.50.80",
 		Port:       8081,
 		Tags:       []string{"a", "b"},
 	}
 
-	fmt.Println(c.NodeId)
+	fmt.Println(c.NodeID)
 
 	mc, err := mconsul.New(c)
 	if err != nil {
@@ -37,15 +38,53 @@ func TestXxx(t *testing.T) {
 		return
 	}
 
+	time.Sleep(5 * time.Second)
+
 	a, eC := mc.GetServer(c.Name)
 	if eC != nil {
 		fmt.Println(eC)
 		return
 	}
 
-	for _, v := range a {
-		fmt.Println(v)
+	for i, v := range a {
+		fmt.Println(i, v)
 	}
 
-	time.Sleep(100 * time.Minute)
+	b, err := mjson.Marshal("asdasdasda")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("UpdateKV")
+	mc.UpdateKV(b)
+	time.Sleep(3 * time.Second)
+
+	a, eC = mc.GetServer(c.Name)
+	if eC != nil {
+		fmt.Println(eC)
+		return
+	}
+
+	for i, v := range a {
+		fmt.Println(i, v)
+	}
+
+	b, err = mjson.Marshal("123213132")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("UpdateKV")
+	mc.UpdateKV(b)
+	time.Sleep(3 * time.Second)
+
+	a, eC = mc.GetServer(c.Name)
+	if eC != nil {
+		fmt.Println(eC)
+		return
+	}
+
+	for i, v := range a {
+		fmt.Println(i, v)
+	}
 }

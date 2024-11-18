@@ -10,128 +10,163 @@ import (
 )
 
 const (
-	consulhealthURL = "/consulhealth"
+	consulHealthURL = "/consulhealth"
 )
 
 type Config struct {
-	ConsulAddr string   // consul
-	Scheme     string   // consul
-	NodeId     int64    // 服務的
-	Name       string   // 服務的
-	Addr       string   // 服務的
-	Port       int      // 服務的
-	Tags       []string // 服務的
-}
-
-type ServerInfo struct {
-	NodeId string
-	Ip     string
+	ConsulAddr  string   // Consul 地址
+	Scheme      string   // http 或 https
+	NodeID      int64    // 服务节点 ID
+	Name        string   // 服务名称
+	Addr        string   // 服务地址
+	Port        int      // 服务端口
+	Tags        []string // 服务标签
+	HealthCheck struct { // 健康检查配置
+		Interval string
+		Timeout  string
+	}
 }
 
 type Handler struct {
-	c      *api.Client
 	config *Config
+	c      *api.Client
 }
 
+type GetServerInfo struct {
+	Addr  string
+	Value []byte
+}
+
+var kv *api.KVPair
+
 func New(config *Config) (*Handler, error) {
-	schema := config.Scheme
-	if schema == "" {
-		schema = "http"
+	if config == nil || config.ConsulAddr == "" || config.Name == "" || config.Addr == "" || config.Port <= 0 {
+		return nil, fmt.Errorf("invalid config: %+v", config)
 	}
 
-	c := &api.Config{
-		Address: config.ConsulAddr, // 指定 Consul 的地址和端口
-		Scheme:  schema,            // 如果使用 HTTPS 則改為 "https"
+	if config.Scheme == "" {
+		config.Scheme = "http" // 默认协议为 HTTP
+	}
+	if config.HealthCheck.Interval == "" {
+		config.HealthCheck.Interval = "30s" // 默认健康检查间隔
+	}
+	if config.HealthCheck.Timeout == "" {
+		config.HealthCheck.Timeout = "10s" // 默认健康检查超时
 	}
 
-	// 初始化 Consul 客戶端
-	client, err := api.NewClient(c)
+	client, err := api.NewClient(&api.Config{
+		Address: config.ConsulAddr,
+		Scheme:  config.Scheme,
+	})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create consul client: %w", err)
 	}
 
 	h := &Handler{
-		c:      client,
 		config: config,
+		c:      client,
+	}
+
+	kv = &api.KVPair{
+		Key: fmt.Sprintf("%v", h.config.NodeID),
 	}
 
 	return h, nil
 }
 
-// 服務註冊
+// 服务注册
 func (h *Handler) RegisterService() *errorcode.Error {
-
 	ip := fmt.Sprintf("%v:%v", h.config.Addr, h.config.Port)
-	healthURL := fmt.Sprintf("http://%v%v", ip, consulhealthURL)
+	healthURL := fmt.Sprintf("%v://%v%v", h.config.Scheme, ip, consulHealthURL)
 
-	// 註冊服務到 Consul
 	registration := &api.AgentServiceRegistration{
-		ID:      fmt.Sprintf("%v", h.config.NodeId), // 每台服務應該有唯一 ID
-		Name:    h.config.Name,                      // 服務名稱（相同名稱表示是同類型服務）
-		Address: h.config.Addr,                      // 服務的地址
-		Port:    h.config.Port,                      // 服務的端口
-		Tags:    h.config.Tags,                      // 可選的服務標籤
-		Check: &api.AgentServiceCheck{ // 健康檢查
+		ID:      fmt.Sprintf("%v", h.config.NodeID), // 唯一 ID
+		Name:    h.config.Name,                      // 服务名称
+		Address: h.config.Addr,                      // 服务地址
+		Port:    h.config.Port,                      // 服务端口
+		Tags:    h.config.Tags,                      // 服务标签
+		Check: &api.AgentServiceCheck{ // 健康检查
 			HTTP:     healthURL,
-			Interval: "30s", // 健康檢查間隔
-			Timeout:  "10s",
+			Interval: h.config.HealthCheck.Interval,
+			Timeout:  h.config.HealthCheck.Timeout,
 		},
 	}
 
-	// 把服務註冊到 Consul
-	err := h.c.Agent().ServiceRegister(registration)
-	if err != nil {
-		return errorcode.Server(err)
+	// 注册服务到 Consul
+	if err := h.c.Agent().ServiceRegister(registration); err != nil {
+		return errorcode.Server(fmt.Errorf("failed to register service: %w", err))
 	}
 
-	err = health(ip)
-	if err != nil {
-		return errorcode.Server(err)
+	// 启动健康检查服务
+	if err := h.startHealthCheckServer(ip); err != nil {
+		return errorcode.Server(fmt.Errorf("failed to start health check server: %w", err))
 	}
 
 	return nil
 }
 
-// 啟動一個簡單的 HTTP 服務
-func health(ip string) error {
-	http.HandleFunc(consulhealthURL, func(w http.ResponseWriter, r *http.Request) {
+// 启动健康检查 HTTP 服务
+func (h *Handler) startHealthCheckServer(ip string) error {
+	mux := http.NewServeMux()
+	mux.HandleFunc(consulHealthURL, func(w http.ResponseWriter, r *http.Request) {
+		// 写入 Consul KV
+		_, err := h.c.KV().Put(kv, nil)
+		if err != nil {
+			http.Error(w, "Failed to update KV", http.StatusInternalServerError)
+			return
+		}
+
+		// 返回 HTTP 响应
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("OK"))
 	})
 
+	server := &http.Server{
+		Addr:    ip,
+		Handler: mux,
+	}
+
 	errChan := make(chan error, 1)
-
 	go func() {
-		err := http.ListenAndServe(ip, nil)
-
-		if err != nil {
-			errChan <- err
-		}
+		errChan <- server.ListenAndServe()
 	}()
 
-	// 等待n秒判斷是否有錯
 	select {
 	case err := <-errChan:
 		return err
-
 	case <-time.After(5 * time.Second):
-		// 等待5秒發現沒有錯誤
 		return nil
 	}
 }
 
-// 查詢指定服務名稱的健康實例
-// 回傳 map[nodeId]Addr
-func (h *Handler) GetServer(serviceName string) (map[string]string, *errorcode.Error) {
-	//  過濾條件確保返回健康的實例
+// 更新kv數值
+func (h *Handler) UpdateKV(v []byte) {
+	kv.Value = v
+	fmt.Println("UpdateKV", kv.Value)
+}
+
+// 查询指定服务名称的健康实例
+func (h *Handler) GetServer(serviceName string) (map[string]GetServerInfo, *errorcode.Error) {
 	instances, _, err := h.c.Health().Service(serviceName, "", true, nil)
 	if err != nil {
-		return nil, errorcode.Server(err)
+		return nil, errorcode.Server(fmt.Errorf("failed to fetch service instances: %w", err))
 	}
 
-	result := map[string]string{}
-	for _, v := range instances {
-		result[v.Service.ID] = v.Service.Address
+	result := make(map[string]GetServerInfo)
+	for _, instance := range instances {
+		// 获取服务的健康状态信息（从 KV）
+		kvPair, _, err := h.c.KV().Get(instance.Service.ID, nil)
+		v := []byte{}
+		if err == nil && kvPair != nil {
+			v = kvPair.Value
+		}
+
+		gsInfo := GetServerInfo{
+			Addr:  instance.Service.Address,
+			Value: v,
+		}
+		// 格式化返回值，包括服务地址和状态
+		result[instance.Service.ID] = gsInfo
 	}
 
 	return result, nil
