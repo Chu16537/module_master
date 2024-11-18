@@ -122,7 +122,7 @@ func (h *Handler) Pipe() redis.Pipeliner {
 // 新增 / 更新 score
 func (h *Handler) AddAndUpdateZset(ctx context.Context, key string, score float64, member string) error {
 	// 刪除指定 score 的 member
-	_, err := h.client.ZRemRangeByScore(ctx, Key_Node, fmt.Sprintf("%f", score), fmt.Sprintf("%f", score)).Result()
+	_, err := h.client.ZRemRangeByScore(ctx, key, fmt.Sprintf("%f", score), fmt.Sprintf("%f", score)).Result()
 	if err != nil {
 		return err
 	}

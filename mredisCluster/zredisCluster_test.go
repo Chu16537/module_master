@@ -7,21 +7,54 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mredisCluster"
+	"github.com/Chu16537/module_master/mredisCluster/hmrediscluster"
 )
 
 func run(h *mredisCluster.Handler) {
 
 	ctx := context.TODO()
 
-	unix := time.Now().Unix()
+	// unix := time.Now().Unix()
+	// fmt.Println("unix", unix)
+	// gsis, err := hmrediscluster.GetGameServerRank(h, ctx, unix, true, 20)
+	// if err != nil {
+	// 	fmt.Println("err", err)
+	// 	return
+	// }
 
-	node, err := h.GetNode(ctx, unix, mredisCluster.NodeUpdateSecond)
+	// fmt.Println("gsis", gsis)
+
+	// nodeIds := make([]string, len(gsis))
+
+	// for i, v := range gsis {
+	// 	nodeIds[i] = v.Member
+	// }
+
+	// fmt.Println("nodeIds", nodeIds)
+
+	// ipMap, err := hmrediscluster.GetGameServerIP(h, ctx, nodeIds)
+	// if err != nil {
+	// 	fmt.Println("err", err)
+	// 	return
+	// }
+
+	// fmt.Println("ipMap", ipMap)
+
+	// unix2 := time.Now().Unix()
+	// err2 := hmrediscluster.DelGameServerIP(h, ctx, unix2)
+	// if err2 != nil {
+	// 	fmt.Println("err", err)
+	// 	return
+	// }
+
+	var nodeId int64 = 2
+	unix := time.Now().Unix()
+	fmt.Println("unix", unix)
+	err := hmrediscluster.UpdateGameServerRank(h, ctx, "1731913864.2", nodeId, unix, "1.2.3.4")
 	if err != nil {
 		fmt.Println("err", err)
 		return
 	}
-
-	fmt.Println("node", node)
 
 	// key := "game_server_rank"
 	// gss, err := h.GetScore(ctx, key, time.Now().Unix(), 30000, true, 30)

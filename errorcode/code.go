@@ -40,6 +40,7 @@ const (
 	GameWallet_Balacne_Less = 40002 // 錢包金額不足
 
 	// Redis
+	Redis_Error = 50001 //
 
 	// api_server
 	Account_Length_Error   = 60001 // account 長度錯誤

@@ -69,22 +69,6 @@ const (
 	local num_results = tonumber(ARGV[4]) -- 需要返回的結果數量
 	local expire_time = current_time - expire_duration
 
-	-- 遍歷 ZSET 成員，刪除過期的成員
-	local to_remove = {}
-	local zset_members = redis.call("ZRANGE", zset_key, 0, -1)
-
-	for _, member in ipairs(zset_members) do
-	    -- 提取 member 的 UNIX 時間部分
-	    local unix_timestamp = tonumber(string.match(member, "^(%d+)%."))
-	    if unix_timestamp and unix_timestamp < expire_time then
-	        table.insert(to_remove, member)
-	    end
-	end
-
-	-- 刪除過期成員
-	if #to_remove > 0 then
-	    redis.call("ZREM", zset_key, unpack(to_remove))
-	end
 
 	-- 根據排序方向獲取數據
 	local range_result
@@ -109,5 +93,39 @@ const (
 	end
 
 	return formatted_result
+	`
+
+	LuaGetGameServerTimeoutMember = `
+	local zset_key = KEYS[1]
+	local current_time = tonumber(ARGV[1])
+	local expire_duration = tonumber(ARGV[2]) -- 傳入的過期秒數
+	local expire_time = current_time - expire_duration
+	
+	-- 用來記錄所有刪除的數值（小數點後部分）
+	local to_remove_values = {}
+	
+	-- 用來記錄每個成員的 unix_timestamp 和 decimal_value
+	local member_info = {}
+	
+	-- 遍歷 ZSET 成員
+	local zset_members = redis.call("ZRANGE", zset_key, 0, -1)
+	
+	for _, member in ipairs(zset_members) do
+		-- 提取 member 的 UNIX 時間部分和小數點後部分
+		local unix_timestamp, decimal_value = string.match(member, "^(%d+)%.(.+)$")
+		if unix_timestamp then
+			unix_timestamp = tonumber(unix_timestamp)
+			-- 比較 UNIX 時間是否過期
+			if unix_timestamp < expire_time then
+				-- 記錄小數點後部分
+				table.insert(to_remove_values, decimal_value)
+				-- 記錄為字串格式的 unix_timestamp 和 decimal_value
+				table.insert(member_info, tostring(member))  -- 使用 tostring() 轉換為字符串
+			end
+		end
+	end
+	
+	-- 回傳過期的 unix_timestamp 和 decimal_value 作為字符串
+	return member_info	
 	`
 )
