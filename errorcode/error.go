@@ -130,9 +130,16 @@ func GameWalleBalanceLess(userID, tableID, nowBalance, amount uint64) *Error {
 	}
 }
 
-func MQPublishError(subject string, data []byte, err error) *Error {
+func MQPubError(subject string, data []byte, err error) *Error {
 	return &Error{
-		Code: MQ_Publish_Error,
+		Code: MQ_Pub_Error,
 		Err:  errors.Errorf("subject:%v data:%s err:%v", subject, string(data), err.Error()),
+	}
+}
+
+func MQSubError(subject string, err error) *Error {
+	return &Error{
+		Code: MQ_Sub_Error,
+		Err:  errors.Errorf("subject:%v err:%v", subject, err.Error()),
 	}
 }

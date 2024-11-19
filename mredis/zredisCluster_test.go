@@ -7,22 +7,21 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/mredis"
-	"github.com/Chu16537/module_master/mredis/hmredis"
 )
 
 func run(h *mredis.Handler) {
 
 	ctx := context.TODO()
 
-	unix := time.Now().Unix()
-	fmt.Println("unix", unix)
-	gsis, err := hmredis.GetGameServerRank(h, ctx, unix, true, 20)
-	if err != nil {
-		fmt.Println("err", err)
-		return
-	}
+	// unix := time.Now().Unix()
+	// fmt.Println("unix", unix)
+	// gsis, err := hmredis.GetGameServerRank(h, ctx, unix, true, 20)
+	// if err != nil {
+	// 	fmt.Println("err", err)
+	// 	return
+	// }
 
-	fmt.Println("gsis", gsis)
+	// fmt.Println("gsis", gsis)
 
 	// nodeIds := make([]string, len(gsis))
 
@@ -181,6 +180,19 @@ func run(h *mredis.Handler) {
 	// 	fmt.Println(err)
 	// 	return
 	// }
+
+	m1 := map[string]interface{}{
+		"a": "aaa",
+	}
+	err := h.HSet(ctx, "a", m1)
+	if err != nil {
+		fmt.Println("a", err)
+	}
+
+	m2 := map[string]interface{}{
+		"s": "123",
+	}
+	h.HSet(ctx, "a", m2)
 
 }
 func Test_A(t *testing.T) {

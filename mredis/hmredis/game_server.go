@@ -8,6 +8,7 @@ import (
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mredis"
+	"github.com/Chu16537/module_master/proto/db"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -105,4 +106,66 @@ func UpdateGameServerRank(h *mredis.Handler, ctx context.Context, oldMember stri
 	}
 
 	return nil
+}
+
+// 更新牌桌
+func UpdateTable(h *mredis.Handler, ctx context.Context, data *db.Table) *errorcode.Error {
+	key := keyTable(data.ID)
+	update := map[string]interface{}{
+		"id":          data.ID,
+		"club_id":     data.ClubID,
+		"expire_time": data.ExpireTime,
+		"status":      data.Status,
+		"game_id":     data.GameID,
+		"game_config": data.GameConfig,
+	}
+
+	err := h.HSet(ctx, key, update)
+	if err != nil {
+		return errorcode.New(errorcode.Redis_Error, err)
+	}
+
+	return nil
+}
+
+// 取得牌桌
+func GetTable(h *mredis.Handler, ctx context.Context, tableID uint64) (*db.Table, *errorcode.Error) {
+	key := keyTable(tableID)
+
+	m, err := h.HGetAll(ctx, key)
+	if err != nil {
+		return nil, errorcode.New(errorcode.Redis_Error, err)
+	}
+
+	id, err := strconv.Atoi(m["id"])
+	if err != nil {
+		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable id:%v", m["id"]))
+	}
+	clubId, err := strconv.Atoi(m["club_id"])
+	if err != nil {
+		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable club_id:%v", m["club_id"]))
+	}
+	expireTime, err := strconv.Atoi(m["expire_time"])
+	if err != nil {
+		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable expire_time:%v", m["expire_time"]))
+	}
+	status, err := strconv.Atoi(m["status"])
+	if err != nil {
+		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable status:%v", m["status"]))
+	}
+	gameId, err := strconv.Atoi(m["game_id"])
+	if err != nil {
+		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable game_id:%v", m["game_id"]))
+	}
+
+	t := &db.Table{
+		ID:         uint64(id),
+		ClubID:     uint64(clubId),
+		ExpireTime: int64(expireTime),
+		Status:     status,
+		GameID:     gameId,
+		GameConfig: []byte(m["game_config"]),
+	}
+
+	return t, nil
 }

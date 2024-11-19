@@ -52,5 +52,6 @@ const (
 	RoomServer_Req_Error = 70001 // room server 請求錯誤
 
 	// mq
-	MQ_Publish_Error = 80001 // mq publish 錯誤
+	MQ_Pub_Error = 80001 // mq publish 錯誤
+	MQ_Sub_Error = 80002 // mq subject 錯誤
 )

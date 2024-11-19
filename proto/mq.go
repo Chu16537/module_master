@@ -10,6 +10,19 @@ type TableServerDeleteRoom struct {
 	TableIDs []uint64 // 要刪除的房間編號
 }
 
+type TableServerCreateRoom struct {
+	Data []TableServerCreateRoomData
+}
+
+type TableServerCreateRoomData struct {
+	NodeID  uint64
+	TableID uint64
+}
+
+type TableServerUpdateRoomData struct {
+	TableID uint64
+}
+
 // 玩家請求 推給房間
 type PlayerReqPushToRoom struct {
 	ReqID     string      `json:"req_id"`     // 請求編號
