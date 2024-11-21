@@ -30,16 +30,18 @@ func Test_A(t *testing.T) {
 	subChan := make(chan proto.MQSubData, 1024)
 
 	subName := "test_sub_name"
+	consumer := "consumer1"
+
 	m := mnats.SubMode{
-		Mode: mnats.Sub_Mode_Last_Ack,
+		Mode: mnats.Sub_Mode_Last,
 	}
-	err = h.Sub(subName, m, subChan)
+	err = h.Sub(subName, consumer, m, subChan)
 	if err != nil {
 		fmt.Printf("Sub:%+v", err)
 		return
 	}
 
-	defer h.UnSub(subName)
+	defer h.UnSub(consumer)
 
 	go func() {
 		for {
@@ -53,6 +55,8 @@ func Test_A(t *testing.T) {
 			}
 		}
 	}()
+
+	time.Sleep(5 * time.Second)
 
 	fmt.Println("start push")
 	for i := 0; i < 5; i++ {

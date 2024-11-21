@@ -1,8 +1,6 @@
 package mnats
 
 import (
-	"fmt"
-
 	"github.com/Chu16537/module_master/proto"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
@@ -35,7 +33,7 @@ func (h *Handler) Pub(subject string, data []byte) error {
 }
 
 // 訂閱
-func (h *Handler) Sub(subjectName string, mode SubMode, subChan chan proto.MQSubData) error {
+func (h *Handler) Sub(subjectName string, consumer string, mode SubMode, subChan chan proto.MQSubData) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -48,7 +46,7 @@ func (h *Handler) Sub(subjectName string, mode SubMode, subChan chan proto.MQSub
 
 	switch mode.Mode {
 	case Sub_Mode_Last_Ack:
-		opts = append(opts, nats.Durable(subjectName)) // 從最後ack 開始
+		opts = append(opts, nats.Durable(consumer)) // 從最後ack 開始
 	case Sub_Mode_Last:
 		opts = append(opts, nats.DeliverNew()) // 從訂閱後的最新消息開始
 	case Sub_Mode_Sequence:
@@ -86,10 +84,7 @@ func (h *Handler) Sub(subjectName string, mode SubMode, subChan chan proto.MQSub
 }
 
 // 取消訂閱
-func (h *Handler) UnSub(subjectName string) {
-	err := h.subMap[subjectName].Unsubscribe()
-	if err != nil {
-		fmt.Println("UnSub err", err)
-	}
-	delete(h.subMap, subjectName)
+func (h *Handler) UnSub(consumer string) {
+	h.subMap[consumer].Unsubscribe()
+	delete(h.subMap, consumer)
 }
