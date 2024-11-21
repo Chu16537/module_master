@@ -1,0 +1,6 @@
+nats: 
+  addr: "nats://127.0.0.1:4222,nats://127.0.0.1:4223,nats://127.0.0.1:4224"
+  user: "user"
+  password: "password"
+  streamnames: 
+  - "game_server"

@@ -9,10 +9,10 @@ import (
 )
 
 type Config struct {
-	Addr       string // 多個可以使用",區隔 "nats://127.0.0.1:4222,nats://127.0.0.1:6222,nats://127.0.0.1:8222"
-	User       string
-	Password   string
-	StreamName string
+	Addr        string // 多個可以使用",區隔 "nats://127.0.0.1:4222,nats://127.0.0.1:6222,nats://127.0.0.1:8222"
+	User        string
+	Password    string
+	StreamNames []string
 }
 
 type Handler struct {
@@ -47,9 +47,11 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 		return nil, errors.Wrapf(err, "connect err :%v", err.Error())
 	}
 
-	err = h.createStream(h.config.StreamName)
-	if err != nil {
-		return nil, errors.Wrapf(err, "createStream err :%v", err.Error())
+	for _, stream := range h.config.StreamNames {
+		err = h.createStream(stream)
+		if err != nil {
+			return nil, errors.Wrapf(err, "createStream err :%v", err.Error())
+		}
 	}
 
 	return h, nil

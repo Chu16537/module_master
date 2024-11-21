@@ -11,12 +11,13 @@ import (
 )
 
 func Test_A(t *testing.T) {
+	streamName := "test_stream_name"
 
 	config := &mnats.Config{
-		Addr:       "nats://127.0.0.1:4222,nats://127.0.0.1:4223,nats://127.0.0.1:4224",
-		User:       "user",
-		Password:   "password",
-		StreamName: "test_stream",
+		Addr:        "nats://127.0.0.1:4222,nats://127.0.0.1:4223,nats://127.0.0.1:4224",
+		User:        "user",
+		Password:    "password",
+		StreamNames: []string{streamName},
 	}
 
 	ctx := context.Background()
@@ -30,14 +31,14 @@ func Test_A(t *testing.T) {
 	subChan := make(chan proto.MQSubData, 1024)
 
 	subName := "test_sub_name"
-	consumer := "consumer1"
+	consumer := "consumer2"
 
 	m := mnats.SubMode{
 		Mode: mnats.Sub_Mode_Last,
 	}
-	err = h.Sub(subName, consumer, m, subChan)
+	err = h.Sub(streamName, subName, consumer, m, subChan)
 	if err != nil {
-		fmt.Printf("Sub:%+v", err)
+		fmt.Printf("Sub:%+v \n", err)
 		return
 	}
 
