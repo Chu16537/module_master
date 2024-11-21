@@ -2,6 +2,7 @@ package mgin
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -63,7 +64,12 @@ func New(ctx context.Context, config *Config, timeoutFn func(c *gin.Context)) (*
 }
 
 func (h *Handler) Done() {
-	h.srv.Shutdown(h.ctx)
+	err := h.srv.Shutdown(h.ctx)
+	if err != nil {
+		fmt.Printf("gin Shutdown error: %v\n", err)
+	} else {
+		fmt.Println("gin Shutdown success")
+	}
 }
 
 func (h *Handler) Run() error {

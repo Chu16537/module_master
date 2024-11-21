@@ -61,7 +61,7 @@ func New(ctx context.Context, config *Config, rpch IRPCHandler, opt ...grpc.Serv
 // 關閉
 func (h *Handler) Done() {
 	if h.server != nil {
-		h.server.Stop()
+		h.server.GracefulStop()
 	}
 }
 
