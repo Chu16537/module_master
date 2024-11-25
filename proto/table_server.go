@@ -6,7 +6,7 @@ const (
 	TS_GET_TABLE           = 1
 	TS_UPDATE_TABLE_GAME   = 2
 	TS_UPDATE_TABLE_STATUS = 3
-	TS_CREATE_TABLE        = 4
+	// TS_CREATE_TABLE        = 4
 )
 
 type TSGetTableReq struct {

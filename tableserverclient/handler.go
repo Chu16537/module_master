@@ -114,37 +114,37 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 	return nil
 }
 
-// 創建牌桌
-func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint64, expireTime int64, gameID int) *errorcode.Error {
-	reqData := &proto.TSCreateTableReq{
-		ClubID:     clubID,
-		ExpireTime: expireTime,
-		GameID:     gameID,
-	}
+// // 創建牌桌
+// func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint64, expireTime int64, gameID int) *errorcode.Error {
+// 	reqData := &proto.TSCreateTableReq{
+// 		ClubID:     clubID,
+// 		ExpireTime: expireTime,
+// 		GameID:     gameID,
+// 	}
 
-	reqDataBytes, err := mjson.Marshal(reqData)
-	if err != nil {
-		return errorcode.DataMarshalError(fmt.Sprintf("CreateTable Marshal error:%v", err))
-	}
+// 	reqDataBytes, err := mjson.Marshal(reqData)
+// 	if err != nil {
+// 		return errorcode.DataMarshalError(fmt.Sprintf("CreateTable Marshal error:%v", err))
+// 	}
 
-	req := &commongrpc.UnaryRPCReq{
-		LogData: &commongrpc.LogData{
-			Tracer: logTracer,
-		},
-		EventCode: proto.TS_CREATE_TABLE,
-		Data:      reqDataBytes,
-	}
+// 	req := &commongrpc.UnaryRPCReq{
+// 		LogData: &commongrpc.LogData{
+// 			Tracer: logTracer,
+// 		},
+// 		EventCode: proto.TS_CREATE_TABLE,
+// 		Data:      reqDataBytes,
+// 	}
 
-	_, errC := h.client.UnaryRPC(ctx, req)
-	if errC != nil {
-		return errC
-	}
+// 	_, errC := h.client.UnaryRPC(ctx, req)
+// 	if errC != nil {
+// 		return errC
+// 	}
 
-	// resData := &proto.TSCreateTableRes{}
-	// err = mjson.Unmarshal(res.Data, resData)
-	// if err != nil {
-	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("CreateTable Unmarshal error:%v", err))
-	// }
+// 	// resData := &proto.TSCreateTableRes{}
+// 	// err = mjson.Unmarshal(res.Data, resData)
+// 	// if err != nil {
+// 	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("CreateTable Unmarshal error:%v", err))
+// 	// }
 
-	return nil
-}
+// 	return nil
+// }
