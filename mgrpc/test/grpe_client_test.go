@@ -39,7 +39,7 @@ func TestClient(t *testing.T) {
 		LogData: &commongrpc.LogData{
 			Tracer: "test_client",
 		},
-		EventCode: proto.RS_GET_TABLE,
+		EventCode: proto.TS_GET_TABLE,
 		Data:      rb,
 	}
 	res, errC := h.UnaryRPC(context.Background(), req)

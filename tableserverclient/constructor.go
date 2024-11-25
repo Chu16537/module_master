@@ -1,4 +1,4 @@
-package roomserverclient
+package tableserverclient
 
 import (
 	"context"

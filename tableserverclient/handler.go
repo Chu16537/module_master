@@ -1,4 +1,4 @@
-package roomserverclient
+package tableserverclient
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 // 取得牌桌
 func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, findOpt *db.FindOpt) ([]*db.Table, *errorcode.Error) {
-	reqData := &proto.RSGetTableReq{
+	reqData := &proto.TSGetTableReq{
 		TableOpt: tableOpt,
 		FindOpt:  findOpt,
 	}
@@ -27,7 +27,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 		LogData: &commongrpc.LogData{
 			Tracer: logTracer,
 		},
-		EventCode: proto.RS_GET_TABLE,
+		EventCode: proto.TS_GET_TABLE,
 		Data:      reqDataBytes,
 	}
 
@@ -36,7 +36,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 		return nil, errC
 	}
 
-	resData := &proto.RSGetTableRes{}
+	resData := &proto.TSGetTableRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
 		return nil, errorcode.DataUnmarshalError(fmt.Sprintf("GetTable Unmarshal error:%v", err))
@@ -47,7 +47,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 
 // 更新牌桌 遊戲設定
 func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOpt *db.TableOpt, gameConfig []byte) (*db.Table, *errorcode.Error) {
-	reqData := &proto.RSUpdateTableGameReq{
+	reqData := &proto.TSUpdateTableGameReq{
 		TableOpt:   tableOpt,
 		GameConfig: gameConfig,
 	}
@@ -61,7 +61,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 		LogData: &commongrpc.LogData{
 			Tracer: logTracer,
 		},
-		EventCode: proto.RS_UPDATE_TABLE_GAME,
+		EventCode: proto.TS_UPDATE_TABLE_GAME,
 		Data:      reqDataBytes,
 	}
 
@@ -70,7 +70,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 		return nil, errC
 	}
 
-	resData := &proto.RSUpdateTableGameRes{}
+	resData := &proto.TSUpdateTableGameRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
 		return nil, errorcode.DataUnmarshalError(fmt.Sprintf("UpdateTableGame Unmarshal error:%v", err))
@@ -81,7 +81,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 
 // 更新牌桌狀態
 func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, status int, expireTime int64) *errorcode.Error {
-	reqData := &proto.RSUpdateTableReq{
+	reqData := &proto.TSUpdateTableReq{
 		TableOpt:   tableOpt,
 		Status:     status,
 		ExpireTime: expireTime,
@@ -96,7 +96,7 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 		LogData: &commongrpc.LogData{
 			Tracer: logTracer,
 		},
-		EventCode: proto.RS_UPDATE_TABLE_STATUS,
+		EventCode: proto.TS_UPDATE_TABLE_STATUS,
 		Data:      reqDataBytes,
 	}
 
@@ -105,10 +105,45 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 		return errC
 	}
 
-	// resData := &proto.RSUpdateTableRes{}
+	// resData := &proto.TSUpdateTableRes{}
 	// err = mjson.Unmarshal(res.Data, resData)
 	// if err != nil {
 	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("UpdateTableGame Unmarshal error:%v", err))
+	// }
+
+	return nil
+}
+
+// 創建牌桌
+func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint64, expireTime int64, gameID int) *errorcode.Error {
+	reqData := &proto.TSCreateTableReq{
+		ClubID:     clubID,
+		ExpireTime: expireTime,
+		GameID:     gameID,
+	}
+
+	reqDataBytes, err := mjson.Marshal(reqData)
+	if err != nil {
+		return errorcode.DataMarshalError(fmt.Sprintf("CreateTable Marshal error:%v", err))
+	}
+
+	req := &commongrpc.UnaryRPCReq{
+		LogData: &commongrpc.LogData{
+			Tracer: logTracer,
+		},
+		EventCode: proto.TS_CREATE_TABLE,
+		Data:      reqDataBytes,
+	}
+
+	_, errC := h.client.UnaryRPC(ctx, req)
+	if errC != nil {
+		return errC
+	}
+
+	// resData := &proto.TSCreateTableRes{}
+	// err = mjson.Unmarshal(res.Data, resData)
+	// if err != nil {
+	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("CreateTable Unmarshal error:%v", err))
 	// }
 
 	return nil
