@@ -80,7 +80,6 @@ type JoinClubRes struct {
 }
 
 type TransBalanceClubeReq struct {
-	ClubID    uint64 `json:"club_id"`
 	TagUserID uint64 `json:"tagUser_id"`
 	Amount    uint64 `json:"amount"`
 }

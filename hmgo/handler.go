@@ -150,7 +150,7 @@ func (h *Handler) IsClubUserInfoPresident(ctx context.Context, opt *db.ClubUserI
 		return nil, errorcode.NotClubPermissions(opt.UserID, opt.ClubID)
 	}
 
-	return cui[0], errorcode.Success()
+	return cui[0], nil
 }
 
 /*

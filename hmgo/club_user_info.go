@@ -47,13 +47,13 @@ func (h *Handler) createClubUserInfo(ctx context.Context, data *db.ClubUserInfo)
 }
 
 // 更新 ClubUserInfo
-func (h *Handler) UpdateClubUserInfo(ctx context.Context, filter *db.ClubUserInfoOpt, data map[string]interface{}) (int64, *errorcode.Error) {
-	c, err := h.update(ctx, db.ColName_Club_User_Info, filter.Filter_Mgo(), data)
+func (h *Handler) UpdateClubUserInfo(ctx context.Context, filter *db.ClubUserInfoOpt, data map[string]interface{}) *errorcode.Error {
+	_, err := h.update(ctx, db.ColName_Club_User_Info, filter.Filter_Mgo(), data)
 	if err != nil {
-		return c, errorcode.Server(err)
+		return errorcode.Server(err)
 	}
 
-	return c, nil
+	return errorcode.Success()
 }
 
 // 更新金額

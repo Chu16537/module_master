@@ -86,6 +86,5 @@ func (h *Handler) CreatRandomString(length int) string {
 
 // orderID 時間-nodeId-唯一碼
 func (h *Handler) CreateOrderID() string {
-	fmt.Println(h.uid)
 	return fmt.Sprintf("%v-%v-%v", time.Now().Unix(), h.node, h.CreateID())
 }

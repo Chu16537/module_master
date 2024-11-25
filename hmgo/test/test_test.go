@@ -137,7 +137,7 @@ func TestClub(t *testing.T) {
 	cuiUpdata := map[string]interface{}{
 		"permissions": db.Club_User_Permissions_Vice_President,
 	}
-	_, err = h.UpdateClubUserInfo(ctx, cuiOpt, cuiUpdata)
+	err = h.UpdateClubUserInfo(ctx, cuiOpt, cuiUpdata)
 	if err != nil {
 		showErr(t, err)
 		return
