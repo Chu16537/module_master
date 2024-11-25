@@ -1,6 +1,7 @@
 package muid
 
 import (
+	"fmt"
 	"math/rand"
 	"sync/atomic"
 	"time"
@@ -81,4 +82,10 @@ func (h *Handler) CreatRandomString(length int) string {
 		result[i] = charset[h.randGen.Intn(charsetLength)]
 	}
 	return string(result)
+}
+
+// orderID 時間-nodeId-唯一碼
+func (h *Handler) CreateOrderID() string {
+	fmt.Println(h.uid)
+	return fmt.Sprintf("%v-%v-%v", time.Now().Unix(), h.node, h.CreateID())
 }
