@@ -20,8 +20,9 @@ type userData struct {
 var (
 	c         *slot.Config
 	symbolMap map[int]slot.Symbol
-	times            = 100
+	times            = 1000000
 	betCredit uint64 = 100
+	rtp              = 98.5
 	ud               = &userData{
 		GreenScarab: 0,
 		BlueScarab:  0,
@@ -46,13 +47,24 @@ func TestXxx(t *testing.T) {
 
 	symbolMap = c.GameSettings[0].SymbolToMap()
 
-	totalBet := betCredit * uint64(times)
-	var totalPayout uint64
+	var (
+		totalBet    uint64
+		totalPayout uint64
+	)
 	for i := 0; i < times; i++ {
 		_, total := game1()
+
+		// 超過rtp 本次不算
+		if (float64(totalPayout+total)*100)/float64(totalBet+betCredit) > rtp {
+			fmt.Println(i, (float64(totalPayout+total)*100)/float64(totalBet+betCredit))
+			i--
+			continue
+		}
+
+		totalBet += betCredit
 		totalPayout += total
-		// r, total := game1()
-		// fmt.Println(totalPayout, r.BaseGame[0])
+		// b, _ := json.Marshal(r)
+		// fmt.Println("b", string(b))
 	}
 
 	fmt.Println("RTP:", float64(totalPayout*100)/float64(totalBet), "%", totalPayout, totalBet)
@@ -103,14 +115,14 @@ func game1() (*slot.Result, uint64) {
 
 	var totalPayout uint64 = 0
 	totalPayout += baseResult.TotalPayoutCredit
-	fmt.Println("totalPayout 1", baseResult, totalPayout)
+	// fmt.Println("totalPayout 1", baseResult, totalPayout)
 	if scarabResult != nil {
 		totalPayout += scarabResult.TotalPayoutCredit
-		fmt.Println("totalPayout 2", scarabResult, totalPayout)
+		// fmt.Println("totalPayout 2", scarabResult, totalPayout)
 	}
 	for _, v := range gameResult.FreeGame {
 		totalPayout += v.TotalPayoutCredit
-		fmt.Println("totalPayout 3", v, totalPayout)
+		// fmt.Println("totalPayout 3", v, totalPayout)
 	}
 
 	return gameResult, totalPayout
