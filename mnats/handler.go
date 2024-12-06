@@ -27,14 +27,9 @@ func (h *Handler) Pub(subject string, data []byte) error {
 }
 
 // 訂閱
-func (h *Handler) Sub(stream string, subjectName string, consumer string, mode SubMode, subChan chan proto.MQSubData) error {
+func (h *Handler) Sub(subjectName string, consumer string, mode SubMode, subChan chan proto.MQSubData) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
-
-	err := h.createSubjects(stream, subjectName)
-	if err != nil {
-		return err
-	}
 
 	opts := []nats.SubOpt{}
 

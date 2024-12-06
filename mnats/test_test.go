@@ -31,18 +31,27 @@ func Test_A(t *testing.T) {
 	subChan := make(chan proto.MQSubData, 1024)
 
 	subName := "test_sub_name"
-	consumer := "consumer2"
+	consumer := "consumer1"
 
 	m := mnats.SubMode{
 		Mode: mnats.Sub_Mode_Last,
 	}
-	err = h.Sub(streamName, subName, consumer, m, subChan)
+	err = h.Sub(subName, consumer, m, subChan)
 	if err != nil {
 		fmt.Printf("Sub:%+v \n", err)
 		return
 	}
 
 	defer h.UnSub(consumer)
+
+	consumer2 := "consumer2"
+	err = h.Sub(subName, consumer2, m, subChan)
+	if err != nil {
+		fmt.Printf("Sub:%+v \n", err)
+		return
+	}
+
+	defer h.UnSub(consumer2)
 
 	go func() {
 		for {
@@ -57,7 +66,7 @@ func Test_A(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 
 	fmt.Println("start push")
 	for i := 0; i < 5; i++ {
