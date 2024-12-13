@@ -77,3 +77,27 @@ func (h *Handler) UnSub(consumer string) {
 	h.subMap[consumer].Unsubscribe()
 	delete(h.subMap, consumer)
 }
+
+// 刪除指定subject所有訊息
+func (h *Handler) DelSubject(streamName string, subjectName string) error {
+	// 配置清除选项
+	purgeOpts := &nats.StreamPurgeRequest{
+		Subject: subjectName, // 指定要清除的 subject
+	}
+
+	// 清除 subject
+	err := h.js.PurgeStream(streamName, purgeOpts)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (h *Handler) DelStream(streamName string) error {
+	err := h.js.DeleteStream(streamName)
+	if err != nil {
+		return err
+	}
+	return nil
+}

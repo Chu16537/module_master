@@ -53,6 +53,10 @@ func New(node int64) *Handler {
 	return h
 }
 
+func (h *Handler) GetNodeID() int64 {
+	return h.node
+}
+
 // 創建唯一碼
 func (h *Handler) CreateID() int64 {
 	nowTimestamp := time.Now().UnixNano() >> int64(h.tailBits)

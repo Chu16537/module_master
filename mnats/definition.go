@@ -7,7 +7,7 @@ type SubMode struct {
 }
 
 const (
-	Sub_Mode_Last_Ack int = iota // 從最後ack 開始
+	Sub_Mode_Last_Ack int = iota // 從最後ack 開始 consumer 不可以重複
 	Sub_Mode_Last                // 從訂閱後的最新消息開始
 	Sub_Mode_Sequence            // 從指定的 Sequence 開始
 )

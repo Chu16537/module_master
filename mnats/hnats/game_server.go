@@ -1,44 +1,75 @@
 package hnats
 
-// // 註冊 table server
-// func SubTableGameServer(h *mnats.Handler, nodeID int64, subChan chan proto.MQSubData) *errorcode.Error {
-// 	sm := mnats.SubMode{
-// 		Mode: mnats.Sub_Mode_Last,
-// 	}
+import (
+	"github.com/Chu16537/module_master/mjson"
+	"github.com/Chu16537/module_master/mnats"
+	"github.com/Chu16537/module_master/proto"
+)
 
-// 	err := h.Sub(GameServer, GameServer, gameserverConsumerKey(nodeID), sm, subChan)
-// 	if err != nil {
-// 		return errorcode.MQSubError(GameServer, err)
-// 	}
+// game server 註冊
+func SubGameServer(h *mnats.Handler, subChan chan proto.MQSubData) error {
+	err := h.CreateSubjects(StreamNameGameServer, SubjectNameGameServer)
+	if err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	sm := mnats.SubMode{
+		Mode: mnats.Sub_Mode_Last,
+	}
 
-// // 推送 gs table > player
-// func PubTableToPlayer(h *mnats.Handler, p *proto.TableToPlayer) *errorcode.Error {
-// 	data, err := mjson.Marshal(p)
-// 	if err != nil {
-// 		return errorcode.DataMarshalError(fmt.Sprintf("PubTableToPlayer err:%v", err.Error()))
-// 	}
+	err = h.Sub(SubjectNameGameServer, ConsumerNameGameServer, sm, subChan)
+	if err != nil {
+		return err
+	}
 
-// 	err = h.Pub(PlayerServer, data)
-// 	if err != nil {
-// 		return errorcode.MQPubError(PlayerServer, data, err)
-// 	}
+	return nil
+}
 
-// 	return nil
-// }
+// 玩家 > 房間 註冊
+func SubRoom(h *mnats.Handler, tableID uint64, subChan chan proto.MQSubData) error {
+	sm := mnats.SubMode{
+		Mode: mnats.Sub_Mode_Last_Ack,
+	}
 
-// // 註冊 player server
-// func SubPlayerToTable(h *mnats.Handler, tableID uint64, subChan chan proto.MQSubData) *errorcode.Error {
-// 	sm := mnats.SubMode{
-// 		Mode: mnats.Sub_Mode_Last_Ack,
-// 	}
+	subName := subNameRoom(tableID)
+	conName := consumerNameRoom(tableID)
 
-// 	err := h.Sub(GameServer, GameServer, tableKey(tableID), sm, subChan)
-// 	if err != nil {
-// 		return errorcode.MQSubError(GameServer, err)
-// 	}
+	err := h.CreateSubjects(StreamNameGameServer, subName)
+	if err != nil {
+		return err
+	}
 
-// 	return nil
-// }
+	err = h.Sub(subName, conName, sm, subChan)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 刪除房間所有訊息
+func DelRoom(h *mnats.Handler, tableID uint64) error {
+	subName := subNameRoom(tableID)
+	err := h.DelSubject(StreamNameGameServer, subName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 房間推播給玩家
+func PubPlayer(h *mnats.Handler, data *proto.TableToPlayer) error {
+
+	b, err := mjson.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	err = h.Pub(subNamePlayer(), b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

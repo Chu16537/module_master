@@ -31,7 +31,7 @@ func (h *Handler) createStream(streamName string) error {
 }
 
 // 創建 Subjects
-func (h *Handler) createSubjects(stream string, subjectName string) error {
+func (h *Handler) CreateSubjects(stream string, subjectName string) error {
 	streamInfo, err := h.js.AddStream(
 		&nats.StreamConfig{
 			Name:     stream,

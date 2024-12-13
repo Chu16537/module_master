@@ -3,15 +3,26 @@ package hnats
 import "fmt"
 
 const (
-	GameServer   = "game_server"
-	PlayerServer = "player_server"
-	Table        = "table"
+	StreamNameGameServer   = "stream_game_server"
+	SubjectNameGameServer  = "subject_game_server"
+	ConsumerNameGameServer = "consumer_game_server"
+
+	StreamNameGameClientServer   = "stream_game_client_server"
+	SubjectNameGameClientServer  = "subject_game_client_server"
+	ConsumerNameGameClientServer = "consumer_game_client_server"
 )
 
-func gameserverConsumerKey(nodeId int64) string {
-	return fmt.Sprintf("%v.%v", GameServer, nodeId)
+func subNameRoom(tableID uint64) string {
+	return fmt.Sprintf("sub_room_%v", tableID)
+}
+func consumerNameRoom(tableID uint64) string {
+	return fmt.Sprintf("con_room_%v", tableID)
 }
 
-func tableKey(tableId uint64) string {
-	return fmt.Sprintf("%v.%v", Table, tableId)
+func subNamePlayer() string {
+	return "sub_player"
+}
+
+func consumerRoomToPlayer() string {
+	return "con_player"
 }

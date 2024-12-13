@@ -39,6 +39,9 @@ const (
 	GameWallet_Not_Exist    = 40001 // 錢包不存在
 	GameWallet_Balacne_Less = 40002 // 錢包金額不足
 
+	// game server
+	Game_Server_Create_Room_Error = 50001 // gs 創建房間失敗
+
 	// Redis
 	Redis_Error = 50001 //
 

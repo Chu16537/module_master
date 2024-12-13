@@ -1,30 +1,62 @@
 package hnats
 
-// // 推送 player > gs table
-// func PubPlayerToTable(h *mnats.Handler, p *proto.PlayerToTable) *errorcode.Error {
-// 	data, err := mjson.Marshal(p)
-// 	if err != nil {
-// 		return errorcode.DataMarshalError(fmt.Sprintf("PubPlayerToTable err:%v", err.Error()))
-// 	}
+import (
+	"github.com/Chu16537/module_master/mjson"
+	"github.com/Chu16537/module_master/mnats"
+	"github.com/Chu16537/module_master/proto"
+)
 
-// 	err = h.Pub(tableKey(p.TableID), data)
-// 	if err != nil {
-// 		return errorcode.MQPubError(GameServer, data, err)
-// 	}
+func SubGameClientServer(h *mnats.Handler, subChan chan proto.MQSubData) error {
+	sm := mnats.SubMode{
+		Mode: mnats.Sub_Mode_Last,
+	}
 
-// 	return nil
-// }
+	err := h.CreateSubjects(StreamNameGameClientServer, SubjectNameGameClientServer)
+	if err != nil {
+		return err
+	}
 
-// // 註冊 game server
-// func SubTableToPlayer(h *mnats.Handler, nodeID int64, subChan chan proto.MQSubData) *errorcode.Error {
-// 	sm := mnats.SubMode{
-// 		Mode: mnats.Sub_Mode_Last,
-// 	}
+	err = h.Sub(SubjectNameGameClientServer, ConsumerNameGameClientServer, sm, subChan)
+	if err != nil {
+		return err
+	}
 
-// 	err := h.Sub(PlayerServer, PlayerServer, gameserverConsumerKey(nodeID), sm, subChan)
-// 	if err != nil {
-// 		return errorcode.MQSubError(PlayerServer, err)
-// 	}
+	return nil
+}
 
-// 	return nil
-// }
+// room > player
+func SubPlayer(h *mnats.Handler, subChan chan proto.MQSubData) error {
+	subName := subNamePlayer()
+	conName := consumerRoomToPlayer()
+
+	sm := mnats.SubMode{
+		Mode: mnats.Sub_Mode_Last,
+	}
+
+	err := h.CreateSubjects(StreamNameGameClientServer, subName)
+	if err != nil {
+		return err
+	}
+
+	err = h.Sub(subName, conName, sm, subChan)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 房間推播給玩家
+func PubRoom(h *mnats.Handler, tableID uint64, data *proto.PlayerToTable) error {
+	b, err := mjson.Marshal(data)
+	if err != nil {
+		return err
+	}
+
+	err = h.Pub(subNameRoom(tableID), b)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

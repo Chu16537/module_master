@@ -20,7 +20,7 @@ type userData struct {
 var (
 	c         *slot.Config
 	symbolMap map[int]slot.Symbol
-	times            = 1000000
+	times            = 10000000
 	betCredit uint64 = 100
 	rtp              = 98.5
 	ud               = &userData{
@@ -50,40 +50,70 @@ func TestXxx(t *testing.T) {
 	var (
 		totalBet    uint64
 		totalPayout uint64
+		minMulti    float64 = 99999
+		maxMulti    float64 = 0
+
+		a = map[string]int{}
+		s = map[string]int{}
 	)
+
 	for i := 0; i < times; i++ {
-		_, total := game1()
+		r, base1, free1 := game1()
+		// r, total := game1()
+		tmpRes := float64(totalPayout+base1+free1) / float64(totalBet+betCredit)
+		nowRes := float64(base1+free1) / float64(betCredit)
+
+		if tmpRes != 0 && tmpRes <= minMulti {
+			minMulti = tmpRes
+		}
+		a[fmt.Sprintf("%.1f", tmpRes*100)]++
 
 		// 超過rtp 本次不算
-		if (float64(totalPayout+total)*100)/float64(totalBet+betCredit) > rtp {
-			fmt.Println(i, (float64(totalPayout+total)*100)/float64(totalBet+betCredit))
+		if tmpRes > rtp {
+			fmt.Println(i, tmpRes, base1, free1, totalPayout, totalBet, float64(totalPayout)/float64(totalBet), r.BaseGame, r.BaseGame[0].TotalPayoutCredit)
 			i--
 			continue
 		}
 
+		if nowRes > maxMulti {
+			maxMulti = nowRes
+		}
+		s[fmt.Sprintf("%.1f", nowRes*100)]++
+
 		totalBet += betCredit
-		totalPayout += total
+		totalPayout += base1 + free1
+
 		// b, _ := json.Marshal(r)
 		// fmt.Println("b", string(b))
 	}
 
-	fmt.Println("RTP:", float64(totalPayout*100)/float64(totalBet), "%", totalPayout, totalBet)
+	for i, v := range a {
+		fmt.Println("最小贏分倍率", i, v)
+	}
+
+	for i, v := range s {
+		fmt.Println("最大贏分倍率", i, v)
+	}
+
+	fmt.Println("RTP:", float64(totalPayout*100)/float64(totalBet), "%", "最小贏分倍率", minMulti*100, "%", "最大贏分倍率", maxMulti*100, "%")
 
 	fmt.Println("總計時間時間", time.Now().Sub(st))
 }
 
-func game1() (*slot.Result, uint64) {
+func game1() (*slot.Result, uint64, uint64) {
 	game, err := slot.CreateSlotGame(1)
 	if err != nil {
 		fmt.Println("CreateSlotGame", err)
-		return nil, 0
+		return nil, 0, 0
 	}
 
+	// cheat := []int{0, 0, 0, 0, 0}
+	cheat := []int{}
 	// base
-	baseReelInfo, err := game.CreateRandReel("base", nil)
+	baseReelInfo, err := game.CreateRandReel("base", cheat)
 	if err != nil {
 		fmt.Println("CreateRandReel", err)
-		return nil, 0
+		return nil, 0, 0
 	}
 
 	// 結果
@@ -113,19 +143,16 @@ func game1() (*slot.Result, uint64) {
 		FreeGame: freeResults,
 	}
 
-	var totalPayout uint64 = 0
-	totalPayout += baseResult.TotalPayoutCredit
-	// fmt.Println("totalPayout 1", baseResult, totalPayout)
+	base := baseResult.TotalPayoutCredit
+	free := uint64(0)
 	if scarabResult != nil {
-		totalPayout += scarabResult.TotalPayoutCredit
-		// fmt.Println("totalPayout 2", scarabResult, totalPayout)
+		base += scarabResult.TotalPayoutCredit
 	}
 	for _, v := range gameResult.FreeGame {
-		totalPayout += v.TotalPayoutCredit
-		// fmt.Println("totalPayout 3", v, totalPayout)
+		free += v.TotalPayoutCredit
 	}
 
-	return gameResult, totalPayout
+	return gameResult, base, free
 }
 
 // 更換scarab
