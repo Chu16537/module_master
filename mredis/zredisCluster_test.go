@@ -181,18 +181,31 @@ func run(h *mredis.Handler) {
 	// 	return
 	// }
 
-	m1 := map[string]interface{}{
-		"a": "aaa",
-	}
-	err := h.HSet(ctx, "a", m1)
+	// m1 := map[string]interface{}{
+	// 	"a": "aaa",
+	// }
+	// err := h.HSet(ctx, "a", m1)
+	// if err != nil {
+	// 	fmt.Println("a", err)
+	// }
+
+	// m2 := map[string]interface{}{
+	// 	"s": "123",
+	// }
+	// h.HSet(ctx, "a", m2)
+
+	fmt.Println(time.Now().Unix())
+	err := h.UpdateServerLockTime(ctx, "a", 1)
 	if err != nil {
-		fmt.Println("a", err)
+		fmt.Println("a1", err)
 	}
 
-	m2 := map[string]interface{}{
-		"s": "123",
+	time.Sleep(3 * time.Second)
+	fmt.Println(time.Now().Unix())
+	err = h.UpdateServerLockTime(ctx, "a", 1)
+	if err != nil {
+		fmt.Println("a2", err)
 	}
-	h.HSet(ctx, "a", m2)
 
 }
 func Test_A(t *testing.T) {

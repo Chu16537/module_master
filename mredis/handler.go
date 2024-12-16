@@ -223,3 +223,15 @@ func (h *Handler) GetScore(ctx context.Context, key string, unix int64, expireDu
 	return scoreInfoList, nil
 
 }
+
+// 給每個服務更新上鎖時間
+// key: server_lock:${serverName}  score 是更新時間  member 是nodeID
+func (h *Handler) UpdateServerLockTime(ctx context.Context, serverName string, nodeID int) error {
+	key := fmt.Sprintf("server_lock:%v", serverName)
+
+	err := h.AddAndUpdateZset(ctx, key, float64(time.Now().Unix()), strconv.Itoa(nodeID))
+	if err != nil {
+		return err
+	}
+	return nil
+}
