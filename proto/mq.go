@@ -43,7 +43,7 @@ func (p *PlayerToTable) GetRes() *TableToPlayer {
 		UserIDs:   []uint64{p.UserID},
 		TableID:   p.TableID,
 		EventCode: p.EventCode,
-		ErrorCode: errorcode.SuccessCode,
+		ErrorCode: errorcode.Code_Success,
 		Data:      []byte{},
 	}
 }

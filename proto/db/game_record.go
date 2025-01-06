@@ -41,13 +41,13 @@ func (g *GameRecord) GetUserRecord() ([]*UserRecord, *errorcode.Error) {
 		info := &GameRecordInfoMultiple{}
 		err := mjson.Unmarshal(g.Info, info)
 		if err != nil {
-			return nil, errorcode.Server(err)
+			return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, err)
 		}
 
 		return info.UserRecords, nil
 
 	default:
-		return nil, errorcode.New(errorcode.Game_Not_Type, fmt.Errorf("GameRecord:%v not type :%v", g.GameRecordID, g.GameType))
+		return nil, errorcode.New(errorcode.Code_Game_Not_Type, fmt.Errorf("GameRecord:%v not type :%v", g.GameRecordID, g.GameType))
 	}
 }
 

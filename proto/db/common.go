@@ -1,8 +1,15 @@
 package db
 
+import (
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
+)
+
 type FindOpt struct {
-	Start uint64
-	Limit uint64
+	Start  uint64
+	Limit  uint64
+	Sort   bson.D
+	Fields bson.M
 }
 
 func checkTimeUxin(start, end int64) (int64, int64) {
@@ -13,15 +20,32 @@ func checkTimeUxin(start, end int64) (int64, int64) {
 	return start, end
 }
 
-func (o *FindOpt) ToMgo() {
+func (o *FindOpt) ToMgo() *options.FindOptions {
+	fo := options.Find()
+
+	if o == nil {
+		return fo
+	}
+
 	if o.Start > 0 {
-		o.Start--
+		fo.SetSkip(int64(o.Start))
+	}
+	if o.Limit > 0 {
+		fo.SetLimit(int64(o.Limit))
+	}
+	if len(o.Sort) > 0 {
+		fo.SetSort(o.Sort)
+	}
+	if len(o.Fields) > 0 {
+		fo.SetProjection(o.Fields)
 	}
 
-	if o.Limit == 0 {
-		o.Limit = 1
-	}
+	return fo
+}
 
+func (o *FindOpt) ToAggregate() *options.AggregateOptions {
+
+	return nil
 }
 
 type UpdateBalanceInfo struct {

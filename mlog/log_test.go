@@ -24,6 +24,6 @@ func Test_A(t *testing.T) {
 
 	l := mlog.Get("module")
 
-	l.New(mlog.ErrorLevel, "Test_A", "tracer", nil, errorcode.Server(fmt.Errorf("test err")))
-	l.New(mlog.InfoLevel, "Test_A", "tracer2", "test info", errorcode.Server(fmt.Errorf("test err")))
+	l.New(mlog.ErrorLevel, "Test_A", "tracer", nil, errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("test err")))
+	l.New(mlog.InfoLevel, "Test_A", "tracer2", "test info", errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("test err")))
 }

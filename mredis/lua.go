@@ -128,4 +128,25 @@ const (
 	-- 回傳過期的 unix_timestamp 和 decimal_value 作為字符串
 	return member_info	
 	`
+
+	LuaTest = `
+	local zset_key = KEYS[1]
+	local member = ARGV[1]
+	local can_update_score = tonumber(ARGV[2]) -- 转换为数字
+	local new_score = tonumber(ARGV[3])       -- 转换为数字
+	
+	-- 获取指定 member 的 score
+	local current_score = redis.call("ZSCORE", zset_key, member)
+	
+	if current_score then
+		current_score = tonumber(current_score) -- 转换为数字
+		if current_score >= can_update_score then
+			return false
+		end
+	end
+	
+	-- 更新 member 的 score 为 new_score
+	redis.call("ZADD", zset_key, new_score, member)
+	return true
+	`
 )

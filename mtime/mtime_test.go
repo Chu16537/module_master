@@ -10,13 +10,12 @@ import (
 )
 
 func Test(t *testing.T) {
-	interval := 100 * time.Millisecond
 	ctx := context.Background()
 
 	a := func() {
 		fmt.Println("aaa")
 	}
-	go mtime.RunTick(ctx, interval, a)
+	go mtime.RunTick(ctx, 100, a)
 
 	time.Sleep(10 * time.Second)
 }

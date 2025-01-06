@@ -10,7 +10,7 @@ const (
 )
 
 type Club struct {
-	ID             uint64 `json:"id" bson:"id"`                           // id
+	ClubID         uint64 `json:"club_id" bson:"club_id"`                 // id
 	Name           string `json:"name" bson:"name"`                       // 名稱
 	PresidentName  string `json:"president_name" bson:"president_name"`   // 會長名稱
 	Content        string `json:"content" bson:"content"`                 // 公告

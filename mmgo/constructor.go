@@ -2,47 +2,81 @@ package mmgo
 
 import (
 	"context"
+	"errors"
 	"time"
 
+	"github.com/Chu16537/module_master/errorcode"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Config struct {
-	Addr     string
-	Database string
-	Username string
-	Password string
+	Master *Option `yaml:"master"`
+	Second *Option `yaml:"second"`
+}
+
+type Option struct {
+	Addr     string `yaml:"addr"`
+	Database string `yaml:"data_base"`
+	Username string `yaml:"user_name"`
+	Password string `yaml:"pass_word"`
 }
 
 type Handler struct {
 	ctx    context.Context
+	config *Config
+	read   *dbOpt
+	write  *dbOpt
+}
+
+type dbOpt struct {
 	opts   *options.ClientOptions
 	client *mongo.Client
 	db     *mongo.Database
-	dbName string
 }
 
-func New(ctx context.Context, conf *Config) (*Handler, error) {
+func New(ctx context.Context, config *Config) (*Handler, *errorcode.Error) {
+	// 基本檢查
+	if config.Master == nil || config.Master.Addr == "" || config.Master.Database == "" {
+		return nil, errorcode.New(errorcode.Code_Server_Error, errors.New("master config error"))
+	}
 
-	opt := options.Client().ApplyURI(conf.Addr)
+	//  假如read是空的 讀寫就在同一台
+	if config.Second.Addr == "" {
+		config.Second = config.Master
+	}
 
-	if conf.Username != "" {
+	wOpt := options.Client().ApplyURI(config.Master.Addr)
+	if config.Master.Username != "" {
 		cred := options.Credential{
-			Username: conf.Username,
-			Password: conf.Password,
+			Username: config.Master.Username,
+			Password: config.Master.Password,
 		}
-		opt.SetAuth(cred)
+		wOpt.SetAuth(cred)
+	}
+
+	rOpt := options.Client().ApplyURI(config.Second.Addr)
+	if config.Second.Username != "" {
+		cred := options.Credential{
+			Username: config.Second.Username,
+			Password: config.Second.Password,
+		}
+		rOpt.SetAuth(cred)
 	}
 
 	h := &Handler{
 		ctx:    ctx,
-		opts:   opt,
-		dbName: conf.Database,
+		config: config,
+		write: &dbOpt{
+			opts: wOpt,
+		},
+		read: &dbOpt{
+			opts: rOpt,
+		},
 	}
 
 	if err := h.connect(); err != nil {
-		return nil, err
+		return nil, errorcode.New(errorcode.Code_Server_Error, err)
 	}
 
 	return h, nil
@@ -58,13 +92,19 @@ func (h *Handler) Check() error {
 	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
 	defer cancel()
 
-	if err := h.client.Ping(ctx, nil); err != nil {
+	err := h.write.client.Ping(ctx, nil)
+	if err == nil {
+		err = h.read.client.Ping(ctx, nil)
+	}
+
+	if err != nil {
 		h.close()
 		if err2 := h.connect(); err2 != nil {
 			return err2
 		}
 		return err
 	}
+
 	return nil
 }
 
@@ -76,35 +116,76 @@ func (h *Handler) connect() error {
 	defer cancel()
 
 	// 建立连接
-	client, err := mongo.Connect(ctx, h.opts)
+	wClient, err := mongo.Connect(ctx, h.write.opts)
+	if err != nil {
+		return err
+	}
+	h.write.client = wClient
+	h.write.db = h.write.client.Database(h.config.Master.Database)
+
+	// 建立连接
+	rClient, err := mongo.Connect(ctx, h.read.opts)
 	if err != nil {
 		return err
 	}
 
-	h.client = client
-	h.db = client.Database(h.dbName)
+	h.read.client = rClient
+	h.read.db = h.read.client.Database(h.config.Second.Database)
 
 	return nil
 }
 
 // 關閉
 func (h *Handler) close() {
-	if h.client != nil {
-		h.client.Disconnect(h.ctx)
+	if h.write.client != nil {
+		h.write.client.Disconnect(h.ctx)
 	}
-}
 
-// 取得 client
-func (h *Handler) GetClient() *mongo.Client {
-	return h.client
-}
-
-// 取得DB
-func (h *Handler) GetDB() *mongo.Database {
-	return h.db
+	if h.read.client != nil {
+		h.read.client.Disconnect(h.ctx)
+	}
 }
 
 // 取得 ctx
 func (h *Handler) GetCtx() context.Context {
 	return h.ctx
+}
+
+// 取得 讀:讀連線 寫:寫連線
+func (h *Handler) GetWR() *Handler {
+	return &Handler{
+		ctx:   h.ctx,
+		read:  h.read,
+		write: h.write,
+	}
+}
+
+// 取得 讀:讀連線 寫:讀連線
+func (h *Handler) GetWW() *Handler {
+	return &Handler{
+		ctx:   h.ctx,
+		read:  h.write,
+		write: h.write,
+	}
+}
+
+// 執行 Transaction
+func (h *Handler) Transaction(ctx context.Context, callback func(ctx mongo.SessionContext) (interface{}, error), opts ...*options.TransactionOptions) *errorcode.Error {
+	// 強制使用 讀讀 這樣 查詢跟寫入都是使用讀db
+	nh := h.GetWW()
+
+	s, err := nh.write.client.StartSession()
+	if err != nil {
+		return errorcode.New(errorcode.Code_DB_Transaction_Error, err)
+	}
+
+	// 無論事務是否成功，我們都必須結束會話以釋放資源。
+	defer s.EndSession(ctx)
+
+	// 執行 transaction
+	if _, err := s.WithTransaction(ctx, callback); err != nil {
+		return errorcode.New(errorcode.Code_DB_Transaction_Error, err)
+	}
+
+	return errorcode.Success()
 }

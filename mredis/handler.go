@@ -25,6 +25,9 @@ func (h *Handler) UpdateTTL(ctx context.Context, key string, second int64) error
 // 執行lua語法
 func (h *Handler) RunLua(ctx context.Context, luaScript string, keys []string, args ...interface{}) (interface{}, error) {
 	r, err := h.client.Eval(ctx, luaScript, keys, args).Result()
+	if err != nil && errors.Is(err, redis.Nil) {
+		return true, nil
+	}
 	return r, err
 }
 
@@ -172,10 +175,11 @@ func (h *Handler) GetNode(ctx context.Context, unix int64) (int64, error) {
 	return nodeId.(int64), err
 }
 
-// update node member
-func (h *Handler) UpdateNode(ctx context.Context, nodeID float64, unix int64) error {
-	member := fmt.Sprintf("%v.%v", unix, nodeID)
-	err := h.AddAndUpdateZset(ctx, Key_Node, nodeID, member)
+// 更新node 時間
+// score: nodeID /  member: unix.nodeID
+func (h *Handler) UpdateNode(ctx context.Context, nodeID int64) error {
+	member := fmt.Sprintf("%v.%v", time.Now().Unix(), nodeID)
+	err := h.AddAndUpdateZset(ctx, Key_Node, float64(nodeID), member)
 	if err != nil {
 		return err
 	}
@@ -226,10 +230,10 @@ func (h *Handler) GetScore(ctx context.Context, key string, unix int64, expireDu
 
 // 給每個服務更新上鎖時間
 // key: server_lock:${serverName}  score 是更新時間  member 是nodeID
-func (h *Handler) UpdateServerLockTime(ctx context.Context, serverName string, nodeID int) error {
-	key := fmt.Sprintf("server_lock:%v", serverName)
+func (h *Handler) UpdateServerLockTime(ctx context.Context, serverName string, nodeID int64) error {
+	key := fmt.Sprintf("lock:%v", serverName)
 
-	err := h.AddAndUpdateZset(ctx, key, float64(time.Now().Unix()), strconv.Itoa(nodeID))
+	err := h.AddAndUpdateZset(ctx, key, float64(time.Now().Unix()), strconv.Itoa(int(nodeID)))
 	if err != nil {
 		return err
 	}

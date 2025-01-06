@@ -20,7 +20,7 @@ type Handler struct {
 	time          time.Time // 時間
 	lastTimestamp int64     // 上次使用時間
 	sequence      uint32    // 順序號碼
-	sequenceBits  uintptr
+	sequencits    uintptr
 	instanceMask  int64
 	tailBits      uintptr
 	randGen       *rand.Rand

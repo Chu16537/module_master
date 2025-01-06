@@ -14,7 +14,9 @@ const (
 )
 
 // 每 tick 執行事件
-func RunTick(ctx context.Context, interval time.Duration, f func()) {
+func RunTick(ctx context.Context, second int, f func()) {
+	interval := time.Duration(second) * time.Second
+
 	tick := time.NewTicker(interval)
 	defer tick.Stop()
 

@@ -175,7 +175,7 @@ func run(h *mredis.Handler) {
 
 	// unix := time.Now().Unix()
 	// fmt.Println(unix)
-	// err := h.UpdateNode(ctx, 0, unix)
+	// err := h.UpdateNode(ctx, 1)
 	// if err != nil {
 	// 	fmt.Println(err)
 	// 	return
@@ -194,19 +194,45 @@ func run(h *mredis.Handler) {
 	// }
 	// h.HSet(ctx, "a", m2)
 
-	fmt.Println(time.Now().Unix())
-	err := h.UpdateServerLockTime(ctx, "a", 1)
+	// fmt.Println(time.Now().Unix())
+	// err := h.UpdateServerLockTime(ctx, "a", 1)
+	// if err != nil {
+	// 	fmt.Println("a1", err)
+	// }
+
+	// time.Sleep(3 * time.Second)
+	// fmt.Println(time.Now().Unix())
+	// err = h.UpdateServerLockTime(ctx, "a", 1)
+	// if err != nil {
+	// 	fmt.Println("a2", err)
+	// }
+
+	// tableIDs := []uint64{1, 3, 4}
+
+	// args := make([]interface{}, len(tableIDs)+1)
+	// // args[0] = strconv.FormatInt(time.Now().Unix(), 10)
+	// args[0] = time.Now().Unix()
+	// for i, v := range tableIDs {
+	// 	args[i+1] = strconv.FormatUint(v, 10) // 转为字符串传入 Lua 脚本
+	// }
+
+	// aa, err := h.RunLua(ctx, mredis.LuaTest, []string{"a"}, args...)
+	// if err != nil {
+	// 	fmt.Println("aRunLua", err)
+	// 	return
+	// }
+	// fmt.Println("aa", aa)
+
+	now := time.Now().Unix()
+	canUpdateScore := now - 120
+	args := []interface{}{1, canUpdateScore, now}
+	aa, err := h.RunLua(ctx, mredis.LuaTest, []string{"a"}, args...)
 	if err != nil {
-		fmt.Println("a1", err)
+		fmt.Println("aRunLua", err)
+		return
 	}
 
-	time.Sleep(3 * time.Second)
-	fmt.Println(time.Now().Unix())
-	err = h.UpdateServerLockTime(ctx, "a", 1)
-	if err != nil {
-		fmt.Println("a2", err)
-	}
-
+	fmt.Println("aa", aa)
 }
 func Test_A(t *testing.T) {
 	// 创建一个上下文和配置

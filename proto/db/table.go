@@ -13,7 +13,7 @@ const (
 )
 
 type Table struct {
-	ID         uint64 `json:"id" bson:"id"`                   // 牌桌id
+	TableID    uint64 `json:"table_id" bson:"table_id"`       // 牌桌id
 	ClubID     uint64 `json:"club_id" bson:"club_id"`         // 俱樂部編號
 	ExpireTime int64  `json:"expire_time" bson:"expire_time"` // 到期時間
 	Status     int    `json:"status" bson:"status"`           // 狀態
