@@ -19,7 +19,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 
 	reqDataBytes, err := mjson.Marshal(reqData)
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable Marshal error:%v", err))
+		return nil, errorcode.New(errorcode.Code_Data_Marshal_Error, fmt.Errorf("GetTable Marshal error:%v", err))
 	}
 
 	req := &commongrpc.UnaryRPCReq{
@@ -38,7 +38,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 	resData := &TSGetTableRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
-		return nil, errorcode.DataUnmarshalError(fmt.Sprintf("GetTable Unmarshal error:%v", err))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable Unmarshal error:%v", err))
 	}
 
 	return resData.Tables, nil
@@ -53,7 +53,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 
 	reqDataBytes, err := mjson.Marshal(reqData)
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("UpdateTableGame Marshal error:%v", err))
+		return nil, errorcode.New(errorcode.Code_Data_Marshal_Error, fmt.Errorf("UpdateTableGame Marshal error:%v", err))
 	}
 
 	req := &commongrpc.UnaryRPCReq{
@@ -72,7 +72,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 	resData := &TSUpdateTableGameRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
-		return nil, errorcode.DataUnmarshalError(fmt.Sprintf("UpdateTableGame Unmarshal error:%v", err))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("UpdateTableGame Unmarshal error:%v", err))
 	}
 
 	return resData.Table, nil
@@ -88,7 +88,7 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 
 	reqDataBytes, err := mjson.Marshal(reqData)
 	if err != nil {
-		return errorcode.DataMarshalError(fmt.Sprintf("UpdateTableStatus Marshal error:%v", err))
+		return errorcode.New(errorcode.Code_Data_Marshal_Error, fmt.Errorf("UpdateTableStatus Marshal error:%v", err))
 	}
 
 	req := &commongrpc.UnaryRPCReq{
@@ -107,7 +107,7 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 	// resData := &TSUpdateTableRes{}
 	// err = mjson.Unmarshal(res.Data, resData)
 	// if err != nil {
-	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("UpdateTableGame Unmarshal error:%v", err))
+	// 	return errorcode.New(errorcode.Code_Data_Unmarshal_Error,fmt.Errorf("UpdateTableGame Unmarshal error:%v", err))
 	// }
 
 	return nil
@@ -123,7 +123,7 @@ func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint
 
 	reqDataBytes, err := mjson.Marshal(reqData)
 	if err != nil {
-		return errorcode.DataMarshalError(fmt.Sprintf("CreateTable Marshal error:%v", err))
+		return errorcode.New(errorcode.Code_Data_Marshal_Error, fmt.Errorf("CreateTable Marshal error:%v", err))
 	}
 
 	req := &commongrpc.UnaryRPCReq{
@@ -142,7 +142,7 @@ func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint
 	// resData := &TSCreateTableRes{}
 	// err = mjson.Unmarshal(res.Data, resData)
 	// if err != nil {
-	// 	return errorcode.DataUnmarshalError(fmt.Sprintf("CreateTable Unmarshal error:%v", err))
+	// 	return errorcode.New(errorcode.Code_Data_Unmarshal_Error,fmt.Errorf("CreateTable Unmarshal error:%v", err))
 	// }
 
 	return nil

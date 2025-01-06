@@ -20,12 +20,12 @@ func (h *Handler) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*c
 	res, err := h.client.UnaryRPC(cctx, req)
 	if err != nil {
 		if status.Code(err) == codes.DeadlineExceeded {
-			return nil, errorcode.New(errorcode.Timeout, errors.Errorf("UnaryRPC eventCode:%v timeout", req.EventCode))
+			return nil, errorcode.New(errorcode.Code_Timeout, errors.Errorf("UnaryRPC eventCode:%v timeout", req.EventCode))
 		}
-		return nil, errorcode.Server(errors.Errorf("UnaryRPC eventCode:%v err", err))
+		return nil, errorcode.New(errorcode.Code_Server_Error, errors.Errorf("UnaryRPC eventCode:%v err", err))
 	}
 
-	if res.ErrorCode != errorcode.SuccessCode {
+	if res.ErrorCode != errorcode.Code_Success {
 		return nil, errorcode.New(int(res.ErrorCode), errors.Errorf(res.Message))
 	}
 
@@ -36,7 +36,7 @@ func UnaryRPC(ctx context.Context, ip string, req *commongrpc.UnaryRPCReq) (*com
 	// 连接到 gRPC 服务
 	conn, err := grpc.Dial(ip, grpc.WithInsecure())
 	if err != nil {
-		return nil, errorcode.Server(err)
+		return nil, errorcode.New(errorcode.Code_Server_Error, err)
 	}
 	defer conn.Close()
 
@@ -46,12 +46,12 @@ func UnaryRPC(ctx context.Context, ip string, req *commongrpc.UnaryRPCReq) (*com
 	res, err := client.UnaryRPC(ctx, req)
 	if err != nil {
 		if status.Code(err) == codes.DeadlineExceeded {
-			return nil, errorcode.New(errorcode.Timeout, errors.Errorf("UnaryRPC eventCode:%v timeout", req.EventCode))
+			return nil, errorcode.New(errorcode.Code_Timeout, errors.Errorf("UnaryRPC eventCode:%v timeout", req.EventCode))
 		}
-		return nil, errorcode.Server(errors.Errorf("UnaryRPC eventCode:%v err", err))
+		return nil, errorcode.New(errorcode.Code_Server_Error, errors.Errorf("UnaryRPC eventCode:%v err", err))
 	}
 
-	if res.ErrorCode != errorcode.SuccessCode {
+	if res.ErrorCode != errorcode.Code_Success {
 		return nil, errorcode.New(int(res.ErrorCode), errors.Errorf(res.Message))
 	}
 

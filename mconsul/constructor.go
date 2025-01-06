@@ -94,12 +94,12 @@ func (h *Handler) RegisterService() *errorcode.Error {
 
 	// 注册服务到 Consul
 	if err := h.c.Agent().ServiceRegister(registration); err != nil {
-		return errorcode.Server(fmt.Errorf("failed to register service: %w", err))
+		return errorcode.New(errorcode.Code_Server_Error, err)
 	}
 
 	// 启动健康检查服务
 	if err := h.startHealthCheckServer(ip); err != nil {
-		return errorcode.Server(fmt.Errorf("failed to start health check server: %w", err))
+		return errorcode.New(errorcode.Code_Server_Error, err)
 	}
 
 	return nil
@@ -149,7 +149,7 @@ func (h *Handler) UpdateKV(v []byte) {
 func (h *Handler) GetServer(serviceName string) (map[string]GetServerInfo, *errorcode.Error) {
 	instances, _, err := h.c.Health().Service(serviceName, "", true, nil)
 	if err != nil {
-		return nil, errorcode.Server(fmt.Errorf("failed to fetch service instances: %w", err))
+		return nil, errorcode.New(errorcode.Code_Server_Error, err)
 	}
 
 	result := make(map[string]GetServerInfo)

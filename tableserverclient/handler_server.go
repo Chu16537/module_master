@@ -17,7 +17,7 @@ func (h *Handler) GameServerDone(ctx context.Context, logTracer string, nodeID i
 
 	reqDataBytes, err := mjson.Marshal(reqData)
 	if err != nil {
-		return false, errorcode.DataMarshalError(fmt.Sprintf("GameServerDone Marshal error:%v", err))
+		return false, errorcode.New(errorcode.Code_Data_Marshal_Error, fmt.Errorf("GameServerDone Marshal error:%v", err))
 	}
 
 	req := &commongrpc.UnaryRPCReq{

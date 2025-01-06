@@ -23,7 +23,7 @@ const (
 func GetGameServerRank(h *mredis.Handler, ctx context.Context, unix int64, isMin bool, count int) ([]mredis.GetScoreInfo, *errorcode.Error) {
 	gsis, err := h.GetScore(ctx, gameServerRank, unix, GameServerRankExpireDuration, isMin, count)
 	if err != nil {
-		return nil, errorcode.New(errorcode.Redis_Error, err)
+		return nil, errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	return gsis, nil
@@ -33,7 +33,7 @@ func GetGameServerRank(h *mredis.Handler, ctx context.Context, unix int64, isMin
 func GetGameServerIP(h *mredis.Handler, ctx context.Context, nodeIDs []string) (map[string]string, *errorcode.Error) {
 	data, err := h.GetClient().HMGet(ctx, gameServerIP, nodeIDs...).Result()
 	if err != nil {
-		return nil, errorcode.New(errorcode.Redis_Error, err)
+		return nil, errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	result := map[string]string{}
@@ -50,7 +50,7 @@ func GetGameServerIP(h *mredis.Handler, ctx context.Context, nodeIDs []string) (
 func DelGameServerIP(h *mredis.Handler, ctx context.Context, unix int64) *errorcode.Error {
 	result, err := h.RunLua(ctx, mredis.LuaGetGameServerTimeoutMember, []string{gameServerRank}, unix, GameServerRankExpireDuration)
 	if err != nil {
-		return errorcode.New(errorcode.Redis_Error, err)
+		return errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	// 用來存儲小數點後的部分
@@ -76,7 +76,7 @@ func DelGameServerIP(h *mredis.Handler, ctx context.Context, unix int64) *errorc
 
 	_, err = pipe.Exec(ctx)
 	if err != nil {
-		return errorcode.New(errorcode.Redis_Error, err)
+		return errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	return nil
@@ -97,12 +97,12 @@ func UpdateGameServerRank(h *mredis.Handler, ctx context.Context, oldMember stri
 	setData := map[string]interface{}{
 		strconv.Itoa(int(nodeId)): ip,
 	}
-	fmt.Println("setData", setData)
+
 	pipe.HSet(ctx, gameServerIP, setData)
 
 	_, err := pipe.Exec(ctx)
 	if err != nil {
-		return errorcode.New(errorcode.Redis_Error, err)
+		return errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	return nil
@@ -110,9 +110,9 @@ func UpdateGameServerRank(h *mredis.Handler, ctx context.Context, oldMember stri
 
 // 更新牌桌
 func UpdateTable(h *mredis.Handler, ctx context.Context, data *db.Table) *errorcode.Error {
-	key := keyTable(data.ID)
+	key := keyTable(data.TableID)
 	update := map[string]interface{}{
-		"id":          data.ID,
+		"id":          data.TableID,
 		"club_id":     data.ClubID,
 		"expire_time": data.ExpireTime,
 		"status":      data.Status,
@@ -122,7 +122,7 @@ func UpdateTable(h *mredis.Handler, ctx context.Context, data *db.Table) *errorc
 
 	err := h.HSet(ctx, key, update)
 	if err != nil {
-		return errorcode.New(errorcode.Redis_Error, err)
+		return errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	return nil
@@ -134,32 +134,32 @@ func GetTable(h *mredis.Handler, ctx context.Context, tableID uint64) (*db.Table
 
 	m, err := h.HGetAll(ctx, key)
 	if err != nil {
-		return nil, errorcode.New(errorcode.Redis_Error, err)
+		return nil, errorcode.New(errorcode.Code_Redis_Error, err)
 	}
 
 	id, err := strconv.Atoi(m["id"])
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable id:%v", m["id"]))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable id:%v", m["id"]))
 	}
 	clubId, err := strconv.Atoi(m["club_id"])
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable club_id:%v", m["club_id"]))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable club_id:%v", m["club_id"]))
 	}
 	expireTime, err := strconv.Atoi(m["expire_time"])
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable expire_time:%v", m["expire_time"]))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable expire_time:%v", m["expire_time"]))
 	}
 	status, err := strconv.Atoi(m["status"])
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable status:%v", m["status"]))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable status:%v", m["status"]))
 	}
 	gameId, err := strconv.Atoi(m["game_id"])
 	if err != nil {
-		return nil, errorcode.DataMarshalError(fmt.Sprintf("GetTable game_id:%v", m["game_id"]))
+		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable game_id:%v", m["game_id"]))
 	}
 
 	t := &db.Table{
-		ID:         uint64(id),
+		TableID:    uint64(id),
 		ClubID:     uint64(clubId),
 		ExpireTime: int64(expireTime),
 		Status:     status,

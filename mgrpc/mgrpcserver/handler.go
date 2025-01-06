@@ -22,7 +22,7 @@ func (h *Handler) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*c
 			if r := recover(); r != nil {
 				res = &commongrpc.UnaryRPCRes{
 					EventCode: req.EventCode,
-					ErrorCode: errorcode.Handler_Not_Exist,
+					ErrorCode: errorcode.Code_Handler_Not_Exist,
 				}
 			}
 
@@ -42,7 +42,7 @@ func (h *Handler) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*c
 		// 回傳error 會把 錯誤訊息回傳回去
 		res := &commongrpc.UnaryRPCRes{
 			EventCode: req.EventCode,
-			ErrorCode: errorcode.Timeout,
+			ErrorCode: errorcode.Code_Timeout,
 		}
 		return res, nil
 	case res := <-resChan:

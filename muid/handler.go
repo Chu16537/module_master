@@ -20,7 +20,6 @@ type Handler struct {
 	time          time.Time // 時間
 	lastTimestamp int64     // 上次使用時間
 	sequence      uint32    // 順序號碼
-	sequencits    uintptr
 	instanceMask  int64
 	tailBits      uintptr
 	randGen       *rand.Rand
@@ -29,13 +28,6 @@ type Handler struct {
 var h *Handler
 
 func New(node int64) *Handler {
-	var (
-		sequence     uint32  = 0
-		sequenceBits uintptr = uintptr(32)
-		instanceMask         = node << int64(sequenceBits)
-		tailBits     uintptr = uintptr(20)
-	)
-
 	t := time.Now()
 
 	h = &Handler{
@@ -43,10 +35,9 @@ func New(node int64) *Handler {
 		uid:           xid.New().String(),
 		time:          t,
 		lastTimestamp: t.UnixNano(),
-		sequence:      sequence,
-		sequenceBits:  sequenceBits,
-		instanceMask:  instanceMask,
-		tailBits:      tailBits,
+		sequence:      0,
+		instanceMask:  node << int64(uintptr(32)),
+		tailBits:      uintptr(20),
 		randGen:       rand.New(rand.NewSource(t.UnixNano())),
 	}
 

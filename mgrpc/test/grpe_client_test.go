@@ -8,8 +8,8 @@ import (
 	"github.com/Chu16537/module_master/mgrpc/commongrpc"
 	"github.com/Chu16537/module_master/mgrpc/mgrpcclient"
 	"github.com/Chu16537/module_master/mjson"
-	"github.com/Chu16537/module_master/proto"
 	"github.com/Chu16537/module_master/proto/db"
+	"github.com/Chu16537/module_master/tableserverclient"
 )
 
 func TestClient(t *testing.T) {
@@ -39,7 +39,7 @@ func TestClient(t *testing.T) {
 		LogData: &commongrpc.LogData{
 			Tracer: "test_client",
 		},
-		EventCode: proto.TS_GET_TABLE,
+		EventCode: tableserverclient.GET_TABLE,
 		Data:      rb,
 	}
 	res, errC := h.UnaryRPC(context.Background(), req)
