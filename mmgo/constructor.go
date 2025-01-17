@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Chu16537/module_master/errorcode"
+	"github.com/Chu16537/module_master/proto/db"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -78,6 +79,9 @@ func New(ctx context.Context, config *Config) (*Handler, *errorcode.Error) {
 	if err := h.connect(); err != nil {
 		return nil, errorcode.New(errorcode.Code_Server_Error, err)
 	}
+
+	// 初始化 count 資料表
+	h.CreateCollection(ctx, db.ColName_Counters, [][]string{[]string{"col_name"}})
 
 	return h, nil
 }
@@ -167,25 +171,4 @@ func (h *Handler) GetWW() *Handler {
 		read:  h.write,
 		write: h.write,
 	}
-}
-
-// 執行 Transaction
-func (h *Handler) Transaction(ctx context.Context, callback func(ctx mongo.SessionContext) (interface{}, error), opts ...*options.TransactionOptions) *errorcode.Error {
-	// 強制使用 讀讀 這樣 查詢跟寫入都是使用讀db
-	nh := h.GetWW()
-
-	s, err := nh.write.client.StartSession()
-	if err != nil {
-		return errorcode.New(errorcode.Code_DB_Transaction_Error, err)
-	}
-
-	// 無論事務是否成功，我們都必須結束會話以釋放資源。
-	defer s.EndSession(ctx)
-
-	// 執行 transaction
-	if _, err := s.WithTransaction(ctx, callback); err != nil {
-		return errorcode.New(errorcode.Code_DB_Transaction_Error, err)
-	}
-
-	return errorcode.Success()
 }

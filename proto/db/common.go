@@ -48,13 +48,6 @@ func (o *FindOpt) ToAggregate() *options.AggregateOptions {
 	return nil
 }
 
-type UpdateBalanceInfo struct {
-	UserID  uint64
-	ClubID  uint64
-	TableID uint64
-	Balance uint64
-}
-
 type TotalCount struct {
 	Count int64 `bson:"count"`
 }

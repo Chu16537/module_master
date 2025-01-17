@@ -27,6 +27,6 @@ func Success() *Error {
 	}
 }
 
-func (e *Error) IsNotSuccess() bool {
-	return e.Code != Code_Success
+func (e *Error) IsSuccess() bool {
+	return e.Code == Code_Success
 }

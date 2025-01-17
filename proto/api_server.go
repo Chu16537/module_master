@@ -2,9 +2,14 @@ package proto
 
 import "github.com/Chu16537/module_master/proto/db"
 
-type CommRes struct {
-	Code int         `json:"code"`
-	Data interface{} `json:"data"`
+type CommonReq struct {
+	Platform string `json:"platform"`
+	Data     string `json:"data"` // base64 跟 aes加密後資料
+}
+
+type CommonRes struct {
+	ErrorCode int         `json:"error_code"`
+	Data      interface{} `json:"data"`
 }
 
 // 查詢共用findopt

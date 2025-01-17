@@ -10,8 +10,14 @@ const (
 	Club_User_Permissions_Member         = 1 // 會員
 	Club_User_Permissions_Vice_President = 2 // 副會長
 	Club_User_Permissions_President      = 3 // 會長
-
 )
+
+type UpdateBalanceInfo struct {
+	UserID  uint64
+	ClubID  uint64
+	TableID uint64
+	Balance uint64
+}
 
 // 會長可設定的權限
 var PresidentCanSetPermissions = map[int]struct{}{

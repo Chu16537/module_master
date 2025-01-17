@@ -18,15 +18,8 @@ const (
 	// admin
 
 	// api
-	Code_Account_Length_Error      = 30001 // account 長度錯誤
-	Code_Password_Length_Error     = 30002 // password 長度錯誤
-	Code_NickName_Length_Error     = 30003 // nickname 長度錯誤
-	Code_Account_Password_Error    = 30004 // 帳號或密碼錯誤
-	Code_Club_Not_Exist            = 30005 // 俱樂部不存在
-	Code_Club_User_Not_Permissions = 30006 // 權限不足
-	Code_Club_User_Not_In_Club     = 30007 // 會員不在俱樂部
-	Code_Club_User_Balacne_Less    = 30008 // 玩家金額不足
-	Code_Club_User_Account_Exist   = 30009 // 玩家帳號已經存在
+	Code_Platform_Not_Exist = 30001 // Platform 不存在
+	Code_Decrypt_Error      = 30002 // Decrypt 錯誤
 
 	// game socket server
 
