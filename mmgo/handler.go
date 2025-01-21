@@ -15,6 +15,35 @@ type IFiltetOpt interface {
 	ToMgo() bson.M
 }
 
+// 創建資料表
+// uniqueKeys 可以多個索引為一組 (ex  user_id, table_id) 每一組是一組[]string
+// ex []string{[]string{"user_id", "table_id"},[]string{"user_id"}}
+func (h *Handler) CreateCollection(ctx context.Context, colName string, uniqueKeys [][]string) *errorcode.Error {
+	col := h.write.db.Collection(colName)
+
+	for _, keys := range uniqueKeys {
+
+		// 記錄keys
+		ks := bson.D{}
+		for _, k := range keys {
+			ks = append(ks, bson.E{Key: k, Value: 1})
+		}
+
+		// 創建索引
+		model := mongo.IndexModel{
+			Keys:    ks,
+			Options: options.Index().SetUnique(true),
+		}
+
+		_, err := col.Indexes().CreateOne(ctx, model)
+		if err != nil {
+			return errorcode.New(errorcode.Code_DB_Insert_Error, err)
+		}
+	}
+
+	return nil
+}
+
 // 請傳入 *T
 func FindOne[T any](h *Handler, ctx context.Context, colName string, filter IFiltetOpt) (T, *errorcode.Error) {
 	col := h.read.db.Collection(colName)
@@ -27,7 +56,7 @@ func FindOne[T any](h *Handler, ctx context.Context, colName string, filter IFil
 		}
 		return result, errorcode.New(errorcode.Code_DB_Find_Error, errors.Wrap(err, err.Error()))
 	}
-	return result, errorcode.Success()
+	return result, nil
 }
 
 func Find[T any](h *Handler, ctx context.Context, colName string, filter IFiltetOpt, findOpt *db.FindOpt) ([]T, *errorcode.Error) {
@@ -45,7 +74,7 @@ func Find[T any](h *Handler, ctx context.Context, colName string, filter IFiltet
 		return nil, errorcode.New(errorcode.Code_DB_Cursor_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return results, errorcode.Success()
+	return results, nil
 }
 
 func Count(h *Handler, ctx context.Context, name string, filter IFiltetOpt) (int64, *errorcode.Error) {
@@ -53,7 +82,7 @@ func Count(h *Handler, ctx context.Context, name string, filter IFiltetOpt) (int
 	if err != nil {
 		return 0, errorcode.New(errorcode.Code_DB_Count_Error, errors.Wrap(err, err.Error()))
 	}
-	return count, errorcode.Success()
+	return count, nil
 }
 
 func Insert(h *Handler, ctx context.Context, name string, data interface{}) *errorcode.Error {
@@ -62,7 +91,7 @@ func Insert(h *Handler, ctx context.Context, name string, data interface{}) *err
 	if err != nil {
 		return errorcode.New(errorcode.Code_DB_Insert_Error, errors.Wrap(err, err.Error()))
 	}
-	return errorcode.Success()
+	return nil
 }
 
 func InsertMany(h *Handler, ctx context.Context, name string, data ...interface{}) *errorcode.Error {
@@ -72,11 +101,9 @@ func InsertMany(h *Handler, ctx context.Context, name string, data ...interface{
 		return errorcode.New(errorcode.Code_DB_InsertMany_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return errorcode.Success()
+	return nil
 }
 
-// MatchedCount 符合條件的資料數量
-// ModifiedCount 更改的資料數量
 func Update(h *Handler, ctx context.Context, name string, filter IFiltetOpt, data map[string]interface{}) (int64, *errorcode.Error) {
 	col := h.write.db.Collection(name)
 
@@ -87,7 +114,9 @@ func Update(h *Handler, ctx context.Context, name string, filter IFiltetOpt, dat
 		return 0, errorcode.New(errorcode.Code_DB_Update_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return r.ModifiedCount, errorcode.Success()
+	// MatchedCount 符合條件的資料數量
+	// ModifiedCount 更改的資料數量
+	return r.ModifiedCount, nil
 }
 
 func Delete(h *Handler, ctx context.Context, name string, filter bson.M) (int64, *errorcode.Error) {
@@ -99,7 +128,7 @@ func Delete(h *Handler, ctx context.Context, name string, filter bson.M) (int64,
 	}
 
 	// DeletedCount 删除的資料數量
-	return r.DeletedCount, errorcode.Success()
+	return r.DeletedCount, nil
 }
 
 func Aggregate[T any](h *Handler, ctx context.Context, colName string, pipeline interface{}, opts *db.FindOpt) ([]T, *errorcode.Error) {
@@ -116,7 +145,7 @@ func Aggregate[T any](h *Handler, ctx context.Context, colName string, pipeline 
 		return nil, errorcode.New(errorcode.Code_DB_Cursor_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return results, errorcode.Success()
+	return results, nil
 }
 
 // 批量执行多个写操作（包括插入、更新和删除）。
@@ -128,7 +157,7 @@ func BulkWrite(h *Handler, ctx context.Context, name string, operations []mongo.
 		return nil, errorcode.New(errorcode.Code_DB_BulkWrite_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return result, errorcode.Success()
+	return result, nil
 }
 
 // 執行 Transaction
@@ -149,7 +178,7 @@ func Transaction(h *Handler, ctx context.Context, callback func(sctx mongo.Sessi
 		return errorcode.New(errorcode.Code_DB_Transaction_Error, errors.Wrap(err, err.Error()))
 	}
 
-	return errorcode.Success()
+	return nil
 }
 
 // 自增id

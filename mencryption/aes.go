@@ -34,13 +34,11 @@ func AesEncrypt(plaintext, key []byte, iv []byte) (string, error) {
 	}
 
 	plaintext = pkcs7Padding(plaintext, block.BlockSize())
-	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
-
-	// 將 IV 放入密文的前面
-	copy(ciphertext[:aes.BlockSize], iv)
 
 	mode := cipher.NewCBCEncrypter(block, iv)
-	mode.CryptBlocks(ciphertext[aes.BlockSize:], plaintext)
+
+	ciphertext := make([]byte, len(plaintext))
+	mode.CryptBlocks(ciphertext, plaintext)
 
 	// 將加密數據轉換為 Base64
 	encryptedBase64 := base64.StdEncoding.EncodeToString(ciphertext)
@@ -54,26 +52,22 @@ func AesDecrypt(ciphertext string, key []byte, iv []byte) ([]byte, error) {
 		return nil, fmt.Errorf("AesDecrypt key:%v iv:%v nil", key, iv)
 	}
 
-	// 解密：從 Base64 還原密文
-	encryptedBytes, err := base64.StdEncoding.DecodeString(ciphertext)
-	if err != nil {
-		return nil, err
-	}
-
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(encryptedBytes) < aes.BlockSize {
-		return nil, fmt.Errorf("encryptedBytes too short")
-	}
-
-	encryptedBytes = encryptedBytes[aes.BlockSize:]
-
 	mode := cipher.NewCBCDecrypter(block, iv)
-	mode.CryptBlocks(encryptedBytes, encryptedBytes)
 
-	plaintext := pkcs7Unpadding(encryptedBytes)
+	// 解密：從 Base64 還原密文
+	encryptedBytes, err := base64.StdEncoding.DecodeString(ciphertext)
+	if err != nil {
+		return nil, err
+	}
+	origData := make([]byte, len(encryptedBytes))
+	mode.CryptBlocks(origData, encryptedBytes)
+
+	plaintext := pkcs7Unpadding(origData)
+
 	return plaintext, nil
 }
