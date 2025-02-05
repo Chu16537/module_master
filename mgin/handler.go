@@ -8,16 +8,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func timeoutBase(c *gin.Context) {
+	res := gin.H{
+		"msg": "timeout",
+	}
+
+	c.AbortWithStatusJSON(http.StatusOK, res)
+}
+
 func (h *Handler) GetRoutine() *gin.Engine {
 	return h.routine
 }
 
-func GetToken(c *gin.Context) string {
-	return c.Request.Header.Get("X-Token")
-}
-
-func GetRequestID(c *gin.Context) string {
-	return c.Request.Header.Get("X-RequestID")
+func GetHeader(c *gin.Context, key string) string {
+	return c.Request.Header.Get(key)
 }
 
 func GetAllPath(c *gin.Context) string {

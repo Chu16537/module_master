@@ -3,14 +3,13 @@ package mwebscoketserver
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
 	"github.com/Chu16537/module_master/errorcode"
 	"github.com/Chu16537/module_master/mjson"
-	"github.com/Chu16537/module_master/mlog"
-	"github.com/Chu16537/module_master/muid"
 	"github.com/gorilla/websocket"
 	"github.com/pkg/errors"
 )
@@ -22,21 +21,21 @@ type Config struct {
 }
 
 type Handler struct {
-	ctx       context.Context
-	config    *Config
-	log       mlog.ILog
-	ws        http.Server
-	upgrader  websocket.Upgrader
-	ih        IHandler
-	time      time.Time
-	uid       *muid.Handler
-	lock      sync.RWMutex
-	clientMap map[int64]IClient // map[唯一編號]IClient
+	ctx            context.Context
+	config         *Config
+	ws             http.Server
+	upgrader       websocket.Upgrader
+	lock           sync.RWMutex
+	clientIdx      uint32
+	clientConnents []IClient // map[唯一編號]IClient
+	ih             IHandler
 }
 
 type IHandler interface {
-	// 收到使用者訊號
-	ReadMessage(*ClientReq)
+	// 斷線
+	Disconnect(idx uint32)
+	// 傳遞資料
+	ReadMessage(*ToHanglerReq)
 }
 
 var h *Handler
@@ -48,22 +47,20 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func New(ctx context.Context, config *Config, uid *muid.Handler, log mlog.ILog, ih IHandler) error {
+func New(ctx context.Context, config *Config, ih IHandler) error {
 	// 基本判斷
 	if config.Addr == "" {
 		return errors.New("websocket new error addr nil")
 	}
 
 	h = &Handler{
-		ctx:       ctx,
-		config:    config,
-		log:       log,
-		time:      time.Now().UTC(),
-		upgrader:  upgrader,
-		ih:        ih,
-		uid:       uid,
-		lock:      sync.RWMutex{},
-		clientMap: make(map[int64]IClient),
+		ctx:            ctx,
+		config:         config,
+		upgrader:       upgrader,
+		lock:           sync.RWMutex{},
+		clientIdx:      0,
+		clientConnents: make([]IClient, config.MaxConn),
+		ih:             ih,
 	}
 
 	h.ws = http.Server{Addr: h.config.Addr, Handler: h}
@@ -100,17 +97,20 @@ func checkAlive() {
 	for {
 		select {
 		case <-h.ctx.Done():
-			h.log.New(mlog.InfoLevel, "checkAlive", "", "mwebscoketserver done", nil)
 			return
 
 		case <-ticker.C:
-			nowUnix := h.time.Unix()
+			nowUnix := time.Now().Unix()
+
 			h.lock.Lock()
-			for id, client := range h.clientMap {
+			for _, client := range h.clientConnents {
+				if client == nil {
+					continue
+				}
+
 				// 一段時間內沒有送請求
 				if nowUnix-client.GetLastReadMsgTime() > int64(h.config.AliveTimeoutSecond) {
-					client.Done()           // 斷開客戶端連線
-					delete(h.clientMap, id) // 從 map 中移除
+					client.Done() // 斷開客戶端連線
 				}
 			}
 
@@ -123,27 +123,43 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// 将 HTTP 连接升级为 WebSocket 连接
 	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		h.log.New(mlog.ErrorLevel, "ServeHTTP", "", nil, errorcode.New(errorcode.Code_Server_Error, err))
 		return
 	}
 
+	var (
+		id     uint32 = 0
+		isJoin bool   = false
+	)
 	sendChan := make(chan []byte, 128)
-	clientId := h.uid.CreateID()
 
 	defer func() {
 		close(sendChan)
 		conn.Close()
 
+		// 斷線刪除
 		h.lock.Lock()
-		delete(h.clientMap, clientId)
+		h.clientConnents[id] = nil
 		h.lock.Unlock()
 	}()
 
-	client := newClient(conn, clientId, sendChan)
-
 	h.lock.Lock()
-	h.clientMap[clientId] = client
+	for i, v := range h.clientConnents {
+		if v == nil {
+			isJoin = true
+			id = uint32(i)
+			break
+		}
+	}
 	h.lock.Unlock()
+
+	if !isJoin {
+		fmt.Println("clientConnents is full")
+		return
+	}
+
+	client := newClient(conn, id, sendChan)
+
+	h.clientConnents[id] = client
 
 	// 讀取訊息
 	go h.reading(conn, client)
@@ -157,32 +173,32 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 	defer func() {
+		// 通知實做層
+		h.ih.Disconnect(client.GetUid())
+		// 斷線
 		client.Done()
 	}()
 
 	for {
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
-			h.log.New(mlog.ErrorLevel, "reading", "", nil, errorcode.New(errorcode.Code_Server_Error, err))
 			return
 		}
 
 		// 格式轉換 有錯誤
-		req := &ClientReq{}
+		req := &ToHanglerReq{}
 		err = mjson.Unmarshal(msg, req)
 		if err != nil {
 			er := errorcode.New(errorcode.Code_Data_Unmarshal_Error, err)
-			h.log.New(mlog.WarnLevel, "reading", "", nil, er)
-
 			b, _ := json.Marshal(er)
 			conn.WriteMessage(websocket.TextMessage, b)
 			continue
 		}
 
-		req.NewID(client.GetUid())
+		req.ClientId = client.GetUid()
 
 		// 更新最後請求時間
-		client.UpdateLastReadTime(h.time.Unix())
+		client.UpdateLastReadTime(time.Now().Unix())
 
 		// 請求實作
 		h.ih.ReadMessage(req)
@@ -191,29 +207,34 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 
 func (h *Handler) sending(conn *websocket.Conn, sender <-chan []byte) {
 	for msg := range sender {
-		if err := conn.WriteMessage(websocket.TextMessage, msg); err != nil {
-			h.log.New(mlog.ErrorLevel, "sending", "", nil, errorcode.New(errorcode.Code_Server_Error, err))
-		}
+		conn.WriteMessage(websocket.TextMessage, msg)
 	}
 }
 
 // 返回請求資料
-func Response(res *ClientRes) {
-	reqId, clientId := res.GetId()
-
-	c, ok := h.clientMap[clientId]
-
-	// 代表使用者斷線
-	if !ok {
-		return
+func Response(res *ToHanglerRes) error {
+	if res == nil {
+		return fmt.Errorf("Response res nil")
 	}
 
-	res.Id = reqId
-	resByte, err := mjson.Marshal(res)
+	c := h.clientConnents[res.ClientId]
+
+	// 代表連線已經斷線
+	if c == nil {
+		return nil
+	}
+
+	// 回傳前端
+	clientRes := &ClientRes{
+		RequestId: res.RequestId,
+		Data:      res.Data,
+	}
+
+	resByte, err := mjson.Marshal(clientRes)
 	if err != nil {
-		h.log.New(mlog.ErrorLevel, "Response", "", nil, errorcode.New(errorcode.Code_Server_Error, errors.Errorf("clientId:%v res marshal err data:%v", clientId, res)))
-		return
+		return err
 	}
 
 	c.WriteMessageQueue(resByte)
+	return nil
 }

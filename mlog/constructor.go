@@ -3,100 +3,91 @@ package mlog
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"time"
 
-	"github.com/Chu16537/module_master/mtime"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 )
 
 type Config struct {
-	Name         string // 伺服器名稱，用於標識日誌來源
-	FilePath     string // 本地日誌檔案路徑
-	ElasticURL   string // Elasticsearch 伺服器 URL，用於將日誌輸出到 Elasticsearch
-	ElasticIndex string // Elasticsearch 索引，用於分組管理日誌
+	Name string `env:"LOG_NAME"` // 服務名稱
 }
 
-type Log struct {
-	handler *handler
-	name    string
-}
 type handler struct {
-	config *Config  // 配置信息
-	file   *os.File // 當前日誌檔案指標
-
-	currentDate string // 當前日期
+	config *Config
+	log    zerolog.Logger
 }
 
 var h *handler
 
-func New(config *Config) error {
+func Init(config *Config) error {
 	if config.Name == "" {
-		return errors.New("name is nil")
+		return errors.New("config name is nil")
 	}
 
-	// 設定日誌格式
-	opt := &logOpt{
-		JSONFormatter: logrus.JSONFormatter{
-			TimestampFormat: time.RFC3339,
-		},
-	}
+	// 设置全局时间格式为 Unix 时间戳
+	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	logrus.SetFormatter(opt)
-	logrus.SetLevel(logrus.DebugLevel)
+	zlog := zerolog.New(os.Stdout). // 输出到标准输出
+					With().
+					Timestamp().                     // 为每条日志添加时间戳
+					Str("server-name", config.Name). // 添加自定义字段
+					Logger().
+					Level(zerolog.DebugLevel) // 设置日志等级为 Debug
 
 	h = &handler{
-		config:      config,
-		currentDate: mtime.GetTimeFormatTime(time.Now(), mtime.Format_YMD),
-	}
-
-	// 輸出到本地
-	if config.FilePath != "" {
-		fp := filepath.Join(config.FilePath, fmt.Sprintf("%s_%s.log", config.Name, h.currentDate))
-
-		// 確保目錄存在
-		err := os.MkdirAll(filepath.Dir(fp), os.ModePerm)
-		if err != nil {
-			return err
-		}
-
-		h.file, err = os.OpenFile(fp, os.O_CREATE|os.O_WRONLY|os.O_APPEND, os.ModePerm)
-		if err != nil {
-			return err
-		}
-
-		logrus.SetOutput(h.file)
-	} else {
-		logrus.SetOutput(os.Stdout)
-	}
-
-	// 添加 Elasticsearch hook
-	if config.ElasticURL != "" {
-		esHook, err := newElasticsearchHook(config.ElasticURL, config.ElasticIndex)
-		if err != nil {
-			return err
-		}
-
-		logrus.AddHook(esHook)
+		config: config,
+		log:    zlog,
 	}
 
 	return nil
 }
 
-func Get(name string) ILog {
-	if h == nil {
-		panic("mlog nil")
-	}
-
-	return &Log{
-		handler: h,
-		name:    name,
-	}
+func Info(args ...interface{}) {
+	h.log.WithLevel(zerolog.InfoLevel).CallerSkipFrame(1).Msg(fmt.Sprint(args...))
 }
 
-func Done() {
-	if h.file != nil {
-		h.file.Close()
-	}
+func Infof(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.InfoLevel).Msgf(format, args...)
+}
+
+func Trace(args ...interface{}) {
+	h.log.WithLevel(zerolog.TraceLevel).Msg(fmt.Sprint(args...))
+}
+
+func Tracef(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.TraceLevel).Msgf(format, args...)
+}
+
+func Debug(args ...interface{}) {
+	h.log.WithLevel(zerolog.DebugLevel).Msg(fmt.Sprint(args...))
+}
+
+func Debugf(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.DebugLevel).Msgf(format, args...)
+}
+
+func Warn(args ...interface{}) {
+	h.log.WithLevel(zerolog.WarnLevel).Caller(1).Msg(fmt.Sprint(args...))
+}
+
+func Warnf(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.WarnLevel).Caller(1).Msgf(format, args...)
+}
+
+func Error(args ...interface{}) {
+	h.log.WithLevel(zerolog.ErrorLevel).Caller(1).Msg(fmt.Sprint(args...))
+}
+
+func Errorf(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.ErrorLevel).Caller(1).Msgf(format, args...)
+}
+
+func Fatal(args ...interface{}) {
+	h.log.WithLevel(zerolog.FatalLevel).Caller(3).Msg(fmt.Sprint(args...))
+	os.Exit(1)
+}
+
+func Fatalf(format string, args ...interface{}) {
+	h.log.WithLevel(zerolog.FatalLevel).Caller(3).Msgf(format, args...)
+	os.Exit(1)
 }

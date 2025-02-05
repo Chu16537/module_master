@@ -1,20 +1,18 @@
 module github.com/Chu16537/module_master
 
-go 1.21
-
-toolchain go1.22.4
+go 1.22.4
 
 require (
-	github.com/bytedance/sonic v1.12.1
-	github.com/elastic/go-elasticsearch/v7 v7.17.10
+	github.com/bytedance/sonic v1.12.7
 	github.com/gin-gonic/gin v1.10.0
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/consul/api v1.30.0
+	github.com/joho/godotenv v1.5.1
 	github.com/nats-io/nats.go v1.37.0
 	github.com/pkg/errors v0.9.1
-	github.com/redis/go-redis/v9 v9.5.1
-	github.com/rs/xid v1.5.0
-	github.com/sirupsen/logrus v1.9.3
+	github.com/redis/go-redis/v9 v9.7.0
+	github.com/rs/zerolog v1.33.0
+	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
 	go.mongodb.org/mongo-driver v1.14.0
@@ -28,10 +26,9 @@ require (
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/armon/go-metrics v0.4.1 // indirect
-	github.com/bytedance/sonic/loader v0.2.0 // indirect
+	github.com/bytedance/sonic/loader v0.2.2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cloudwego/base64x v0.1.4 // indirect
-	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
@@ -44,7 +41,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
-	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

@@ -1,6 +1,8 @@
 package mredis
 
-type GetScoreInfo struct {
-	Member string
-	Score  float64
+type ZsetRangeOpt struct {
+	Min    string
+	Max    string
+	Offset int64
+	Count  int64
 }

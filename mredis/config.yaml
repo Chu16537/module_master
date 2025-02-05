@@ -7,3 +7,5 @@ redis:
   - "127.0.0.1:7005"
   - "127.0.0.1:7006"
   password: aa
+  db: 0
+  timeout_secount: "5000ms"

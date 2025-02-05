@@ -14,28 +14,23 @@ import (
 )
 
 type Config struct {
-	IsSwag        bool
-	Addr          string
-	TimeoutSecond int
+	IsSwag        bool          `env:"GIN_IS_SWAG"`
+	Port          string        `env:"GIN_PORT"`
+	TimeoutSecond time.Duration `env:"GIN_TIMEOUT_SECOND"`
 }
 
 type Handler struct {
-	ctx             context.Context
-	config          *Config
-	routine         *gin.Engine
-	timeoutDuration time.Duration
-	srv             *http.Server
-	timeoutFunc     func(c *gin.Context)
+	ctx         context.Context
+	config      *Config
+	routine     *gin.Engine
+	srv         *http.Server
+	timeoutFunc func(c *gin.Context)
 }
 
 func New(ctx context.Context, config *Config, timeoutFn func(c *gin.Context)) (*Handler, error) {
 	// 基本判斷
-	if config.Addr == "" {
-		return nil, errors.New("gin new error addr nil")
-	}
-
-	if config.TimeoutSecond == 0 {
-		config.TimeoutSecond = 5
+	if config.Port == "" {
+		return nil, errors.New("gin new error port is nil")
 	}
 
 	tFn := timeoutBase
@@ -44,10 +39,9 @@ func New(ctx context.Context, config *Config, timeoutFn func(c *gin.Context)) (*
 	}
 
 	h := &Handler{
-		ctx:             ctx,
-		config:          config,
-		timeoutDuration: time.Duration(time.Duration(config.TimeoutSecond) * time.Second),
-		timeoutFunc:     tFn,
+		ctx:         ctx,
+		config:      config,
+		timeoutFunc: tFn,
 	}
 
 	routine := gin.Default()
@@ -75,7 +69,7 @@ func (h *Handler) Done() {
 func (h *Handler) Run() error {
 	// 配置 HTTP 服务器
 	h.srv = &http.Server{
-		Addr:    h.config.Addr,
+		Addr:    fmt.Sprintf(":%s", h.config.Port),
 		Handler: h.routine,
 	}
 
@@ -99,12 +93,4 @@ func (h *Handler) Run() error {
 		return nil
 	}
 
-}
-
-func timeoutBase(c *gin.Context) {
-	res := gin.H{
-		"msg": "timeout",
-	}
-
-	c.AbortWithStatusJSON(http.StatusOK, res)
 }

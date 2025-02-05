@@ -5,8 +5,6 @@ import (
 	"math/rand"
 	"sync/atomic"
 	"time"
-
-	"github.com/rs/xid"
 )
 
 const (
@@ -14,42 +12,41 @@ const (
 	maxSequenceVal = uint32(1<<32 - 1) // 避免sequence溢位的最大值
 )
 
-type Handler struct {
-	node          int64     // 機器碼
-	uid           string    // 唯一號碼
+type handler struct {
+	node int64 // 機器碼
+
 	time          time.Time // 時間
 	lastTimestamp int64     // 上次使用時間
 	sequence      uint32    // 順序號碼
 	instanceMask  int64
 	tailBits      uintptr
 	randGen       *rand.Rand
+	orderIDCount  uint32 // 使用次數
 }
 
-var h *Handler
+var h *handler
 
-func New(node int64) *Handler {
+func New(node int64) {
 	t := time.Now()
 
-	h = &Handler{
+	h = &handler{
 		node:          node,
-		uid:           xid.New().String(),
 		time:          t,
 		lastTimestamp: t.UnixNano(),
 		sequence:      0,
 		instanceMask:  node << int64(uintptr(32)),
 		tailBits:      uintptr(20),
 		randGen:       rand.New(rand.NewSource(t.UnixNano())),
+		orderIDCount:  0,
 	}
-
-	return h
 }
 
-func (h *Handler) GetNodeID() int64 {
+func GetNodeID() int64 {
 	return h.node
 }
 
 // 創建唯一碼
-func (h *Handler) CreateID() int64 {
+func CreateID() int64 {
 	nowTimestamp := time.Now().UnixNano() >> int64(h.tailBits)
 
 	// 同一時間戳下，防止sequence溢位
@@ -70,7 +67,7 @@ func (h *Handler) CreateID() int64 {
 }
 
 // 隨機字符串生成函數
-func (h *Handler) CreatRandomString(length int) string {
+func CreatRandomString(length int) string {
 	result := make([]byte, length)
 	charsetLength := len(charset)
 	for i := 0; i < length; i++ {
@@ -80,6 +77,10 @@ func (h *Handler) CreatRandomString(length int) string {
 }
 
 // orderID 時間-nodeId-唯一碼
-func (h *Handler) CreateOrderID() string {
-	return fmt.Sprintf("%v-%v-%v", time.Now().Unix(), h.node, h.CreateID())
+func CreateOrderID() string {
+	if atomic.AddUint32(&h.orderIDCount, 1) > maxSequenceVal {
+		h.orderIDCount = 0
+	}
+
+	return fmt.Sprintf("%v-%v-%v", CreateID(), h.node, h.orderIDCount)
 }

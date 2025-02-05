@@ -9,9 +9,17 @@ import (
 
 func TestMain(t *testing.T) {
 
-	h := muid.New(1)
+	muid.New(1)
 
-	orderId := h.CreateOrderID()
+	orderId := muid.CreateOrderID()
+	fmt.Println("orderId", orderId)
+	fmt.Println("orderId", len(orderId))
+
+	orderId = muid.CreateOrderID()
+	fmt.Println("orderId", orderId)
+	fmt.Println("orderId", len(orderId))
+
+	orderId = muid.CreateOrderID()
 	fmt.Println("orderId", orderId)
 	fmt.Println("orderId", len(orderId))
 

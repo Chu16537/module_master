@@ -6,8 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mlog"
-	"github.com/Chu16537/module_master/muid"
 	"github.com/Chu16537/module_master/mwebscoketserver"
 )
 
@@ -17,24 +15,11 @@ func TestMain(t *testing.T) {
 	config := &mwebscoketserver.Config{
 		Addr:               "0.0.0.0:10000",
 		MaxConn:            10000,
-		AliveTimeoutSecond: 10,
+		AliveTimeoutSecond: 3,
 	}
-
-	uid := muid.New(1)
-
-	logConfig := &mlog.Config{
-		Name: "test_ws",
-	}
-	err := mlog.New(logConfig)
-	if err != nil {
-		fmt.Println("log", err)
-		return
-	}
-
-	l := mlog.Get("test_ws")
 
 	a := &aa{}
-	err = mwebscoketserver.New(ctx, config, uid, l, a)
+	err := mwebscoketserver.New(ctx, config, a)
 	if err != nil {
 		fmt.Println("ws err", err)
 		return
@@ -46,9 +31,17 @@ func TestMain(t *testing.T) {
 
 type aa struct{}
 
-func (a *aa) ReadMessage(req *mwebscoketserver.ClientReq) {
+func (a *aa) ReadMessage(req *mwebscoketserver.ToHanglerReq) {
+	fmt.Println(req.RequestId, req.ClientId, req.Data)
 
-	fmt.Println(req.Id)
+	res := &mwebscoketserver.ToHanglerRes{
+		RequestId: req.RequestId,
+		ClientId:  req.ClientId,
+		Data:      "ss",
+	}
+	mwebscoketserver.Response(res)
+}
 
-	mwebscoketserver.Response(nil)
+func (a *aa) Disconnect(idx uint32) {
+	fmt.Println("disconnect", idx)
 }

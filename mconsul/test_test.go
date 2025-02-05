@@ -12,12 +12,12 @@ import (
 
 func TestXxx(t *testing.T) {
 
-	uid := muid.New(1)
+	muid.New(1)
 
 	c := &mconsul.Config{
 		ConsulAddr: "192.168.50.80:8500",
 		Scheme:     "http",
-		NodeID:     uid.CreateID(),
+		NodeID:     muid.CreateID(),
 		Name:       "test_name",
 		Addr:       "192.168.50.80",
 		Port:       8081,

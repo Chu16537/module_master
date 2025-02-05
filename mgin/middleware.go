@@ -14,7 +14,7 @@ func (h *Handler) AddMiddleware(f func() gin.HandlerFunc) {
 func (h *Handler) middlewareTimeout() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// 为请求创建一个带超时的 context
-		ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeoutDuration)
+		ctx, cancel := context.WithTimeout(c.Request.Context(), h.config.TimeoutSecond)
 		defer cancel()
 
 		// 使用 context 替换原始的请求 context

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/myaml"
+	"github.com/Chu16537/module_master/config"
 	"github.com/Chu16537/module_master/slot"
 )
 
@@ -31,7 +31,7 @@ var (
 
 func newConfig() (*slot.Config, error) {
 	c = new(slot.Config)
-	err := myaml.Read("config.yaml", c)
+	err := config.LoadYaml("config.yaml", c)
 	if err != nil {
 		return nil, err
 	}

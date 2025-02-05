@@ -1,5 +1,0 @@
-log:
-  name: "name_server"
-  filepath: "./log"
-  elasticurl: ""
-  elasticindex: ""
