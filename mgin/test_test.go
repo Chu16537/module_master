@@ -13,8 +13,8 @@ import (
 func TestXxx(t *testing.T) {
 
 	config := &mgin.Config{
-		Port:          "8080",
-		TimeoutSecond: 10 * time.Second,
+		Port:    "8080",
+		Timeout: 10 * time.Second,
 	}
 
 	h, err := mgin.New(context.Background(), config, nil)

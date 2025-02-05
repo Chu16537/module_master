@@ -14,9 +14,9 @@ import (
 )
 
 type Config struct {
-	IsSwag        bool          `env:"GIN_IS_SWAG"`
-	Port          string        `env:"GIN_PORT"`
-	TimeoutSecond time.Duration `env:"GIN_TIMEOUT_SECOND"`
+	IsSwag  bool          `env:"GIN_IS_SWAG"`
+	Port    string        `env:"GIN_PORT"`
+	Timeout time.Duration `env:"GIN_TIMEOUT"`
 }
 
 type Handler struct {

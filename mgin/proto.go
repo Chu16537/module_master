@@ -1,8 +1,7 @@
 package mgin
 
 type Req struct {
-	Platform string `json:"platform"`
-	Data     string `json:"data"` // base64 跟 aes加密後資料
+	Data interface{} `json:"data"`
 }
 
 type Res struct {
