@@ -5,12 +5,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Chu16537/module_master/errorcode"
 	"github.com/gin-gonic/gin"
 )
 
 func timeoutBase(c *gin.Context) {
 	res := gin.H{
-		"msg": "timeout",
+		"code": errorcode.Code_Timeout,
+		"msg":  "timeout",
 	}
 
 	c.AbortWithStatusJSON(http.StatusOK, res)

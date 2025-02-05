@@ -9,7 +9,7 @@ import (
 )
 
 type Config struct {
-	Name string `env:"LOG_NAME"` // 服務名稱
+	Name string `env:"LOG_NAME" yaml:"name"` // 服務名稱
 }
 
 type handler struct {
