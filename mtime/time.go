@@ -98,3 +98,12 @@ func GetDayUnixStart(t int64) int64 {
 func GetDayUnixEnd(t int64) int64 {
 	return ((t/Day_Sceond)+1)*Day_Sceond - 1
 }
+
+// 比較時間大小 回傳 小,大
+func CompareTime(t1, t2 int64) (int64, int64) {
+	// 時間 t1 比 t2 大
+	if t1 > t2 {
+		return t2, t1
+	}
+	return t1, t2
+}

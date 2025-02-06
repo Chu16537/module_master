@@ -17,25 +17,27 @@ type IRoomServer interface {
 	UpdateTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, status int, expireTime int64) *errorcode.Error
 }
 
-type Handler struct {
+type handler struct {
 	ctx    context.Context
 	client *mgrpcclient.Handler
 }
 
-func Init(ctx context.Context, conf *mgrpcclient.Config) (*Handler, error) {
+var h *handler
+
+func Init(ctx context.Context, conf *mgrpcclient.Config) error {
 	clientHandler, err := mgrpcclient.New(ctx, conf)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	h := &Handler{
+	h = &handler{
 		ctx:    ctx,
 		client: clientHandler,
 	}
 
-	return h, nil
+	return nil
 }
 
-func (h *Handler) Done() {
+func (h *handler) Done() {
 	h.client.Done()
 }

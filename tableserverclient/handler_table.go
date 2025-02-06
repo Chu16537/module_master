@@ -11,8 +11,12 @@ import (
 )
 
 // 取得牌桌
-func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, findOpt *db.FindOpt) ([]*db.Table, *errorcode.Error) {
-	reqData := &TSGetTableReq{
+func GetTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, findOpt *db.FindOpt) ([]*db.Table, *errorcode.Error) {
+	if h == nil {
+		return nil, errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("client nil"))
+	}
+
+	reqData := &GetTableReq{
 		TableOpt: tableOpt,
 		FindOpt:  findOpt,
 	}
@@ -35,7 +39,7 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 		return nil, errC
 	}
 
-	resData := &TSGetTableRes{}
+	resData := &GetTableRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
 		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("GetTable Unmarshal error:%v", err))
@@ -45,8 +49,12 @@ func (h *Handler) GetTable(ctx context.Context, logTracer string, tableOpt *db.T
 }
 
 // 更新牌桌 遊戲設定
-func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOpt *db.TableOpt, gameConfig []byte) (*db.Table, *errorcode.Error) {
-	reqData := &TSUpdateTableGameReq{
+func UpdateTableGame(ctx context.Context, logTracer string, tableOpt *db.TableOpt, gameConfig []byte) (*db.Table, *errorcode.Error) {
+	if h == nil {
+		return nil, errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("client nil"))
+	}
+
+	reqData := &UpdateTableGameReq{
 		TableOpt:   tableOpt,
 		GameConfig: gameConfig,
 	}
@@ -69,7 +77,7 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 		return nil, errC
 	}
 
-	resData := &TSUpdateTableGameRes{}
+	resData := &UpdateTableGameRes{}
 	err = mjson.Unmarshal(res.Data, resData)
 	if err != nil {
 		return nil, errorcode.New(errorcode.Code_Data_Unmarshal_Error, fmt.Errorf("UpdateTableGame Unmarshal error:%v", err))
@@ -79,8 +87,12 @@ func (h *Handler) UpdateTableGame(ctx context.Context, logTracer string, tableOp
 }
 
 // 更新牌桌狀態
-func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, status int, expireTime int64) *errorcode.Error {
-	reqData := &TSUpdateTableReq{
+func UpdateTable(ctx context.Context, logTracer string, tableOpt *db.TableOpt, status int, expireTime int64) *errorcode.Error {
+	if h == nil {
+		return errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("client nil"))
+	}
+
+	reqData := &UpdateTableReq{
 		TableOpt:   tableOpt,
 		Status:     status,
 		ExpireTime: expireTime,
@@ -104,7 +116,7 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 		return errC
 	}
 
-	// resData := &TSUpdateTableRes{}
+	// resData := &UpdateTableRes{}
 	// err = mjson.Unmarshal(res.Data, resData)
 	// if err != nil {
 	// 	return errorcode.New(errorcode.Code_Data_Unmarshal_Error,fmt.Errorf("UpdateTableGame Unmarshal error:%v", err))
@@ -114,9 +126,13 @@ func (h *Handler) UpdateTable(ctx context.Context, logTracer string, tableOpt *d
 }
 
 // 創建牌桌
-func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint64, expireTime int64, gameID int) *errorcode.Error {
-	reqData := &TSCreateTableReq{
-		ClubID:     clubID,
+func CreateTable(ctx context.Context, logTracer string, platformID uint64, expireTime int64, gameID int) *errorcode.Error {
+	if h == nil {
+		return errorcode.New(errorcode.Code_Server_Error, fmt.Errorf("client nil"))
+	}
+
+	reqData := &CreateTableReq{
+		PlatformID: platformID,
 		ExpireTime: expireTime,
 		GameID:     gameID,
 	}
@@ -139,7 +155,7 @@ func (h *Handler) CreateTable(ctx context.Context, logTracer string, clubID uint
 		return errC
 	}
 
-	// resData := &TSCreateTableRes{}
+	// resData := &CreateTableRes{}
 	// err = mjson.Unmarshal(res.Data, resData)
 	// if err != nil {
 	// 	return errorcode.New(errorcode.Code_Data_Unmarshal_Error,fmt.Errorf("CreateTable Unmarshal error:%v", err))

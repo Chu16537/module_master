@@ -1,23 +1,18 @@
 package db
 
 import (
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type FindOpt struct {
-	Start  uint64
-	Limit  uint64
-	Sort   bson.D
-	Fields bson.M
+	Start uint64
+	Limit uint64
+	Mgo   *MongoFindOpt
 }
 
-func checkTimeUxin(start, end int64) (int64, int64) {
-	// 時間 start 比 end 小
-	if start > end {
-		return end, start
-	}
-	return start, end
+type MongoFindOpt struct {
+	Sort   map[string]int // 排序 // bson.D{{"price", 1}, {"name", -1}}：先按 price 升序，再按 name 降序。
+	Fields map[string]int // 顯示得欄位 // bson.M{"name": 1, "age": 1}：只返回 name 和 age bson.M{"password": 0}：排除 password 欄位（0 表示不返回該欄位）。
 }
 
 func (o *FindOpt) ToMgo() *options.FindOptions {
@@ -33,11 +28,14 @@ func (o *FindOpt) ToMgo() *options.FindOptions {
 	if o.Limit > 0 {
 		fo.SetLimit(int64(o.Limit))
 	}
-	if len(o.Sort) > 0 {
-		fo.SetSort(o.Sort)
-	}
-	if len(o.Fields) > 0 {
-		fo.SetProjection(o.Fields)
+
+	if o.Mgo != nil {
+		if len(o.Mgo.Sort) > 0 {
+			fo.SetSort(o.Mgo.Sort)
+		}
+		if len(o.Mgo.Fields) > 0 {
+			fo.SetProjection(o.Mgo.Fields)
+		}
 	}
 
 	return fo

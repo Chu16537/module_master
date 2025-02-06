@@ -13,12 +13,12 @@ const (
 )
 
 type Table struct {
-	TableID    uint64 `json:"table_id" bson:"table_id"`       // 牌桌id
-	ClubID     uint64 `json:"club_id" bson:"club_id"`         // 俱樂部編號
-	ExpireTime int64  `json:"expire_time" bson:"expire_time"` // 到期時間
-	Status     int    `json:"status" bson:"status"`           // 狀態
-	GameID     int    `json:"game_id" bson:"game_id"`         // 遊戲編號
-	GameConfig []byte `json:"game_config" bson:"game_config"` // 每個遊戲設定不同
+	TableID    uint64 `json:"table_id" bson:"table_id"`           // 牌桌id
+	PlatformID uint64 `json:"platformID_id" bson:"platformID_id"` // 俱樂部編號
+	ExpireTime int64  `json:"expire_time" bson:"expire_time"`     // 到期時間
+	Status     int    `json:"status" bson:"status"`               // 狀態
+	GameID     int    `json:"game_id" bson:"game_id"`             // 遊戲編號
+	GameConfig []byte `json:"game_config" bson:"game_config"`     // 每個遊戲設定不同
 }
 
 // 遊戲1
@@ -46,7 +46,7 @@ type GameConfig2 struct {
 
 type TableOpt struct {
 	ID            uint64
-	ClubID        uint64
+	PlatformID    uint64
 	GameID        int64
 	Status        []int
 	DelExpireTime int64
@@ -76,8 +76,8 @@ func (o *TableOpt) Filter_Mgo() bson.M {
 		filter["id"] = o.ID
 	}
 
-	if o.ClubID > 0 {
-		filter["club_id"] = o.ClubID
+	if o.PlatformID > 0 {
+		filter["platform_id"] = o.PlatformID
 	}
 
 	if o.GameID > 0 {

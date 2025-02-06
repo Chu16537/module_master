@@ -10,7 +10,7 @@ import (
 )
 
 // gs 斷線
-func (h *Handler) GameServerDone(ctx context.Context, logTracer string, nodeID int64) (bool, *errorcode.Error) {
+func (h *handler) GameServerDone(ctx context.Context, logTracer string, nodeID int64) (bool, *errorcode.Error) {
 	reqData := &GameServerDoneReq{
 		NodeID: nodeID,
 	}
