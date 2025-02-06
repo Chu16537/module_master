@@ -14,7 +14,7 @@ const (
 
 type Table struct {
 	TableID    uint64 `json:"table_id" bson:"table_id"`           // 牌桌id
-	PlatformID uint64 `json:"platformID_id" bson:"platformID_id"` // 俱樂部編號
+	PlatformID uint64 `json:"platformID_id" bson:"platformID_id"` // 平台編號
 	ExpireTime int64  `json:"expire_time" bson:"expire_time"`     // 到期時間
 	Status     int    `json:"status" bson:"status"`               // 狀態
 	GameID     int    `json:"game_id" bson:"game_id"`             // 遊戲編號
