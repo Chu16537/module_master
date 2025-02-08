@@ -115,7 +115,7 @@ func (h *Handler) Pipe() redis.Pipeliner {
 }
 
 // 新增 / 更新 指定的score(不能重複才可以使用)
-func (h *Handler) AddAndUpdateZset(ctx context.Context, key string, score float64, member string) error {
+func (h *Handler) UpdateZsetMember(ctx context.Context, key string, score float64, member string) error {
 	// 刪除指定 score 的 member
 	_, err := h.rdsCmdable.ZRemRangeByScore(ctx, key, fmt.Sprintf("%f", score), fmt.Sprintf("%f", score)).Result()
 	if err != nil {
@@ -129,12 +129,12 @@ func (h *Handler) AddAndUpdateZset(ctx context.Context, key string, score float6
 }
 
 // 取得 member 的 score
-func (h *Handler) GetZsetMember(ctx context.Context, key string, member string) (float64, error) {
+func (h *Handler) GetScore(ctx context.Context, key string, member string) (float64, error) {
 	return h.rdsCmdable.ZScore(ctx, key, member).Result()
 }
 
-// 取得 範圍內的 member
-func (h *Handler) GetZsetRange(ctx context.Context, key string, o *ZsetRangeOpt) ([]string, error) {
+// GetZsetRange 取得 ZSET 範圍內的 member，透過 desc 決定排序方向
+func (h *Handler) GetZsetRange(ctx context.Context, key string, o *ZsetRangeOpt, desc bool) ([]string, error) {
 	opt := &redis.ZRangeBy{
 		Min:    o.Min,
 		Max:    o.Max,
@@ -145,7 +145,18 @@ func (h *Handler) GetZsetRange(ctx context.Context, key string, o *ZsetRangeOpt)
 		opt.Count = o.Count
 	}
 
+	if desc {
+		// 由大到小排序
+		return h.rdsCmdable.ZRevRangeByScore(ctx, key, opt).Result()
+	}
+
+	// 由小到大排序
 	return h.rdsCmdable.ZRangeByScore(ctx, key, opt).Result()
+}
+
+// 更新 member 的 score
+func (h *Handler) UpdateZsetScore(ctx context.Context, key string, member string, score float64) error {
+	return h.rdsCmdable.ZAdd(ctx, key, redis.Z{Score: score, Member: member}).Err()
 }
 
 // 刪除 members
@@ -172,7 +183,7 @@ func (h *Handler) Lock(ctx context.Context, key string, second int) error {
 func (h *Handler) UpdateServerLockTime(ctx context.Context, name string, nodeID int64) error {
 	key := fmt.Sprintf("lock:%v", name)
 
-	err := h.AddAndUpdateZset(ctx, key, float64(time.Now().Unix()), strconv.Itoa(int(nodeID)))
+	err := h.UpdateZsetMember(ctx, key, float64(time.Now().Unix()), strconv.Itoa(int(nodeID)))
 	if err != nil {
 		return err
 	}

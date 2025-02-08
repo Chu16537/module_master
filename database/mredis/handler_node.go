@@ -7,7 +7,6 @@ import (
 )
 
 // 取得 node score
-// 取得成功後自動執行更新
 func (h *Handler) GetNode(ctx context.Context, unix int64) (int64, error) {
 	keys := []string{Key_Node}
 	values := []interface{}{unix, NodeSecond}
@@ -23,7 +22,7 @@ func (h *Handler) GetNode(ctx context.Context, unix int64) (int64, error) {
 // score: nodeID /  member: unix.nodeID
 func (h *Handler) UpdateNode(ctx context.Context, nodeID int64) error {
 	member := fmt.Sprintf("%v.%v", time.Now().Unix(), nodeID)
-	err := h.AddAndUpdateZset(ctx, Key_Node, float64(nodeID), member)
+	err := h.UpdateZsetMember(ctx, Key_Node, float64(nodeID), member)
 	if err != nil {
 		return err
 	}

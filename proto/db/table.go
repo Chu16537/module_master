@@ -5,24 +5,24 @@ import (
 )
 
 const (
-	Table_Status_Unable     = 0 // 未啟用 會長不能使用 只有admin 可以使用
-	Table_Status_Enable     = 1 // 啟用 但不能創建房間 會長 可以更改遊戲設定 會長可以更改狀態為創建
-	Table_Status_WaitCreate = 2 // 等待創建 rs 會查詢 並且創建房間
-	Table_Status_Playing    = 3 // gs 創建成功 創建失敗改為 Table_Status_WaitCreate
-	Table_Status_Trans      = 4 // 房間轉換gs  gs1>rs>gs2 gs2把狀態改為 Table_Status_Playing
+	Table_Status_Unable     = 0 // 未啟用 只有admin 可以使用
+	Table_Status_Enable     = 1 // 啟用 但不能創建房間 平台 可以更改遊戲設定 ,更改狀態為等待創建
+	Table_Status_WaitCreate = 2 // 等待創建 ts 會查詢 並且創建房間
+	Table_Status_Playing    = 3 // 創建成功 遊戲正在進行
+	Table_Status_Trans      = 4 // 房間轉換
 )
 
 type Table struct {
-	TableID    uint64 `json:"table_id" bson:"table_id"`           // 牌桌id
-	PlatformID uint64 `json:"platformID_id" bson:"platformID_id"` // 平台編號
-	ExpireTime int64  `json:"expire_time" bson:"expire_time"`     // 到期時間
-	Status     int    `json:"status" bson:"status"`               // 狀態
-	GameID     int    `json:"game_id" bson:"game_id"`             // 遊戲編號
-	GameConfig []byte `json:"game_config" bson:"game_config"`     // 每個遊戲設定不同
+	TableID    uint64      `json:"table_id" bson:"table_id"`       // 牌桌id
+	PlatformID uint64      `json:"platform_id" bson:"platform_id"` // 平台編號
+	ExpireTime int64       `json:"expire_time" bson:"expire_time"` // 到期時間
+	Status     int         `json:"status" bson:"status"`           // 狀態
+	GameID     int         `json:"game_id" bson:"game_id"`         // 遊戲編號
+	GameConfig *GameConfig `json:"game_config" bson:"game_config"` // 每個遊戲設定不同
 }
 
 // 遊戲1
-type GameConfig1 struct {
+type GameConfig struct {
 	EnterBalance      uint64    `json:"enter_balance" bson:"enter_balance"`               // 入場金額
 	MaxPlayerCount    uint      `json:"max_player_count" bson:"max_player_count"`         // 最大玩家數量
 	Chips             []uint64  `json:"chips" bson:"chips"`                               // 籌碼
@@ -31,49 +31,26 @@ type GameConfig1 struct {
 	EffectiveBet      []float64 `json:"effective_bet" bson:"effective_bet"`               // 有效投注
 	MaxBet            uint64    `json:"max_bet" bson:"max_bet"`                           // 單局最大總下注金額 0=無上限
 	Rtp               float64   `json:"rtp" bson:"rtp"`                                   // rpt
-}
-
-type GameConfig2 struct {
-	EnterBalance      uint64    `json:"enter_balance" bson:"enter_balance"`               // 入場金額
-	MaxPlayerCount    int       `json:"max_player_count" bson:"max_player_count"`         // 最大玩家數量
-	Chips             []uint64  `json:"chips" bson:"chips"`                               // 籌碼
-	UpperBetLimitZone []uint64  `json:"upper_bet_limit_zone" bson:"upper_bet_limit_zone"` // 上限
-	Odds              []float64 `json:"odds" bson:"odds"`                                 // 賠率
-	EffectiveBet      []float64 `json:"effective_bet" bson:"effective_bet"`               // 有效投注
-	MaxBet            uint64    `json:"max_bet" bson:"max_bet"`                           // 單局最大總下注金額 0=無上限
-	Rtp               float64   `json:"rtp" bson:"rtp"`                                   // rpt
+	ExtraData         string    `json:"extra_data" bson:"extra_data"`                     // 遊戲額外資料
 }
 
 type TableOpt struct {
-	ID            uint64
-	PlatformID    uint64
-	GameID        int64
-	Status        []int
-	DelExpireTime int64
-
-	DelOpt    *TableOptDel
-	CreateOpt *TableOptCreate
+	TableID    uint64
+	PlatformID uint64
+	GameID     int64
+	Status     []int
+	ExpireTime int64
 }
 
-type TableOptDel struct {
-	Status        []int
-	DelExpireTime int64
-}
-
-type TableOptCreate struct {
-	Status        []int
-	DelExpireTime int64
-}
-
-func (o *TableOpt) Filter_Mgo() bson.M {
+func (o *TableOpt) ToMgo() bson.M {
 	filter := bson.M{}
 
 	if o == nil {
 		return filter
 	}
 
-	if o.ID > 0 {
-		filter["id"] = o.ID
+	if o.TableID > 0 {
+		filter["table_id"] = o.TableID
 	}
 
 	if o.PlatformID > 0 {
@@ -88,23 +65,28 @@ func (o *TableOpt) Filter_Mgo() bson.M {
 		filter["status"] = bson.M{"$in": o.Status}
 	}
 
-	if o.DelExpireTime > 0 {
-		filter["expire_time"] = bson.M{"$lte": o.DelExpireTime}
-	}
-
-	if o.DelOpt != nil {
-		filter["$or"] = []bson.M{
-			{"status": bson.M{"$in": o.DelOpt.Status}},
-			{"expire_time": bson.M{"$lte": o.DelOpt.DelExpireTime}},
-		}
-	}
-
-	if o.CreateOpt != nil {
-		filter["$and"] = []bson.M{
-			{"status": bson.M{"$in": o.CreateOpt.Status}},
-			{"expire_time": bson.M{"$gt": o.CreateOpt.DelExpireTime}},
-		}
+	if o.ExpireTime > 0 {
+		filter["expire_time"] = bson.M{"$lte": o.ExpireTime}
 	}
 
 	return filter
+}
+
+type TableUpdate struct {
+	Status     int
+	ExpireTime int64
+}
+
+func (o *TableUpdate) ToMap() map[string]interface{} {
+	update := map[string]interface{}{}
+
+	if o.Status != -1 {
+		update["status"] = o.Status
+	}
+
+	if o.ExpireTime != 0 {
+		update["expire_time"] = o.ExpireTime
+	}
+
+	return update
 }

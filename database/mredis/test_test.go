@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mredis"
+	"github.com/Chu16537/module_master/database/mredis"
 )
 
 func Test_A(t *testing.T) {

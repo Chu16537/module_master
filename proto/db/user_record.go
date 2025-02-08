@@ -11,7 +11,7 @@ type UserRecord struct {
 	UserID        uint64 `json:"user_id" bson:"user_id"`               // 玩家id
 	GameRecordID  string `json:"game_record_id" bson:"game_record_id"` // 局號(唯一碼)
 	CreateTime    int64  `json:"create_time" bson:"create_time"`       // 創建時間(牌局結束時間)
-	PlatformID    uint64 `json:"platformID_id" bson:"platformID_id"`   // 平台
+	PlatformID    uint64 `json:"platform_id" bson:"platform_id"`       // 平台
 	TableID       uint64 `json:"table_id" bson:"table_id"`             // 房間名稱
 	GameID        int    `json:"game_id" bson:"game_id"`               // 遊戲編號
 	GameType      int    `json:"game_type" bson:"game_type"`           // 遊戲類型

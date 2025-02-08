@@ -1,4 +1,4 @@
-package mnats
+package mq
 
 // 訂閱模式
 type SubMode struct {
