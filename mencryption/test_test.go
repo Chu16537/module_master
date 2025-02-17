@@ -21,9 +21,9 @@ func TestAes(t *testing.T) {
 
 	a := &A{
 		Account:  "test_Account",
-		GameId:   "test_GameId",
-		Currency: "test_Currency",
-		Lang:     "test_Lang",
+		GameId:   "1",
+		Currency: "NTD",
+		Lang:     "en",
 	}
 
 	b, err := mjson.Marshal(a)
@@ -38,7 +38,7 @@ func TestAes(t *testing.T) {
 		return
 	}
 
-	fmt.Println("aesEncStr", aesEncStr)
+	fmt.Println("aesEncStr", string(aesEncStr))
 
 	aesDecStr, err := mencryption.AesDecrypt(aesEncStr, []byte(key), []byte(iv))
 	if err != nil {
