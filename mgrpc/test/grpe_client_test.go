@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/Chu16537/module_master/mgrpc/commongrpc"
 	"github.com/Chu16537/module_master/mgrpc/mgrpcclient"
@@ -14,8 +15,8 @@ import (
 
 func TestClient(t *testing.T) {
 	config := &mgrpcclient.Config{
-		Addr:          ":50051",
-		TimeoutSecond: 3,
+		Addr:    ":50051",
+		Timeout: 10 * time.Second,
 	}
 
 	h, err := mgrpcclient.New(context.Background(), config)

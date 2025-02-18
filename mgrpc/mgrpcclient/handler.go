@@ -14,7 +14,7 @@ import (
 
 func (h *Handler) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*commongrpc.UnaryRPCRes, *errorcode.Error) {
 	// 设置请求的超时时间
-	cctx, cancel := context.WithTimeout(ctx, time.Duration(h.config.TimeoutSecond)*time.Second)
+	cctx, cancel := context.WithTimeout(ctx, h.config.Timeout*time.Second)
 	defer cancel()
 
 	res, err := h.client.UnaryRPC(cctx, req)

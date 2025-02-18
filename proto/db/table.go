@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	Table_Status_Unable     = 0 // 未啟用 只有admin 可以使用
+	Table_Status_UnEnable   = 0 // 未啟用 只有admin 可以使用
 	Table_Status_Enable     = 1 // 啟用 但不能創建房間 平台 可以更改遊戲設定 ,更改狀態為等待創建
 	Table_Status_WaitCreate = 2 // 等待創建 ts 會查詢 並且創建房間
 	Table_Status_Playing    = 3 // 創建成功 遊戲正在進行
@@ -37,7 +37,7 @@ type GameConfig struct {
 type TableOpt struct {
 	TableID    uint64
 	PlatformID uint64
-	GameID     int64
+	GameID     int
 	Status     []int
 	ExpireTime int64
 }

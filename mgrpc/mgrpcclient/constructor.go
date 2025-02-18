@@ -12,8 +12,8 @@ import (
 )
 
 type Config struct {
-	Addr          string
-	TimeoutSecond int
+	Addr    string
+	Timeout time.Duration
 }
 type Handler struct {
 	ctx    context.Context
