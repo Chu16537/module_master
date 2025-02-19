@@ -1,8 +1,7 @@
 package mnats
 
 import (
-	"github.com/Chu16537/module_master/mq"
-	"github.com/Chu16537/module_master/proto"
+	"github.com/Chu16537/module_master/mmq"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )
@@ -16,7 +15,7 @@ func (h *Handler) Pub(subject string, data []byte) error {
 }
 
 // 訂閱
-func (h *Handler) Sub(subject string, consumer string, mode mq.SubMode, subChan chan proto.MQSubData) error {
+func (h *Handler) Sub(subject string, consumer string, mode mmq.SubMode, subChan chan mmq.MQSubData) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -27,11 +26,11 @@ func (h *Handler) Sub(subject string, consumer string, mode mq.SubMode, subChan 
 	opts := []nats.SubOpt{}
 
 	switch mode.Mode {
-	case mq.Sub_Mode_Last_Ack:
+	case mmq.Sub_Mode_Last_Ack:
 		opts = append(opts, nats.Durable(consumer)) // 從最後ack 開始
-	case mq.Sub_Mode_Last:
+	case mmq.Sub_Mode_Last:
 		opts = append(opts, nats.DeliverNew()) // 從最新消息開始
-	case mq.Sub_Mode_Sequence:
+	case mmq.Sub_Mode_Sequence:
 		if mode.StartSequenceID < 1 {
 			mode.StartSequenceID = 1
 		}
@@ -41,19 +40,21 @@ func (h *Handler) Sub(subject string, consumer string, mode mq.SubMode, subChan 
 	// 訂閱
 	sub, err := h.js.Subscribe(subject, func(msg *nats.Msg) {
 		data, _ := msg.Metadata()
-		subChan <- proto.MQSubData{
+
+		c := mmq.MQSubData{
 			Data:       msg.Data,
 			SequenceID: data.Sequence.Consumer,
+			Ack: func() {
+				msg.Ack()
+			},
 		}
 
-		// 要記錄最後ack
-		if mode.Mode == mq.Sub_Mode_Last_Ack {
-			msg.Ack()
-		}
+		subChan <- c
+
 	}, opts...)
 
 	if err != nil {
-		return errors.Wrap(err, "訂閱失敗")
+		return errors.Wrap(err, "sub error")
 	}
 
 	// 記錄訂閱

@@ -31,6 +31,7 @@ type Handler struct {
 
 	lock   sync.Mutex
 	subMap map[string]*nats.Subscription
+	ackMap map[string]*nats.Msg
 }
 
 func New(ctx context.Context, config *Config) (*Handler, error) {
@@ -39,6 +40,7 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 		config: config,
 		lock:   sync.Mutex{},
 		subMap: make(map[string]*nats.Subscription),
+		ackMap: make(map[string]*nats.Msg),
 	}
 
 	// 設定opt

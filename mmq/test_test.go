@@ -1,4 +1,4 @@
-package mnats_test
+package mmq_test
 
 import (
 	"context"
@@ -6,8 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mq/mnats"
+	"github.com/Chu16537/module_master/mmq"
+	"github.com/Chu16537/module_master/mmq/mnats"
 )
+
+var h mmq.IMQHandler
 
 func Test_A(t *testing.T) {
 	config := &mnats.Config{

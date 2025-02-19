@@ -3,18 +3,14 @@ package proto
 import "github.com/Chu16537/module_master/errorcode"
 
 const (
-	GameServer   = "game_server"
-	PlayerServer = "player_server"
+	Stream_GameServer   = "game_server"
+	Stream_PlayerServer = "player_server"
 	// table & game
-	TableToGameCreateTable = 1
-	TableToGameDelTable    = 2
-	TableToGameUpdateTable = 3
+	TableToGameCreateTable = 1 // 創建房間
+	TableToGameDelTable    = 2 // 刪除房間
+	TableToGameUpdateTable = 3 // 更新房間
+	TableToGameGetInfo     = 4 // 取得game server 資訊
 )
-
-type MQSubData struct {
-	SequenceID uint64 `json:"sequence_id"`
-	Data       []byte `json:"data"`
-}
 
 // table server to game server
 type TableServerToGameServer struct {
