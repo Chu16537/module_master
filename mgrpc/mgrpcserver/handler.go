@@ -9,7 +9,7 @@ import (
 
 // UnaryRPC 通用請求
 func (h *Handler) UnaryRPC(ctx context.Context, req *commongrpc.UnaryRPCReq) (*commongrpc.UnaryRPCRes, error) {
-	ctx, cancel := context.WithTimeout(h.ctx, h.timeout)
+	ctx, cancel := context.WithTimeout(h.ctx, h.config.TimeoutSecond)
 	defer cancel()
 
 	// 创建一个用于接收处理结果的 channel

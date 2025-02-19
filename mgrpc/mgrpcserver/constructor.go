@@ -12,7 +12,7 @@ import (
 
 type Config struct {
 	Addr          string
-	TimeoutSecond int
+	TimeoutSecond time.Duration
 	ReStartTime   int // 重啟時間
 	ReStartCount  int // 重啟次數
 }
@@ -23,7 +23,6 @@ type Handler struct {
 	listener   *net.Listener
 	server     *grpc.Server
 	rpcHandler IRPCHandler
-	timeout    time.Duration
 }
 
 type IRPCHandler interface {
@@ -47,7 +46,6 @@ func New(ctx context.Context, config *Config, rpch IRPCHandler, opt ...grpc.Serv
 	h.ctx = ctx
 	h.config = config
 	h.rpcHandler = rpch
-	h.timeout = time.Duration(config.TimeoutSecond) * time.Second
 
 	h.listener = &listener
 

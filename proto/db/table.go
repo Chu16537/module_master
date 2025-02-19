@@ -75,6 +75,7 @@ func (o *TableOpt) ToMgo() bson.M {
 type TableUpdate struct {
 	Status     int
 	ExpireTime int64
+	GameConfig *GameConfig
 }
 
 func (o *TableUpdate) ToMap() map[string]interface{} {
@@ -86,6 +87,10 @@ func (o *TableUpdate) ToMap() map[string]interface{} {
 
 	if o.ExpireTime != 0 {
 		update["expire_time"] = o.ExpireTime
+	}
+
+	if o.GameConfig != nil {
+		update["game_config"] = o.GameConfig
 	}
 
 	return update
