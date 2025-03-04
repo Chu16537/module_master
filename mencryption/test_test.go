@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Chu16537/module_master/mencryption"
-	"github.com/Chu16537/module_master/mjson"
 )
 
 func TestAes(t *testing.T) {
@@ -26,35 +25,24 @@ func TestAes(t *testing.T) {
 		Lang:     "en",
 	}
 
-	b, err := mjson.Marshal(a)
-	if err != nil {
-		t.Error("Marshal", err)
-		return
-	}
+	// ty := mencryption.AES_CBC
+	ty := mencryption.AES_CTR
 
-	aesEncStr, err := mencryption.AesEncrypt(b, []byte(key), []byte(iv))
+	aesEncStr, err := mencryption.AesEncode(ty, []byte(key), []byte(iv), a)
 	if err != nil {
-		t.Error("AesEncrypt", err)
+		t.Error("AesEncode", err)
 		return
 	}
 
 	fmt.Println("aesEncStr", string(aesEncStr))
 
-	aesDecStr, err := mencryption.AesDecrypt(aesEncStr, []byte(key), []byte(iv))
+	aa := &A{}
+	err = mencryption.AesDecode(ty, []byte(key), []byte(iv), string(aesEncStr), aa)
 	if err != nil {
-		t.Error("AesDecrypt", err)
+		t.Errorf("AesDecode %+v", err)
 		return
 	}
 
-	fmt.Println("aesDecStr", string(aesDecStr))
+	fmt.Println("aa", aa)
 
-	s := &A{}
-
-	err = mjson.Unmarshal(aesDecStr, s)
-	if err != nil {
-		t.Error("Unmarshal", err)
-		return
-	}
-
-	fmt.Println("s", s)
 }
