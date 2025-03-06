@@ -3,6 +3,7 @@ package mgin
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
@@ -14,9 +15,10 @@ import (
 )
 
 type Config struct {
-	IsSwag  bool          `env:"GIN_IS_SWAG"`
-	Port    string        `env:"GIN_PORT"`
-	Timeout time.Duration `env:"GIN_TIMEOUT"`
+	IsSwag       bool          `env:"GIN_IS_SWAG"`
+	IsShowGinLog bool          `env:"GIN_IS_SHOW_GIN_LOG"`
+	Port         string        `env:"GIN_PORT"`
+	Timeout      time.Duration `env:"GIN_TIMEOUT"`
 }
 
 type Handler struct {
@@ -31,6 +33,12 @@ func New(ctx context.Context, config *Config, timeoutFn func(c *gin.Context)) (*
 	// 基本判斷
 	if config.Port == "" {
 		return nil, errors.New("gin new error port is nil")
+	}
+
+	if !config.IsShowGinLog {
+		// 禁用 Gin 的日誌輸出
+		gin.DefaultWriter = io.Discard
+		gin.DefaultErrorWriter = io.Discard
 	}
 
 	tFn := timeoutBase
