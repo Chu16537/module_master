@@ -17,27 +17,56 @@ func Test_A(t *testing.T) {
 		Addr:     "nats://127.0.0.1:4222,nats://127.0.0.1:4223,nats://127.0.0.1:4224",
 		User:     "user",
 		Password: "password",
-		CreatStreamInfo: mnats.CreatStreamInfo{
-			Name:       "a",
-			LiveSecond: time.Hour,
-			MaxLen:     1000,
+		CreatStreamInfo: []mnats.CreatStreamInfo{
+			{
+				Name:       "a",
+				LiveSecond: time.Hour,
+				MaxLen:     1000,
+			},
 		},
 	}
 
 	ctx := context.Background()
 
-	h, err := mnats.New(ctx, config)
+	n, err := mnats.New(ctx, config)
 	if err != nil {
 		fmt.Println("New", err)
 		return
 	}
 
 	for i := 0; i < 10; i++ {
-		err := h.AddSubjects(config.CreatStreamInfo.Name, fmt.Sprintf("ss-%v", i))
+		err := n.AddSubjects(config.CreatStreamInfo[0].Name, fmt.Sprintf("ss-%v", i))
 		if err != nil {
-			fmt.Println("err", err)
+			fmt.Println("aaa err", err)
 		}
 	}
+
+	h = n
+
+	subChan := make(chan mmq.MQSubData, 32)
+	h.Sub("ss-0", "ss-0", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan)
+
+	go func() {
+		for v := range subChan {
+			fmt.Println("sub", v.SequenceID, string(v.Data))
+		}
+	}()
+
+	subChan2 := make(chan mmq.MQSubData, 32)
+	h.Sub("ss-0", "ss-1", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan2)
+
+	go func() {
+		for v := range subChan {
+			fmt.Println("sub 1", v.SequenceID, string(v.Data))
+		}
+	}()
+
+	h.Pub("ss-0", []byte("hello world 1"))
+	h.Pub("ss-0", []byte("hello world 2"))
+	h.Pub("ss-0", []byte("hello world 3"))
+	h.Pub("ss-0", []byte("hello world 4"))
+	h.Pub("ss-0", []byte("hello world 5"))
+	h.Pub("ss-0", []byte("hello world 6"))
 
 	// h.DelStream("stream_game_server")
 	// h.DelStream("stream_game_client_server")

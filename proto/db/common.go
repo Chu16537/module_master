@@ -25,6 +25,11 @@ func (o *FindOpt) ToMgo() *options.FindOptions {
 	if o.Start > 0 {
 		fo.SetSkip(int64(o.Start))
 	}
+
+	if o.Limit <= 0 {
+		o.Limit = 10
+	}
+
 	if o.Limit > 0 {
 		fo.SetLimit(int64(o.Limit))
 	}

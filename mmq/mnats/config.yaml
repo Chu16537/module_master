@@ -3,6 +3,9 @@ nats:
   user: "user"
   password: "password"
   creat_stream_info:
-    name: "name"
-    live_second: "1h"
-    max_len: 1000
+    - name: "name1"
+      live_second: "1h"
+      max_len: 1000
+    - name: "name2"
+      live_second: "1h"
+      max_len: 1000

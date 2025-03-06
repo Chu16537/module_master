@@ -23,11 +23,11 @@ func (h *Handler) Sub(subject string, consumer string, mode mmq.SubMode, subChan
 		return errors.New("nats nil")
 	}
 
-	opts := []nats.SubOpt{}
+	var opts []nats.SubOpt
 
 	switch mode.Mode {
 	case mmq.Sub_Mode_Last_Ack:
-		opts = append(opts, nats.Durable(consumer)) // 從最後ack 開始
+		opts = append(opts, nats.Durable(consumer), nats.ManualAck(), nats.AckExplicit()) // 從最後ack 開始
 	case mmq.Sub_Mode_Last:
 		opts = append(opts, nats.DeliverNew()) // 從最新消息開始
 	case mmq.Sub_Mode_Sequence:
@@ -44,9 +44,9 @@ func (h *Handler) Sub(subject string, consumer string, mode mmq.SubMode, subChan
 		c := mmq.MQSubData{
 			Data:       msg.Data,
 			SequenceID: data.Sequence.Consumer,
-			Ack: func() {
-				msg.Ack()
-			},
+			// Ack: func() {
+			// 	msg.Ack()
+			// },
 		}
 
 		subChan <- c
@@ -54,7 +54,7 @@ func (h *Handler) Sub(subject string, consumer string, mode mmq.SubMode, subChan
 	}, opts...)
 
 	if err != nil {
-		return errors.Wrap(err, "sub error")
+		return err
 	}
 
 	// 記錄訂閱
@@ -63,7 +63,7 @@ func (h *Handler) Sub(subject string, consumer string, mode mmq.SubMode, subChan
 }
 
 // 取消訂閱
-func (h *Handler) UnSub(consumer string) {
+func (h *Handler) UnSub(consumer string) error {
 	h.lock.Lock()
 	defer h.lock.Unlock()
 
@@ -71,17 +71,19 @@ func (h *Handler) UnSub(consumer string) {
 		sub.Unsubscribe()
 		delete(h.subMap, consumer)
 	}
+
+	return nil
 }
 
 // 刪除指定 subject 內的所有訊息
-func (h *Handler) DelSubject(streamName, subjectName string) error {
+func (h *Handler) DelSub(streamName, subjectName string) error {
 	if h.js == nil {
-		return errors.New("NATS JetStream 尚未初始化")
+		return errors.New("JetStream is not initialized")
 	}
 
 	err := h.js.PurgeStream(streamName, &nats.StreamPurgeRequest{Subject: subjectName})
 	if err != nil {
-		return errors.Wrap(err, "清除 subject 訊息失敗")
+		return err
 	}
 
 	return nil
@@ -90,12 +92,12 @@ func (h *Handler) DelSubject(streamName, subjectName string) error {
 // 刪除 Stream
 func (h *Handler) DelStream(streamName string) error {
 	if h.js == nil {
-		return errors.New("nats nil")
+		return errors.New("JetStream is not initialized")
 	}
 
 	err := h.js.DeleteStream(streamName)
 	if err != nil {
-		return errors.Wrap(err, "刪除 Stream 失敗")
+		return err
 	}
 	return nil
 }

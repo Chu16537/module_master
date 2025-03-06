@@ -25,8 +25,8 @@ func TestAes(t *testing.T) {
 		Lang:     "en",
 	}
 
+	ty := mencryption.AES_CBC
 	// ty := mencryption.AES_CBC
-	ty := mencryption.AES_CTR
 
 	aesEncStr, err := mencryption.AesEncode(ty, []byte(key), []byte(iv), a)
 	if err != nil {
