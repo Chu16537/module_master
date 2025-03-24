@@ -14,6 +14,8 @@ const (
 	Code_Timeout              = 10007 // 超時
 	Code_Token_Not_Exist      = 10008 // token不存在
 	Code_Handler_Not_Exist    = 10009 // handler不存在
+	Code_Decrypt_Error        = 10010 // Decrypt 錯誤
+	Code_Encrypt_Error        = 10011 // Encrypt 錯誤
 
 	// db
 	Code_DB_Find_Error        = 20001 // db get 錯誤
@@ -40,7 +42,6 @@ const (
 
 	// api
 	Code_Platform_Not_Exist = 100001 // Platform 不存在
-	Code_Decrypt_Error      = 100002 // Decrypt 錯誤
 
 	// game socket server
 

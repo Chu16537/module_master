@@ -19,9 +19,9 @@ func Test_A(t *testing.T) {
 		Password: "password",
 		CreatStreamInfo: []mnats.CreatStreamInfo{
 			{
-				Name:       "a",
-				LiveSecond: time.Hour,
-				MaxLen:     1000,
+				Name:     "game_server",
+				LiveTime: time.Hour,
+				MaxLen:   1000,
 			},
 		},
 	}
@@ -34,39 +34,39 @@ func Test_A(t *testing.T) {
 		return
 	}
 
-	for i := 0; i < 10; i++ {
-		err := n.AddSubjects(config.CreatStreamInfo[0].Name, fmt.Sprintf("ss-%v", i))
-		if err != nil {
-			fmt.Println("aaa err", err)
-		}
-	}
-
 	h = n
 
-	subChan := make(chan mmq.MQSubData, 32)
-	h.Sub("ss-0", "ss-0", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan)
+	// for i := 0; i < 10; i++ {
+	// 	err := n.AddSubjects(config.CreatStreamInfo[0].Name, fmt.Sprintf("ss-%v", i))
+	// 	if err != nil {
+	// 		fmt.Println("aaa err", err)
+	// 	}
+	// }
 
-	go func() {
-		for v := range subChan {
-			fmt.Println("sub", v.SequenceID, string(v.Data))
-		}
-	}()
+	// subChan := make(chan mmq.MQSubData, 32)
+	// h.Sub("ss-0", "ss-0", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan)
 
-	subChan2 := make(chan mmq.MQSubData, 32)
-	h.Sub("ss-0", "ss-1", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan2)
+	// go func() {
+	// 	for v := range subChan {
+	// 		fmt.Println("sub", v.SequenceID, string(v.Data))
+	// 	}
+	// }()
 
-	go func() {
-		for v := range subChan {
-			fmt.Println("sub 1", v.SequenceID, string(v.Data))
-		}
-	}()
+	// subChan2 := make(chan mmq.MQSubData, 32)
+	// h.Sub("ss-0", "ss-1", mmq.SubMode{Mode: mmq.Sub_Mode_Last_Ack}, subChan2)
 
-	h.Pub("ss-0", []byte("hello world 1"))
-	h.Pub("ss-0", []byte("hello world 2"))
-	h.Pub("ss-0", []byte("hello world 3"))
-	h.Pub("ss-0", []byte("hello world 4"))
-	h.Pub("ss-0", []byte("hello world 5"))
-	h.Pub("ss-0", []byte("hello world 6"))
+	// go func() {
+	// 	for v := range subChan {
+	// 		fmt.Println("sub 1", v.SequenceID, string(v.Data))
+	// 	}
+	// }()
+
+	// h.Pub("ss-0", []byte("hello world 1"))
+	// h.Pub("ss-0", []byte("hello world 2"))
+	// h.Pub("ss-0", []byte("hello world 3"))
+	// h.Pub("ss-0", []byte("hello world 4"))
+	// h.Pub("ss-0", []byte("hello world 5"))
+	// h.Pub("ss-0", []byte("hello world 6"))
 
 	// h.DelStream("stream_game_server")
 	// h.DelStream("stream_game_client_server")

@@ -17,7 +17,7 @@ import (
 
 func TestServer(t *testing.T) {
 	config := &mgrpcserver.Config{
-		Addr:          ":50051",
+		Port:          "50051",
 		TimeoutSecond: 3,
 	}
 

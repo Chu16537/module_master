@@ -2,6 +2,7 @@ package mnats
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -16,9 +17,9 @@ type Config struct {
 }
 
 type CreatStreamInfo struct {
-	Name       string
-	LiveSecond time.Duration `yaml:"live_second"` // 生命週期
-	MaxLen     int64         `yaml:"max_len"`     // 最大長度
+	Name     string
+	LiveTime time.Duration `yaml:"live_time"` // 生命週期
+	MaxLen   int64         `yaml:"max_len"`   // 最大長度
 }
 
 type Handler struct {
@@ -49,11 +50,17 @@ func New(ctx context.Context, config *Config) (*Handler, error) {
 		return nil, err
 	}
 
-	for _, v := range h.config.CreatStreamInfo {
-		if err := h.createStream(v.Name, v.LiveSecond, v.MaxLen); err != nil {
-			return nil, err
-		}
+	streamInfo, err := h.js.StreamInfo(h.config.CreatStreamInfo[0].Name)
+	if err != nil {
+		return nil, err
 	}
+
+	fmt.Println(streamInfo.Config.Subjects)
+	// for _, v := range h.config.CreatStreamInfo {
+	// 	if err := h.createStream(v.Name, v.LiveTime, v.MaxLen); err != nil {
+	// 		return nil, err
+	// 	}
+	// }
 
 	return h, nil
 }

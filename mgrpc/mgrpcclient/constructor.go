@@ -12,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Addr    string
+	Port    string
 	Timeout time.Duration
 }
 type Handler struct {
@@ -51,7 +51,7 @@ func (h *Handler) Check() error {
 	if status != connectivity.Connecting {
 		h.Done()
 		if err := h.connect(); err != nil {
-			return fmt.Errorf("grpc connect fail %v", h.config.Addr)
+			return fmt.Errorf("grpc connect fail %v", h.config.Port)
 		}
 	}
 	return nil
@@ -68,7 +68,7 @@ func (h *Handler) connect() error {
 		Timeout:             60 * time.Second, // 确认 PING 帧的超时时间
 		PermitWithoutStream: true,             // 允许在没有活动流时发送心跳包
 	}
-	conn, err := grpc.Dial(h.config.Addr, grpc.WithInsecure(), grpc.WithKeepaliveParams(opt))
+	conn, err := grpc.Dial(fmt.Sprintf(":%v", h.config.Port), grpc.WithInsecure(), grpc.WithKeepaliveParams(opt))
 	if err != nil {
 		return err
 	}

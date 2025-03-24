@@ -3,6 +3,7 @@ package mgrpcserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type Config struct {
-	Addr          string
+	Port          string
 	TimeoutSecond time.Duration
 	ReStartTime   int // 重啟時間
 	ReStartCount  int // 重啟次數
@@ -33,11 +34,11 @@ var h *Handler
 
 func New(ctx context.Context, config *Config, rpch IRPCHandler, opt ...grpc.ServerOption) (*Handler, error) {
 	// 基本判斷
-	if config.Addr == "" {
+	if config.Port == "" {
 		return nil, errors.New("grpc new error addr nil")
 	}
 
-	listener, err := net.Listen("tcp", config.Addr)
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", config.Port))
 	if err != nil {
 		return nil, err
 	}
