@@ -26,7 +26,6 @@ type Handler struct {
 	ws             http.Server
 	upgrader       websocket.Upgrader
 	lock           sync.RWMutex
-	clientIdx      uint32
 	clientConnents []IClient // map[唯一編號]IClient
 	ih             IHandler
 }
@@ -58,7 +57,6 @@ func New(ctx context.Context, config *Config, ih IHandler) error {
 		config:         config,
 		upgrader:       upgrader,
 		lock:           sync.RWMutex{},
-		clientIdx:      0,
 		clientConnents: make([]IClient, config.MaxConn),
 		ih:             ih,
 	}
@@ -110,7 +108,8 @@ func checkAlive() {
 
 				// 一段時間內沒有送請求
 				if nowUnix-client.GetLastReadMsgTime() > int64(h.config.AliveTimeoutSecond) {
-					client.Done() // 斷開客戶端連線
+					// 斷開客戶端連線
+					h.clientDone(client)
 				}
 			}
 
@@ -173,10 +172,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 	defer func() {
-		// 通知實做層
-		h.ih.Disconnect(client.GetUid())
-		// 斷線
-		client.Done()
+		h.clientDone(client)
 	}()
 
 	for {
@@ -209,6 +205,13 @@ func (h *Handler) sending(conn *websocket.Conn, sender <-chan []byte) {
 	for msg := range sender {
 		conn.WriteMessage(websocket.TextMessage, msg)
 	}
+}
+
+func (h *Handler) clientDone(client IClient) {
+	// 通知實做層
+	h.ih.Disconnect(client.GetUid())
+	// 斷線
+	client.Done()
 }
 
 // 返回請求資料
