@@ -182,7 +182,7 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 		}
 
 		// 格式轉換 有錯誤
-		req := &ToHanglerReq{}
+		req := &ClientReq{}
 		err = mjson.Unmarshal(msg, req)
 		if err != nil {
 			er := errorcode.New(errorcode.Code_Data_Unmarshal_Error, err)
@@ -191,13 +191,19 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 			continue
 		}
 
-		req.ClientId = client.GetUid()
+		b, _ := mjson.Marshal(req.Data)
+
+		toHanglerReq := &ToHanglerReq{
+			RequestId: req.RequestId,
+			ClientId:  client.GetUid(),
+			Data:      b,
+		}
 
 		// 更新最後請求時間
 		client.UpdateLastReadTime(time.Now().Unix())
 
 		// 請求實作
-		h.ih.ReadMessage(req)
+		h.ih.ReadMessage(toHanglerReq)
 	}
 }
 
