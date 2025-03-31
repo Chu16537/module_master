@@ -13,7 +13,7 @@ func TestMain(t *testing.T) {
 	ctx := context.Background()
 
 	config := &mwebscoketserver.Config{
-		Addr:               "0.0.0.0:10000",
+		Port:               "10000",
 		MaxConn:            10000,
 		AliveTimeoutSecond: 3,
 	}

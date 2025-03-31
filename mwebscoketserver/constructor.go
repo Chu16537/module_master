@@ -15,7 +15,7 @@ import (
 )
 
 type Config struct {
-	Addr               string
+	Port               string
 	MaxConn            int
 	AliveTimeoutSecond int
 }
@@ -48,7 +48,7 @@ var upgrader = websocket.Upgrader{
 
 func New(ctx context.Context, config *Config, ih IHandler) error {
 	// 基本判斷
-	if config.Addr == "" {
+	if config.Port == "" {
 		return errors.New("websocket new error addr nil")
 	}
 
@@ -61,7 +61,7 @@ func New(ctx context.Context, config *Config, ih IHandler) error {
 		ih:             ih,
 	}
 
-	h.ws = http.Server{Addr: h.config.Addr, Handler: h}
+	h.ws = http.Server{Addr: fmt.Sprintf(":%v", h.config.Port), Handler: h}
 
 	go checkAlive()
 
