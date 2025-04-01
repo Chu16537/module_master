@@ -18,6 +18,7 @@ func (c *ClientReq) CreateClientRes() *ClientRes {
 type ClientRes struct {
 	RequestId string      `json:"req_id"` // 前端創建的req id
 	Command   string      `json:"command"`
+	ErrorCode int         `json:"error_code"`
 	Data      interface{} `json:"data"`
 }
 
