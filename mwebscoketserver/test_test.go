@@ -19,8 +19,8 @@ func TestMain(t *testing.T) {
 
 	config := &mwebscoketserver.Config{
 		Port:               "10000",
-		MaxConn:            10000,
-		AliveTimeoutSecond: 3,
+		MaxConn:            1,
+		AliveTimeoutSecond: 5,
 	}
 
 	a := &aa{}
@@ -34,29 +34,30 @@ func TestMain(t *testing.T) {
 	time.Sleep(100 * time.Second)
 }
 
-type aa struct{}
+type aa struct {
+	AA string `json:"aa"`
+	SS int    `json:"ss"`
+}
 
-func (a *aa) ReadMessage(req *mwebscoketserver.ToHanglerReq) {
-	fmt.Println(req.RequestId, req.ClientId, req.Data)
-
-	// b, err := json.Marshal(req.Data)
-	// if err != nil {
-	// 	fmt.Println("Marshal err", err)
-	// }
+func (a *aa) ReadMessage(toHanglerReq *mwebscoketserver.ToHanglerReq) {
+	// fmt.Println(toHanglerReq.Req.RequestId, toHanglerReq.ClientId, toHanglerReq.Req.Data)
 
 	s := &TestToken{}
-	err := json.Unmarshal(req.Data, s)
+	err := json.Unmarshal(toHanglerReq.Req.Data, s)
 	if err != nil {
 		fmt.Println("Unmarshal err", err)
 	}
 
-	fmt.Println("s", s)
-	res := &mwebscoketserver.ToHanglerRes{
-		RequestId: req.RequestId,
-		ClientId:  req.ClientId,
-		Data:      "ss",
+	res := toHanglerReq.Req.CreateClientRes()
+	res.Data = &aa{
+		AA: "aa",
+		SS: 1,
 	}
-	mwebscoketserver.Response(res)
+	toHanglerRes := &mwebscoketserver.ToHanglerRes{
+		ClientId: toHanglerReq.ClientId,
+		Res:      res,
+	}
+	mwebscoketserver.Response(toHanglerRes)
 }
 
 func (a *aa) Disconnect(idx uint32) {

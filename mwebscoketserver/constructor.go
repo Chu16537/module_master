@@ -81,6 +81,7 @@ func New(ctx context.Context, config *Config, ih IHandler) error {
 
 	case <-time.After(5 * time.Second):
 		// 等待5秒發現沒有錯誤
+		fmt.Println("websocket new success max conn:", h.config.MaxConn)
 		return nil
 	}
 
@@ -126,8 +127,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var (
-		id     uint32 = 0
-		isJoin bool   = false
+		id int = -1
 	)
 	sendChan := make(chan []byte, 128)
 
@@ -135,28 +135,31 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		close(sendChan)
 		conn.Close()
 
+		fmt.Println("disconnect", id)
 		// 斷線刪除
-		h.lock.Lock()
-		h.clientConnents[id] = nil
-		h.lock.Unlock()
+		if id != -1 {
+			h.lock.Lock()
+			h.clientConnents[id] = nil
+			h.lock.Unlock()
+		}
 	}()
 
 	h.lock.Lock()
 	for i, v := range h.clientConnents {
 		if v == nil {
-			isJoin = true
-			id = uint32(i)
+			id = i
 			break
 		}
 	}
 	h.lock.Unlock()
 
-	if !isJoin {
-		fmt.Println("clientConnents is full")
+	if id == -1 {
+		fmt.Println("clientConnents is full", id)
 		return
 	}
 
-	client := newClient(conn, id, sendChan)
+	fmt.Println("id", id, uint32(id))
+	client := newClient(conn, uint32(id), sendChan)
 
 	h.clientConnents[id] = client
 
@@ -191,12 +194,9 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 			continue
 		}
 
-		b, _ := mjson.Marshal(req.Data)
-
 		toHanglerReq := &ToHanglerReq{
-			RequestId: req.RequestId,
-			ClientId:  client.GetUid(),
-			Data:      b,
+			ClientId: client.GetUid(),
+			Req:      req,
 		}
 
 		// 更新最後請求時間
@@ -234,12 +234,7 @@ func Response(res *ToHanglerRes) error {
 	}
 
 	// 回傳前端
-	clientRes := &ClientRes{
-		RequestId: res.RequestId,
-		Data:      res.Data,
-	}
-
-	resByte, err := mjson.Marshal(clientRes)
+	resByte, err := mjson.Marshal(res.Res)
 	if err != nil {
 		return err
 	}
