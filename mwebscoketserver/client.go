@@ -8,9 +8,11 @@ import (
 )
 
 type IClient interface {
+	GetConn() *websocket.Conn
 	GetUid() uint32                // 取得id
 	UpdateLastReadTime(unix int64) // 設定最後訊息時間
 	GetLastReadMsgTime() int64     // 取得最後訊息時間
+	GetSender() chan []byte
 	WriteMessageQueue(msg []byte)  // 傳送資料 順序
 	WriteMessage(msg []byte) error // 傳送資料 不管順序
 	Done()                         // 斷線
@@ -37,6 +39,10 @@ func newClient(conn *websocket.Conn, uid uint32, sender chan []byte) IClient {
 	}
 }
 
+func (c *Client) GetConn() *websocket.Conn {
+	return c.conn
+}
+
 func (c *Client) GetUid() uint32 {
 	return c.uid
 }
@@ -47,6 +53,10 @@ func (c *Client) UpdateLastReadTime(unix int64) {
 
 func (c *Client) GetLastReadMsgTime() int64 {
 	return c.lastReadMsgTime
+}
+
+func (c *Client) GetSender() chan []byte {
+	return c.sender
 }
 
 func (c *Client) WriteMessageQueue(msg []byte) {

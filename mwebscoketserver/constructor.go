@@ -31,6 +31,8 @@ type Handler struct {
 }
 
 type IHandler interface {
+	// 連線
+	Connect(client IClient) error
 	// 斷線
 	Disconnect(idx uint32)
 	// 傳遞資料
@@ -110,7 +112,7 @@ func checkAlive() {
 				// 一段時間內沒有送請求
 				if nowUnix-client.GetLastReadMsgTime() > int64(h.config.AliveTimeoutSecond) {
 					// 斷開客戶端連線
-					h.clientDone(client)
+					h.deleteUser(client)
 				}
 			}
 
@@ -126,57 +128,29 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var (
-		id int = -1
-	)
-	sendChan := make(chan []byte, 128)
+	defer conn.Close()
 
-	defer func() {
-		close(sendChan)
-		conn.Close()
-
-		fmt.Println("disconnect", id)
-		// 斷線刪除
-		if id != -1 {
-			h.lock.Lock()
-			h.clientConnents[id] = nil
-			h.lock.Unlock()
-		}
-	}()
-
-	h.lock.Lock()
-	for i, v := range h.clientConnents {
-		if v == nil {
-			id = i
-			break
-		}
-	}
-	h.lock.Unlock()
-
-	if id == -1 {
-		fmt.Println("clientConnents is full", id)
+	// 創建client
+	client, err := h.createUser(conn)
+	if err != nil {
+		fmt.Println("createUser", err)
 		return
 	}
 
-	fmt.Println("id", id, uint32(id))
-	client := newClient(conn, uint32(id), sendChan)
-
-	h.clientConnents[id] = client
-
 	// 讀取訊息
-	go h.reading(conn, client)
+	go h.reading(client)
 
 	// 傳送訊息
-	go h.sending(conn, sendChan)
+	go h.sending(client)
 
-	// 斷線
+	// 等待斷線
 	client.WaitDone()
+	// 刪除玩家
+	h.deleteUser(client)
 }
 
-func (h *Handler) reading(conn *websocket.Conn, client IClient) {
-	defer func() {
-		h.clientDone(client)
-	}()
+func (h *Handler) reading(client IClient) {
+	conn := client.GetConn()
 
 	for {
 		_, msg, err := conn.ReadMessage()
@@ -207,18 +181,21 @@ func (h *Handler) reading(conn *websocket.Conn, client IClient) {
 	}
 }
 
-func (h *Handler) sending(conn *websocket.Conn, sender <-chan []byte) {
+func (h *Handler) sending(client IClient) {
+	conn := client.GetConn()
+	sender := client.GetSender()
+
 	for msg := range sender {
 		conn.WriteMessage(websocket.TextMessage, msg)
 	}
 }
 
-func (h *Handler) clientDone(client IClient) {
-	// 通知實做層
-	h.ih.Disconnect(client.GetUid())
-	// 斷線
-	client.Done()
-}
+// func (h *Handler) clientDone(client IClient) {
+// 	// 通知實做層
+// 	h.ih.Disconnect(client.GetUid())
+// 	// 斷線
+// 	client.Done()
+// }
 
 // 返回請求資料
 func Response(res *ToHanglerRes) error {
@@ -241,4 +218,50 @@ func Response(res *ToHanglerRes) error {
 
 	c.WriteMessageQueue(resByte)
 	return nil
+}
+
+// 創建user
+func (h *Handler) createUser(conn *websocket.Conn) (IClient, error) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	id := -1
+
+	for i, v := range h.clientConnents {
+		if v == nil {
+			id = i
+			break
+		}
+	}
+
+	if id == -1 {
+		return nil, fmt.Errorf("clientConnents is full")
+	}
+
+	sendChan := make(chan []byte, 128)
+	client := newClient(conn, uint32(id), sendChan)
+
+	// 創建錯誤
+	err := h.ih.Connect(client)
+	if err != nil {
+		return nil, err
+	}
+
+	h.clientConnents[id] = client
+
+	return client, nil
+}
+
+func (h *Handler) deleteUser(client IClient) {
+	// 通知實做層
+	h.ih.Disconnect(client.GetUid())
+	// 斷線
+	client.Done()
+
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	if h.clientConnents[client.GetUid()] != nil {
+		h.clientConnents[client.GetUid()] = nil
+	}
 }

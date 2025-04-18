@@ -39,6 +39,15 @@ type aa struct {
 	SS int    `json:"ss"`
 }
 
+func (a *aa) Connect(client mwebscoketserver.IClient) error {
+	fmt.Println("Connect", client.GetUid())
+	return nil
+}
+
+func (a *aa) Disconnect(idx uint32) {
+	fmt.Println("disconnect", idx)
+}
+
 func (a *aa) ReadMessage(toHanglerReq *mwebscoketserver.ToHanglerReq) {
 	// fmt.Println(toHanglerReq.Req.RequestId, toHanglerReq.ClientId, toHanglerReq.Req.Data)
 
@@ -58,8 +67,4 @@ func (a *aa) ReadMessage(toHanglerReq *mwebscoketserver.ToHanglerReq) {
 		Res:      res,
 	}
 	mwebscoketserver.Response(toHanglerRes)
-}
-
-func (a *aa) Disconnect(idx uint32) {
-	fmt.Println("disconnect", idx)
 }
