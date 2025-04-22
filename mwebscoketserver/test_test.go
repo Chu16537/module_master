@@ -48,22 +48,22 @@ func (a *aa) Disconnect(idx uint32) {
 	fmt.Println("disconnect", idx)
 }
 
-func (a *aa) ReadMessage(toHanglerReq *mwebscoketserver.ToHanglerReq) {
+func (a *aa) EventHandler(clientId uint32, req *mwebscoketserver.ClientReq) {
 	// fmt.Println(toHanglerReq.Req.RequestId, toHanglerReq.ClientId, toHanglerReq.Req.Data)
 
 	s := &TestToken{}
-	err := json.Unmarshal(toHanglerReq.Req.Data, s)
+	err := json.Unmarshal(req.Data, s)
 	if err != nil {
 		fmt.Println("Unmarshal err", err)
 	}
 
-	res := toHanglerReq.Req.CreateClientRes()
+	res := req.CreateClientRes()
 	res.Data = &aa{
 		AA: "aa",
 		SS: 1,
 	}
 	toHanglerRes := &mwebscoketserver.ToHanglerRes{
-		ClientId: toHanglerReq.ClientId,
+		ClientId: clientId,
 		Res:      res,
 	}
 	mwebscoketserver.Response(toHanglerRes)

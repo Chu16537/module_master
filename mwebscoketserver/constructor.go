@@ -34,9 +34,9 @@ type IHandler interface {
 	// 連線
 	Connect(client IClient) error
 	// 斷線
-	Disconnect(idx uint32)
-	// 傳遞資料
-	ReadMessage(*ToHanglerReq)
+	Disconnect(clientId uint32)
+	// 執行請求
+	EventHandler(clientId uint32, req *ClientReq)
 }
 
 var h *Handler
@@ -168,16 +168,11 @@ func (h *Handler) reading(client IClient) {
 			continue
 		}
 
-		toHanglerReq := &ToHanglerReq{
-			ClientId: client.GetUid(),
-			Req:      req,
-		}
-
 		// 更新最後請求時間
 		client.UpdateLastReadTime(time.Now().Unix())
 
 		// 請求實作
-		h.ih.ReadMessage(toHanglerReq)
+		h.ih.EventHandler(client.GetUid(), req)
 	}
 }
 
