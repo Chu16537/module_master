@@ -2,57 +2,37 @@ package mredis
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type Config struct {
-	Addrs    []string      `env:"REDIS_ADDRS" yaml:"addrs"`
-	Password string        `env:"REDIS_PASSWORD" yaml:"password"`
-	Timeout  time.Duration `env:"REDIS_TIMEOUT" yaml:"timeout"`
-	DB       int           `env:"REDIS_DB" yaml:"db"`
+	Addrs    []string      `env:"REDIS_ADDRS"`
+	Password string        `env:"REDIS_PASSWORD"`
+	Timeout  time.Duration `env:"REDIS_TIMEOUT_SECOND"`
+	DB       int           `env:"REDIS_DB"`
 }
 
 type Handler struct {
 	ctx    context.Context
-	mode   int
 	config *Config
-	// 群集
-	clientCluster *redis.ClusterClient
-	optsCluster   *redis.ClusterOptions
-	// 單台
-	client *redis.Client
-	opts   *redis.Options
-	// 實作功能
-	rdsCmdable redis.Cmdable
+	client redis.UniversalClient
 }
 
 func New(ctx context.Context, config *Config) (*Handler, error) {
-	m := Mode_Singleton
-	if len(config.Addrs) > 1 {
-		m = Mode_Cluster
-	}
-
 	h := &Handler{
 		ctx:    ctx,
 		config: config,
-		mode:   m,
-		optsCluster: &redis.ClusterOptions{
+		client: redis.NewUniversalClient(&redis.UniversalOptions{
 			Addrs:        config.Addrs,
-			Password:     config.Password,
-			DialTimeout:  config.Timeout,
-			ReadTimeout:  config.Timeout,
-			WriteTimeout: config.Timeout,
-		},
-		opts: &redis.Options{
-			Addr:         config.Addrs[0], // 单机模式只需要一个地址
 			Password:     config.Password,
 			DB:           config.DB,
 			DialTimeout:  config.Timeout,
 			ReadTimeout:  config.Timeout,
 			WriteTimeout: config.Timeout,
-		},
+		}),
 	}
 
 	if err := h.connect(); err != nil {
@@ -72,11 +52,13 @@ func (h *Handler) Check() error {
 	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
 	defer cancel()
 
-	if _, err := h.rdsCmdable.Ping(ctx).Result(); err != nil {
-		if err2 := h.connect(); err2 != nil {
-			return err2
+	if _, err := h.client.Ping(ctx).Result(); err != nil {
+		if err = h.connect(); err != nil {
+			return err
 		}
-		return err
+		if _, err := h.client.Ping(ctx).Result(); err != nil {
+			return fmt.Errorf("redis ping failed after reconnect: %w", err)
+		}
 	}
 
 	return nil
@@ -84,24 +66,14 @@ func (h *Handler) Check() error {
 
 // 連線
 func (h *Handler) connect() error {
-	h.close()
-
 	ctx, cancel := context.WithTimeout(h.ctx, 10*time.Second)
 	defer cancel()
 
-	switch h.mode {
-	case Mode_Singleton:
-		h.client = redis.NewClient(h.opts)
-		h.rdsCmdable = h.client
-	case Mode_Cluster:
-		h.clientCluster = redis.NewClusterClient(h.optsCluster)
-		h.rdsCmdable = h.clientCluster
-	}
-
-	_, err := h.rdsCmdable.Ping(ctx).Result()
+	pong, err := h.client.Ping(ctx).Result()
 	if err != nil {
 		return err
 	}
+	fmt.Println("pong", pong)
 
 	return nil
 }
@@ -109,16 +81,11 @@ func (h *Handler) connect() error {
 // 關閉
 func (h *Handler) close() {
 	if h.client != nil {
-		h.client.Close()
-	}
-	if h.clientCluster != nil {
-		h.clientCluster.Close()
+		_ = h.client.Close() // 忽略 Close 的錯誤
+		h.client = nil
 	}
 }
 
-func (h *Handler) GetRedis() redis.Cmdable {
-	if h.rdsCmdable != nil {
-		return h.rdsCmdable
-	}
-	return nil
+func (h *Handler) GetRedis() redis.UniversalClient {
+	return h.client
 }

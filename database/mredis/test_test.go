@@ -13,8 +13,8 @@ func Test_A(t *testing.T) {
 	// 创建一个上下文和配置
 	ctx := context.Background()
 	cfg := &mredis.Config{
-		// Addrs:    []string{"192.168.100.71:6379"}, // Redis 集群地址
-		// Password: "Fa6QnP8E",                      // Redis 密码
+		// Addrs:    []string{"127.0.0.1:6379"}, // Redis 集群地址
+		// Password: "aaa",                      // Redis 密码
 		Addrs:    []string{"localhost:7001", "localhost:7002", "localhost:7003", "localhost:7004", "localhost:7005", "localhost:7006"}, // Redis 集群地址
 		Password: "aa",                                                                                                                 // Redis 密码
 		DB:       0,                                                                                                                    // Redis 数据库索引
