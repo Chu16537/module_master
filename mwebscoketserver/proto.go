@@ -21,13 +21,3 @@ type ClientRes struct {
 	ErrorCode int         `json:"error_code"`
 	Data      interface{} `json:"data"`
 }
-
-type ToHanglerReq struct {
-	ClientId uint32
-	Req      *ClientReq
-}
-
-type ToHanglerRes struct {
-	ClientId uint32
-	Res      *ClientRes
-}

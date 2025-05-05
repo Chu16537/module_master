@@ -10,11 +10,16 @@ import (
 	"github.com/Chu16537/module_master/mwebscoketserver"
 )
 
+var (
+	userMap map[uint32]mwebscoketserver.IClient
+)
+
 type TestToken struct {
 	Token string `json:"token"`
 }
 
 func TestMain(t *testing.T) {
+	userMap = make(map[uint32]mwebscoketserver.IClient)
 	ctx := context.Background()
 
 	config := &mwebscoketserver.Config{
@@ -41,15 +46,17 @@ type aa struct {
 
 func (a *aa) Connect(client mwebscoketserver.IClient) error {
 	fmt.Println("Connect", client.GetUid())
+
+	userMap[client.GetUid()] = client
 	return nil
 }
 
 func (a *aa) Disconnect(idx uint32) {
 	fmt.Println("disconnect", idx)
+	delete(userMap, idx)
 }
 
 func (a *aa) EventHandler(clientId uint32, req *mwebscoketserver.ClientReq) {
-	// fmt.Println(toHanglerReq.Req.RequestId, toHanglerReq.ClientId, toHanglerReq.Req.Data)
 
 	s := &TestToken{}
 	err := json.Unmarshal(req.Data, s)
@@ -62,9 +69,8 @@ func (a *aa) EventHandler(clientId uint32, req *mwebscoketserver.ClientReq) {
 		AA: "aa",
 		SS: 1,
 	}
-	toHanglerRes := &mwebscoketserver.ToHanglerRes{
-		ClientId: clientId,
-		Res:      res,
-	}
-	mwebscoketserver.Response(toHanglerRes)
+
+	resByte, _ := json.Marshal(res)
+
+	userMap[clientId].WriteMessage(resByte)
 }

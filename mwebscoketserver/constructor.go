@@ -151,6 +151,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) reading(client IClient) {
 	conn := client.GetConn()
+	// 斷線
+	defer client.Done()
 
 	for {
 		_, msg, err := conn.ReadMessage()
@@ -183,36 +185,6 @@ func (h *Handler) sending(client IClient) {
 	for msg := range sender {
 		conn.WriteMessage(websocket.TextMessage, msg)
 	}
-}
-
-// func (h *Handler) clientDone(client IClient) {
-// 	// 通知實做層
-// 	h.ih.Disconnect(client.GetUid())
-// 	// 斷線
-// 	client.Done()
-// }
-
-// 返回請求資料
-func Response(res *ToHanglerRes) error {
-	if res == nil {
-		return fmt.Errorf("Response res nil")
-	}
-
-	c := h.clientConnents[res.ClientId]
-
-	// 代表連線已經斷線
-	if c == nil {
-		return nil
-	}
-
-	// 回傳前端
-	resByte, err := mjson.Marshal(res.Res)
-	if err != nil {
-		return err
-	}
-
-	c.WriteMessageQueue(resByte)
-	return nil
 }
 
 // 創建user
