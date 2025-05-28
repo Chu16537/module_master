@@ -3,13 +3,15 @@ package mlog
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog"
 )
 
 type Config struct {
-	Name string `env:"LOG_NAME" yaml:"name"` // 服務名稱
+	Name  string `env:"LOG_NAME" yaml:"log_name"`   // 服務名稱
+	Level string `env:"LOG_LEVEL" yaml:"log_level"` // 日誌級別
 }
 
 type handler struct {
@@ -17,27 +19,54 @@ type handler struct {
 	log    zerolog.Logger
 }
 
-var h *handler
+var (
+	h    *handler
+	once sync.Once
+)
 
 func Init(config *Config) error {
 	if config.Name == "" {
 		return errors.New("config name is nil")
 	}
 
-	// 设置全局时间格式为 Unix 时间戳
-	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
-
-	zlog := zerolog.New(os.Stdout). // 输出到标准输出
-					With().
-					Timestamp().                     // 为每条日志添加时间戳
-					Str("server-name", config.Name). // 添加自定义字段
-					Logger().
-					Level(zerolog.DebugLevel) // 设置日志等级为 Debug
-
-	h = &handler{
-		config: config,
-		log:    zlog,
+	if config.Level == "" {
+		config.Level = zerolog.LevelDebugValue
 	}
+
+	lv := zerolog.DebugLevel
+
+	// 根據配置設置日誌級別，預設為 Info
+	switch config.Level {
+	case "trace":
+		lv = zerolog.TraceLevel
+	case "debug":
+		lv = zerolog.DebugLevel
+	case "info":
+		lv = zerolog.InfoLevel
+	case "warn":
+		lv = zerolog.WarnLevel
+	case "error":
+		lv = zerolog.ErrorLevel
+	default:
+		lv = zerolog.InfoLevel
+	}
+
+	once.Do(func() {
+		// 设置全局时间格式为 Unix 时间戳
+		zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
+
+		zlog := zerolog.New(os.Stdout). // 输出到标准输出
+						With().
+						Timestamp().                     // 为每条日志添加时间戳
+						Str("server-name", config.Name). // 添加自定义字段
+						Logger().
+						Level(lv) // 设置日志等级为 Debug
+
+		h = &handler{
+			config: config,
+			log:    zlog,
+		}
+	})
 
 	return nil
 }

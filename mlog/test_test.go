@@ -8,7 +8,8 @@ import (
 
 func Test(t *testing.T) {
 	config := mlog.Config{
-		Name: "test",
+		Name:  "test",
+		Level: "debug",
 	}
 
 	err := mlog.Init(&config)
@@ -23,7 +24,7 @@ func Test(t *testing.T) {
 
 	defer func() {
 		if r := recover(); r != nil {
-			mlog.Fatal(err)
+			mlog.Fatal(r)
 		}
 	}()
 
