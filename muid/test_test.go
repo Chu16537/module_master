@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Chu16537/module_master/muid"
+	"github.com/chu16537/module_master/muid"
 )
 
 func TestMain(t *testing.T) {

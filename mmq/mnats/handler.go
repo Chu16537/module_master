@@ -1,7 +1,7 @@
 package mnats
 
 import (
-	"github.com/Chu16537/module_master/mmq"
+	"github.com/chu16537/module_master/mmq"
 	"github.com/nats-io/nats.go"
 	"github.com/pkg/errors"
 )

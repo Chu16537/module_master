@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/Chu16537/module_master/errorcode"
-	"github.com/Chu16537/module_master/mgrpc/commongrpc"
-	"github.com/Chu16537/module_master/mjson"
-	"github.com/Chu16537/module_master/proto/db"
+	"github.com/chu16537/module_master/errorcode"
+	"github.com/chu16537/module_master/mgrpc/commongrpc"
+	"github.com/chu16537/module_master/mjson"
+	"github.com/chu16537/module_master/proto/db"
 )
 
 // 取得牌桌

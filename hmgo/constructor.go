@@ -3,8 +3,8 @@ package hmgo
 // import (
 // 	"context"
 
-// 	"github.com/Chu16537/module_master/errorcode"
-// 	"github.com/Chu16537/module_master/mmgo"
+// 	"github.com/chu16537/module_master/errorcode"
+// 	"github.com/chu16537/module_master/mmgo"
 // )
 
 // type Handler struct {

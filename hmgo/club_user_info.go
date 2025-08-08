@@ -3,8 +3,8 @@ package hmgo
 // import (
 // 	"context"
 
-// 	"github.com/Chu16537/module_master/errorcode"
-// 	"github.com/Chu16537/module_master/proto/db"
+// 	"github.com/chu16537/module_master/errorcode"
+// 	"github.com/chu16537/module_master/proto/db"
 // 	"go.mongodb.org/mongo-driver/bson"
 // 	"go.mongodb.org/mongo-driver/mongo"
 // )

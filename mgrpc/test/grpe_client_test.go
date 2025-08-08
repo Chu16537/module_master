@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mgrpc/commongrpc"
-	"github.com/Chu16537/module_master/mgrpc/mgrpcclient"
-	"github.com/Chu16537/module_master/mjson"
-	"github.com/Chu16537/module_master/proto/db"
-	"github.com/Chu16537/module_master/tableserverclient"
+	"github.com/chu16537/module_master/mgrpc/commongrpc"
+	"github.com/chu16537/module_master/mgrpc/mgrpcclient"
+	"github.com/chu16537/module_master/mjson"
+	"github.com/chu16537/module_master/proto/db"
+	"github.com/chu16537/module_master/tableserverclient"
 )
 
 func TestClient(t *testing.T) {

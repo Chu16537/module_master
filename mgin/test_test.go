@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mgin"
+	"github.com/chu16537/module_master/mgin"
 	"github.com/gin-gonic/gin"
 )
 

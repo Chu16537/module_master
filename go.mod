@@ -1,4 +1,4 @@
-module github.com/Chu16537/module_master
+module github.com/chu16537/module_master
 
 go 1.22.4
 

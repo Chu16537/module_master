@@ -3,7 +3,7 @@ package mlog_test
 import (
 	"testing"
 
-	"github.com/Chu16537/module_master/mlog"
+	"github.com/chu16537/module_master/mlog"
 )
 
 func Test(t *testing.T) {

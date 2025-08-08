@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mtime"
+	"github.com/chu16537/module_master/mtime"
 )
 
 func Test(t *testing.T) {

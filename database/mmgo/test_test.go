@@ -7,10 +7,10 @@ package mmgo_test
 // 	"testing"
 // 	"time"
 
-// 	"github.com/Chu16537/module_master/mmgo"
-// 	"github.com/Chu16537/module_master/mmgo/hmgo"
-// 	"github.com/Chu16537/module_master/myaml"
-// 	"github.com/Chu16537/module_master/proto/db"
+// 	"github.com/chu16537/module_master/mmgo"
+// 	"github.com/chu16537/module_master/mmgo/hmgo"
+// 	"github.com/chu16537/module_master/myaml"
+// 	"github.com/chu16537/module_master/proto/db"
 // )
 
 // var (

@@ -1,6 +1,6 @@
 package proto
 
-// import "github.com/Chu16537/module_master/proto/db"
+// import "github.com/chu16537/module_master/proto/db"
 
 // const (
 // 	TS_GET_TABLE           = 1

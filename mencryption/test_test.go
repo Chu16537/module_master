@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Chu16537/module_master/mencryption"
+	"github.com/chu16537/module_master/mencryption"
 )
 
 func TestAes(t *testing.T) {

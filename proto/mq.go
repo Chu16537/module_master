@@ -1,6 +1,6 @@
 package proto
 
-import "github.com/Chu16537/module_master/errorcode"
+import "github.com/chu16537/module_master/errorcode"
 
 const (
 	Stream_GameServer   = "game_server"

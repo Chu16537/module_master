@@ -6,12 +6,12 @@ package test_test
 // 	"testing"
 // 	"time"
 
-// 	"github.com/Chu16537/module_master/errorcode"
-// 	"github.com/Chu16537/module_master/hmgo"
-// 	"github.com/Chu16537/module_master/mjson"
-// 	"github.com/Chu16537/module_master/mmgo"
-// 	"github.com/Chu16537/module_master/muid"
-// 	"github.com/Chu16537/module_master/proto/db"
+// 	"github.com/chu16537/module_master/errorcode"
+// 	"github.com/chu16537/module_master/hmgo"
+// 	"github.com/chu16537/module_master/mjson"
+// 	"github.com/chu16537/module_master/mmgo"
+// 	"github.com/chu16537/module_master/muid"
+// 	"github.com/chu16537/module_master/proto/db"
 // )
 
 // var (

@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/config"
-	"github.com/Chu16537/module_master/slot"
+	"github.com/chu16537/module_master/mconfig"
+	"github.com/chu16537/module_master/slot"
 )
 
 type userData struct {
@@ -31,7 +31,7 @@ var (
 
 func newConfig() (*slot.Config, error) {
 	c = new(slot.Config)
-	err := config.LoadYaml("config.yaml", c)
+	err := mconfig.LoadYaml("config.yaml", c)
 	if err != nil {
 		return nil, err
 	}

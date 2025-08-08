@@ -6,7 +6,7 @@ package mgrpcclient
 // 	"io"
 // 	"time"
 
-// 	"github.com/Chu16537/module_master/mgrpc/test"
+// 	"github.com/chu16537/module_master/mgrpc/test"
 // 	"google.golang.org/grpc"
 // )
 

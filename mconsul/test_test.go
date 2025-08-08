@@ -5,9 +5,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mconsul"
-	"github.com/Chu16537/module_master/mjson"
-	"github.com/Chu16537/module_master/muid"
+	"github.com/chu16537/module_master/mconsul"
+	"github.com/chu16537/module_master/mjson"
+	"github.com/chu16537/module_master/muid"
 )
 
 func TestXxx(t *testing.T) {

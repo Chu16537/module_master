@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Chu16537/module_master/mwebscoketserver"
+	"github.com/chu16537/module_master/mwebscoketserver"
 )
 
 var (

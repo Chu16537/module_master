@@ -1,6 +1,6 @@
 package tableserverclient
 
-import "github.com/Chu16537/module_master/proto/db"
+import "github.com/chu16537/module_master/proto/db"
 
 const (
 	GET_TABLE           = 1

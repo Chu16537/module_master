@@ -3,8 +3,8 @@ package mgrpcserver
 import (
 	"context"
 
-	"github.com/Chu16537/module_master/errorcode"
-	"github.com/Chu16537/module_master/mgrpc/commongrpc"
+	"github.com/chu16537/module_master/errorcode"
+	"github.com/chu16537/module_master/mgrpc/commongrpc"
 )
 
 // UnaryRPC 通用請求
