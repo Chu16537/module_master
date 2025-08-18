@@ -34,9 +34,9 @@ type IHandler interface {
 	// 連線
 	Connect(client IClient) error
 	// 斷線
-	Disconnect(clientId uint32)
+	Disconnect(clientId uint)
 	// 執行請求
-	EventHandler(clientId uint32, req *ClientReq)
+	EventHandler(clientId uint, req *ClientReq)
 }
 
 var h *Handler
@@ -206,7 +206,7 @@ func (h *Handler) createUser(conn *websocket.Conn) (IClient, error) {
 	}
 
 	sendChan := make(chan []byte, 128)
-	client := newClient(conn, uint32(id), sendChan)
+	client := newClient(conn, uint(id), sendChan)
 
 	// 創建錯誤
 	err := h.ih.Connect(client)

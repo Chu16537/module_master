@@ -8,4 +8,4 @@ redis:
   - "127.0.0.1:7006"
   password: aa
   db: 0
-  timeout: "10000ms"
+  timeout: "5000ms"

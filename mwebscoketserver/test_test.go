@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	userMap map[uint32]mwebscoketserver.IClient
+	userMap map[uint]mwebscoketserver.IClient
 )
 
 type TestToken struct {
@@ -19,7 +19,7 @@ type TestToken struct {
 }
 
 func TestMain(t *testing.T) {
-	userMap = make(map[uint32]mwebscoketserver.IClient)
+	userMap = make(map[uint]mwebscoketserver.IClient)
 	ctx := context.Background()
 
 	config := &mwebscoketserver.Config{
@@ -51,12 +51,12 @@ func (a *aa) Connect(client mwebscoketserver.IClient) error {
 	return nil
 }
 
-func (a *aa) Disconnect(idx uint32) {
+func (a *aa) Disconnect(idx uint) {
 	fmt.Println("disconnect", idx)
 	delete(userMap, idx)
 }
 
-func (a *aa) EventHandler(clientId uint32, req *mwebscoketserver.ClientReq) {
+func (a *aa) EventHandler(clientId uint, req *mwebscoketserver.ClientReq) {
 
 	s := &TestToken{}
 	err := json.Unmarshal(req.Data, s)

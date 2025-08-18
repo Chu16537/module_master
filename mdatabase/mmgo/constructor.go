@@ -2,10 +2,9 @@ package mmgo
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
-	"github.com/chu16537/module_master/errorcode"
 	"github.com/chu16537/module_master/proto/db"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -36,10 +35,10 @@ type dbOpt struct {
 	db     *mongo.Database
 }
 
-func New(ctx context.Context, config *Config) (*Handler, *errorcode.Error) {
+func New(ctx context.Context, config *Config) (*Handler, error) {
 	// 基本檢查
 	if config.Master == nil || config.Master.Addr == "" || config.Master.Database == "" {
-		return nil, errorcode.New(errorcode.Code_Server_Error, errors.New("master config error"))
+		return nil, fmt.Errorf("invalid config")
 	}
 
 	//  假如read是空的 讀寫就在同一台
@@ -77,7 +76,7 @@ func New(ctx context.Context, config *Config) (*Handler, *errorcode.Error) {
 	}
 
 	if err := h.connect(); err != nil {
-		return nil, errorcode.New(errorcode.Code_Server_Error, err)
+		return nil, err
 	}
 
 	// 初始化 count 資料表

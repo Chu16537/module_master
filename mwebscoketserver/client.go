@@ -9,7 +9,7 @@ import (
 
 type IClient interface {
 	GetConn() *websocket.Conn
-	GetUid() uint32                // 取得id
+	GetUid() uint                  // 取得id
 	UpdateLastReadTime(unix int64) // 設定最後訊息時間
 	GetLastReadMsgTime() int64     // 取得最後訊息時間
 	GetSender() chan []byte
@@ -22,13 +22,13 @@ type IClient interface {
 type Client struct {
 	closeOnce       sync.Once
 	conn            *websocket.Conn
-	uid             uint32
+	uid             uint
 	doneChan        chan bool
 	sender          chan []byte
 	lastReadMsgTime int64
 }
 
-func newClient(conn *websocket.Conn, uid uint32, sender chan []byte) IClient {
+func newClient(conn *websocket.Conn, uid uint, sender chan []byte) IClient {
 	return &Client{
 		closeOnce:       sync.Once{},
 		conn:            conn,
@@ -43,7 +43,7 @@ func (c *Client) GetConn() *websocket.Conn {
 	return c.conn
 }
 
-func (c *Client) GetUid() uint32 {
+func (c *Client) GetUid() uint {
 	return c.uid
 }
 
