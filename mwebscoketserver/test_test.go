@@ -56,7 +56,7 @@ func (a *aa) Disconnect(idx uint) {
 	delete(userMap, idx)
 }
 
-func (a *aa) EventHandler(clientId uint, req *mwebscoketserver.ClientReq) {
+func (a *aa) EventHandler(clientId uint, req *mwebscoketserver.ClientReq) mwebscoketserver.ClientRes {
 
 	s := &TestToken{}
 	err := json.Unmarshal(req.Data, s)
@@ -70,7 +70,5 @@ func (a *aa) EventHandler(clientId uint, req *mwebscoketserver.ClientReq) {
 		SS: 1,
 	}
 
-	resByte, _ := json.Marshal(res)
-
-	userMap[clientId].WriteMessage(resByte)
+	return *res
 }

@@ -36,7 +36,7 @@ type IHandler interface {
 	// 斷線
 	Disconnect(clientId uint)
 	// 執行請求
-	EventHandler(clientId uint, req *ClientReq)
+	EventHandler(clientId uint, req *ClientReq) ClientRes
 }
 
 var h *Handler
@@ -174,7 +174,11 @@ func (h *Handler) reading(client IClient) {
 		client.UpdateLastReadTime(time.Now().Unix())
 
 		// 請求實作
-		h.ih.EventHandler(client.GetUid(), req)
+		res := h.ih.EventHandler(client.GetUid(), req)
+
+		// 回傳
+		b, _ := json.Marshal(res)
+		client.WriteMessageQueue(b)
 	}
 }
 
